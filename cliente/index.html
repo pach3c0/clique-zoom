@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sua Galeria | CLIQUE·ZOOM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+        
+        :root {
+            --font-sans: 'Inter', sans-serif;
+            --font-serif: 'Playfair Display', serif;
+        }
+        
+        body { font-family: var(--font-sans); }
+        h1, h2, h3, .font-serif { font-family: var(--font-serif); }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+
+    <!-- NAVBAR -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="font-serif text-xl font-bold text-neutral-900">CLIQUE·ZOOM</a>
+            <div class="space-x-6">
+                <a href="/" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">Voltar ao Site</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        
+        <!-- HEADER -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-neutral-900 mb-4">Sua Galeria Privada</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">As suas fotos estão prontas para serem compartilhadas e baixadas. Aproveite este momento especial.</p>
+        </div>
+
+        <!-- STATUS/LOGIN -->
+        <div id="login-area" class="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center mb-12">
+            <i data-lucide="lock" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-serif font-bold text-gray-900 mb-2">Acesso Requerido</h2>
+            <p class="text-gray-600 mb-6">Insira seu código de acesso para visualizar suas fotos</p>
+            
+            <form onsubmit="handleAccessCode(event)" class="max-w-sm mx-auto space-y-3">
+                <input 
+                    type="password" 
+                    id="access-code"
+                    placeholder="Código de acesso"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                    required
+                >
+                <button 
+                    type="submit"
+                    class="w-full bg-neutral-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                >
+                    Acessar Galeria
+                </button>
+            </form>
+        </div>
+
+        <!-- GALLERY (hidden by default) -->
+        <div id="gallery-area" class="hidden">
+            
+            <!-- GALLERY INFO -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-serif font-bold text-gray-900 mb-1" id="client-name">Carregando...</h2>
+                        <p class="text-gray-600" id="gallery-date">Data da sessão</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500 mb-1">Fotos disponíveis</p>
+                        <p class="text-3xl font-serif font-bold text-neutral-900" id="photo-count">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GALLERY GRID -->
+            <div id="photos-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <!-- Photos will be loaded here -->
+                <div class="col-span-full text-center py-12 text-gray-500">
+                    <i data-lucide="image" class="w-12 h-12 mx-auto mb-3 text-gray-400"></i>
+                    <p>Fotos em carregamento...</p>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                    Clique nas fotos para baixar em alta resolução
+                </div>
+                <button onclick="handleLogout()" class="px-6 py-2 text-gray-600 hover:text-neutral-900 border border-gray-300 rounded-lg hover:border-neutral-900 transition-colors">
+                    Sair
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-50 border-t border-gray-200 mt-16 py-8 text-center text-sm text-gray-600">
+        <p>&copy; 2026 CLIQUE·ZOOM. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+        // ========== STATE ==========
+        let isLoggedIn = false;
+        let galleryData = null;
+
+        // ========== AUTH ==========
+        function handleAccessCode(e) {
+            e.preventDefault();
+            const code = document.getElementById('access-code').value;
+            
+            // TODO: Validar código no servidor
+            // Por enquanto, simular dados
+            if (code.length > 0) {
+                isLoggedIn = true;
+                galleryData = {
+                    clientName: 'João Silva',
+                    galleryDate: '15 de Janeiro de 2026',
+                    sessionType: 'Família',
+                    totalPhotos: 128,
+                    watermark: true,
+                    canShare: false,
+                    downloadQuality: 'high'
+                };
+                
+                document.getElementById('login-area').classList.add('hidden');
+                document.getElementById('gallery-area').classList.remove('hidden');
+                loadGallery();
+                lucide.createIcons();
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Tem certeza que quer sair?')) {
+                isLoggedIn = false;
+                galleryData = null;
+                document.getElementById('gallery-area').classList.add('hidden');
+                document.getElementById('login-area').classList.remove('hidden');
+                document.getElementById('access-code').value = '';
+            }
+        }
+
+        // ========== LOAD GALLERY ==========
+        function loadGallery() {
+            if (!galleryData) return;
+            
+            document.getElementById('client-name').textContent = galleryData.clientName;
+            document.getElementById('gallery-date').textContent = 'Sessão de ' + galleryData.sessionType + ' • ' + galleryData.galleryDate;
+            document.getElementById('photo-count').textContent = galleryData.totalPhotos;
+            
+            // Simular fotos
+            const html = Array(12).fill(0).map((_, i) => `
+                <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square cursor-pointer hover:shadow-lg transition-shadow">
+                    <div class="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200">
+                        <i data-lucide="image" class="w-8 h-8"></i>
+                    </div>
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button class="bg-white text-gray-900 px-4 py-2 rounded font-semibold text-sm flex items-center gap-2">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Baixar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('photos-grid').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // ========== INIT ==========
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
