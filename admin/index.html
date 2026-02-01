@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLIQUE·ZOOM | Painel Administrativo</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
@@ -21,25 +19,13 @@
         body { font-family: var(--font-sans); }
         h1, h2, h3, .font-serif { font-family: var(--font-serif); }
         
-        .nav-item.active { 
-            @apply bg-gray-800 text-white;
-        }
-        .nav-item {
-            @apply text-gray-400 hover:bg-gray-800 hover:text-white;
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        .nav-item.active { @apply bg-gray-800 text-white; }
+        .nav-item { @apply text-gray-400 hover:bg-gray-800 hover:text-white; }
     </style>
 </head>
 <body class="bg-gray-50">
 
-    <!-- ========== LOGIN SCREEN ========== -->
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-neutral-900 to-gray-800 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
             <div class="text-center mb-8">
@@ -57,7 +43,6 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/20"
                         required
                     >
-                    <p class="text-xs text-gray-400 mt-2">Hint: veja em .env.example</p>
                 </div>
                 
                 <button 
@@ -77,34 +62,28 @@
         </div>
     </div>
 
-    <!-- ========== ADMIN PANEL ========== -->
+    <!-- ADMIN PANEL -->
     <div id="admin-panel" class="hidden flex h-screen overflow-hidden">
         
         <!-- SIDEBAR -->
         <aside class="w-64 bg-neutral-900 text-white flex flex-col border-r border-gray-800">
             <div class="p-6 border-b border-gray-800">
                 <h2 class="font-serif text-xl font-bold tracking-wide">CLIQUE·ZOOM</h2>
-                <p class="text-xs text-gray-400 mt-1">Admin v1.0</p>
+                <p class="text-xs text-gray-400 mt-1">Admin v2.0</p>
             </div>
             
             <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-                <button onclick="switchTab('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium active" data-tab="dashboard">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                <button onclick="switchTab('hero')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium active" data-tab="hero">
+                    <i data-lucide="monitor" class="w-4 h-4"></i> Hero
                 </button>
-                <button onclick="switchTab('galerias')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="galerias">
-                    <i data-lucide="images" class="w-4 h-4"></i> Galerias
+                <button onclick="switchTab('sobre')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="sobre">
+                    <i data-lucide="info" class="w-4 h-4"></i> Sobre
                 </button>
-                <button onclick="switchTab('hero')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="hero">
-                    <i data-lucide="monitor" class="w-4 h-4"></i> Hero & Capa
+                <button onclick="switchTab('portfolio')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="portfolio">
+                    <i data-lucide="images" class="w-4 h-4"></i> Portfólio
                 </button>
-                <button onclick="switchTab('servicos')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="servicos">
-                    <i data-lucide="package" class="w-4 h-4"></i> Serviços
-                </button>
-                <button onclick="switchTab('clientes')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="clientes">
-                    <i data-lucide="users" class="w-4 h-4"></i> Clientes
-                </button>
-                <button onclick="switchTab('relatorios')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="relatorios">
-                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Relatórios
+                <button onclick="switchTab('estudio')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="estudio">
+                    <i data-lucide="building" class="w-4 h-4"></i> Estúdio
                 </button>
             </nav>
             
@@ -120,50 +99,53 @@
 
         <!-- MAIN CONTENT -->
         <main class="flex-1 flex flex-col overflow-hidden">
-            <!-- HEADER -->
             <header class="bg-white border-b border-gray-200 px-8 py-6 flex justify-between items-center">
                 <div>
-                    <h1 id="page-title" class="text-2xl font-serif font-bold text-gray-900">Dashboard</h1>
-                    <p class="text-sm text-gray-500 mt-1">Gerencie seu portfólio e clientes</p>
+                    <h1 id="page-title" class="text-2xl font-serif font-bold text-gray-900">Hero</h1>
+                    <p class="text-sm text-gray-500 mt-1">Edite os conteúdos do seu site</p>
                 </div>
                 <button onclick="saveDados()" class="bg-neutral-900 text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2">
                     <i data-lucide="save" class="w-4 h-4"></i> Salvar
                 </button>
             </header>
 
-            <!-- CONTENT AREA -->
-            <div id="content-area" class="flex-1 overflow-y-auto p-8">
-                <!-- Conteúdo será renderizado aqui via JS -->
-            </div>
+            <div id="content-area" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
         </main>
     </div>
 
-    <!-- SCRIPTS -->
     <script>
-        // ========== STATE MANAGEMENT ==========
-        const PASSWORD = "admin123"; // TODO: Mover para variável de ambiente
-        
-        let currentTab = 'dashboard';
+        const PASSWORD = "admin123";
         let isLoggedIn = false;
+        let currentTab = 'hero';
         
-        // Dados da aplicação (localStorage por enquanto)
         let appData = {
             hero: {
                 title: "A pureza do essencial.",
-                subtitle: "Removemos o ruído visual para capturar o que realmente importa.",
-                image: "IMG_8581.jpg"
+                subtitle: "Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.",
+                image: "IMG_8581.jpg",
+                transform: { scale: 1, posX: 50, posY: 50 }
             },
-            servicos: [
-                { id: 'familia', title: 'Conexão Geracional', description: 'O estúdio high-key elimina distrações...', image: 'Gemini_Generated_Image_hbltjzhbltjzhblt.png', preco: 300 },
-                { id: 'profissional', title: 'Imagem de Autoridade', description: 'Retratos corporativos contemp...', image: 'IMG_8640.jpg', preco: 350 },
-                { id: 'criativo', title: 'Expressão Artística', description: 'Para quem busca fugir do óbvio...', image: 'IMG_8607.jpg', preco: 400 },
-                { id: 'festivos', title: '15 Anos & Formaturas', description: 'Celebre suas conquistas...', image: 'Gemini_Generated_Image_zedrb9zedrb9zedr.png', preco: 450 }
+            about: {
+                title: "Quem Somos",
+                text: "Somos fotógrafos que acreditam na força da simplicidade. Nosso estúdio foi projetado para eliminar distrações e focar no que realmente importa: você.\n\nCom mais de uma década de experiência, capturamos momentos autênticos em um ambiente controlado e minimalista. Cada sessão é uma oportunidade de criar algo único e atemporal.\n\nNosso foco vai além de simplesmente tirar fotos. Oferecemos direção estratégica de imagem, posing especializado e uma abordagem que transforma como você se vê.",
+                image: "IMG_8640.jpg"
+            },
+            portfolio: [
+                { image: "Gemini_Generated_Image_hbltjzhbltjzhblt.png" },
+                { image: "IMG_8640.jpg" },
+                { image: "IMG_8607.jpg" },
+                { image: "Gemini_Generated_Image_zedrb9zedrb9zedr.png" },
+                { image: "IMG_8581.jpg" },
+                { image: "IMG_9153.jpg" }
             ],
-            galerias: [],
-            clientes: []
+            studio: {
+                address: "R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP",
+                hours: "Segunda a Sexta: 9h - 18h\nSábado: 10h - 16h",
+                img1: "IMG_8586.jpg",
+                img2: "IMG_9153.jpg"
+            }
         };
 
-        // ========== AUTH ==========
         function handleLogin(e) {
             e.preventDefault();
             const password = document.getElementById('login-password').value;
@@ -174,7 +156,7 @@
                 document.getElementById('admin-panel').classList.remove('hidden');
                 loadDados();
                 lucide.createIcons();
-                renderDashboard();
+                renderHero();
             } else {
                 alert('Senha incorreta!');
             }
@@ -189,113 +171,28 @@
             }
         }
 
-        // ========== TAB NAVIGATION ==========
         function switchTab(tabName) {
             currentTab = tabName;
             
-            // Atualizar nav
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
             
-            // Renderizar conteúdo
             switch(tabName) {
-                case 'dashboard': renderDashboard(); break;
-                case 'galerias': renderGalerias(); break;
                 case 'hero': renderHero(); break;
-                case 'servicos': renderServicos(); break;
-                case 'clientes': renderClientes(); break;
-                case 'relatorios': renderRelatorios(); break;
+                case 'sobre': renderSobre(); break;
+                case 'portfolio': renderPortfolio(); break;
+                case 'estudio': renderEstudio(); break;
             }
             
             lucide.createIcons();
         }
 
-        // ========== RENDER FUNCTIONS ==========
-        function renderDashboard() {
-            document.getElementById('page-title').textContent = 'Dashboard';
-            const html = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                        <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Total de Galerias</p>
-                        <h3 class="text-3xl font-serif font-bold text-neutral-900">${appData.galerias.length}</h3>
-                        <p class="text-xs text-gray-500 mt-2">De clientes fotografados</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                        <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Total de Clientes</p>
-                        <h3 class="text-3xl font-serif font-bold text-neutral-900">${appData.clientes.length}</h3>
-                        <p class="text-xs text-gray-500 mt-2">Cadastrados no sistema</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                        <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Serviços Ativos</p>
-                        <h3 class="text-3xl font-serif font-bold text-neutral-900">${appData.servicos.length}</h3>
-                        <p class="text-xs text-gray-500 mt-2">Tipos de sessão</p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                    <h2 class="text-lg font-serif font-bold text-gray-900 mb-6">Últimas Galerias</h2>
-                    ${appData.galerias.length === 0 ? 
-                        '<p class="text-gray-500 text-sm text-center py-8">Nenhuma galeria criada ainda. <a href="#" onclick="switchTab(\'galerias\')" class="text-neutral-900 hover:underline font-semibold">Criar primeira galeria →</a></p>' : 
-                        `<div class="space-y-3">
-                            ${appData.galerias.slice(-3).map(g => `
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-100">
-                                    <div>
-                                        <p class="font-semibold text-gray-900">${g.nomeCliente}</p>
-                                        <p class="text-xs text-gray-500">${new Date(g.dataSessao).toLocaleDateString('pt-BR')}</p>
-                                    </div>
-                                    <span class="text-xs font-semibold text-gray-600 bg-gray-200 px-3 py-1 rounded">${g.status || 'Ativo'}</span>
-                                </div>
-                            `).join('')}
-                        </div>`
-                    }
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-        }
-
-        function renderGalerias() {
-            document.getElementById('page-title').textContent = 'Galerias de Clientes';
-            const html = `
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-semibold text-gray-900">Suas Galerias</h2>
-                    <button onclick="criarGaleria()" class="bg-neutral-900 text-white px-4 py-2 rounded font-semibold hover:bg-gray-800 flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Galeria
-                    </button>
-                </div>
-
-                ${appData.galerias.length === 0 ? 
-                    '<div class="text-center py-12 bg-white rounded-lg border border-gray-200"><p class="text-gray-500 mb-4">Nenhuma galeria criada ainda.</p><button onclick="criarGaleria()" class="text-neutral-900 font-semibold hover:underline">Criar primeira galeria →</button></div>' : 
-                    `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${appData.galerias.map((g, idx) => `
-                            <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                                <div class="aspect-video bg-gray-200 rounded mb-4 flex items-center justify-center text-gray-400">
-                                    <i data-lucide="image" class="w-8 h-8"></i>
-                                </div>
-                                <h3 class="font-semibold text-gray-900 mb-2">${g.nomeCliente}</h3>
-                                <p class="text-xs text-gray-500 mb-4">${new Date(g.dataSessao).toLocaleDateString('pt-BR')}</p>
-                                <div class="flex gap-2">
-                                    <button onclick="editarGaleria(${idx})" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 text-sm rounded font-semibold transition-colors flex items-center justify-center gap-1">
-                                        <i data-lucide="edit" class="w-3 h-3"></i> Editar
-                                    </button>
-                                    <button onclick="deletarGaleria(${idx})" class="flex-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm rounded font-semibold transition-colors flex items-center justify-center gap-1">
-                                        <i data-lucide="trash" class="w-3 h-3"></i> Deletar
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>`
-                }
-            `;
-            document.getElementById('content-area').innerHTML = html;
-            lucide.createIcons();
-        }
-
         function renderHero() {
-            document.getElementById('page-title').textContent = 'Hero & Capa';
+            document.getElementById('page-title').textContent = 'Hero Section';
             const html = `
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-4">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-6">Editar Hero Section</h2>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-6">Editar Hero</h2>
                         
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Título Principal</label>
@@ -304,7 +201,7 @@
                                 id="hero-title"
                                 value="${appData.hero.title}"
                                 placeholder="Ex: A pureza do essencial."
-                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/20"
+                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
                             >
                         </div>
 
@@ -312,9 +209,9 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Subtítulo</label>
                             <textarea 
                                 id="hero-subtitle"
-                                placeholder="Descreva a essência do estúdio..."
+                                placeholder="Descrição..."
                                 rows="3"
-                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/20"
+                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
                             >${appData.hero.subtitle}</textarea>
                         </div>
 
@@ -324,8 +221,8 @@
                                 type="text" 
                                 id="hero-image"
                                 value="${appData.hero.image}"
-                                placeholder="Nome do arquivo (ex: IMG_8581.jpg)"
-                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/20 mb-2"
+                                placeholder="Nome da imagem"
+                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 mb-2"
                             >
                             <input 
                                 type="file" 
@@ -335,280 +232,356 @@
                             >
                         </div>
 
-                        <button onclick="saveHero()" class="w-full bg-neutral-900 text-white py-3 rounded font-semibold hover:bg-gray-800 transition-colors">
-                            Salvar Hero
-                        </button>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-2">Escala</label>
+                                <input 
+                                    type="range" 
+                                    id="hero-scale"
+                                    min="0.8" 
+                                    max="2" 
+                                    step="0.05"
+                                    value="${appData.hero.transform?.scale ?? 1}"
+                                    class="w-full"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Valor: <span id="hero-scale-value">${appData.hero.transform?.scale ?? 1}</span>x</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-2">Posição X</label>
+                                <input 
+                                    type="range" 
+                                    id="hero-pos-x"
+                                    min="0" 
+                                    max="100" 
+                                    step="1"
+                                    value="${appData.hero.transform?.posX ?? 50}"
+                                    class="w-full"
+                                >
+                                <p class="text-xs text-gray-500 mt-1"><span id="hero-pos-x-value">${appData.hero.transform?.posX ?? 50}</span>%</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-2">Posição Y</label>
+                                <input 
+                                    type="range" 
+                                    id="hero-pos-y"
+                                    min="0" 
+                                    max="100" 
+                                    step="1"
+                                    value="${appData.hero.transform?.posY ?? 50}"
+                                    class="w-full"
+                                >
+                                <p class="text-xs text-gray-500 mt-1"><span id="hero-pos-y-value">${appData.hero.transform?.posY ?? 50}</span>%</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Preview</h2>
-                        <div class="relative rounded-lg overflow-hidden bg-gray-200 aspect-video flex items-center justify-center">
-                            <div class="text-center text-gray-600">
-                                <i data-lucide="image" class="w-12 h-12 mx-auto mb-2"></i>
-                                <p class="text-sm">Preview da imagem</p>
+                        <div class="relative rounded-lg overflow-hidden bg-black aspect-video flex items-center justify-center">
+                            <img id="preview-image" src="/assets/${appData.hero.image}" alt="Preview" class="absolute inset-0 w-full h-full object-cover" />
+                            <div class="absolute inset-0 bg-black/30"></div>
+                            <div class="relative z-10 text-center text-white">
+                                <h3 class="text-xl md:text-2xl font-serif font-bold mb-3" id="preview-title">${appData.hero.title}</h3>
+                                <p class="text-sm text-gray-200 max-w-xs" id="preview-subtitle">${appData.hero.subtitle}</p>
                             </div>
-                        </div>
-                        <div class="mt-6">
-                            <h3 class="text-xl font-serif font-bold text-gray-900" id="preview-title">${appData.hero.title}</h3>
-                            <p class="text-gray-600 text-sm mt-3" id="preview-subtitle">${appData.hero.subtitle}</p>
                         </div>
                     </div>
                 </div>
             `;
             document.getElementById('content-area').innerHTML = html;
             
-            // Update preview on input
             document.getElementById('hero-title').addEventListener('input', (e) => {
                 document.getElementById('preview-title').textContent = e.target.value;
             });
             document.getElementById('hero-subtitle').addEventListener('input', (e) => {
                 document.getElementById('preview-subtitle').textContent = e.target.value;
             });
-            
-            lucide.createIcons();
+
+            document.getElementById('hero-scale').addEventListener('input', (e) => {
+                document.getElementById('hero-scale-value').textContent = e.target.value;
+                updatePreviewTransform();
+            });
+            document.getElementById('hero-pos-x').addEventListener('input', (e) => {
+                document.getElementById('hero-pos-x-value').textContent = e.target.value;
+                updatePreviewTransform();
+            });
+            document.getElementById('hero-pos-y').addEventListener('input', (e) => {
+                document.getElementById('hero-pos-y-value').textContent = e.target.value;
+                updatePreviewTransform();
+            });
         }
 
-        function renderServicos() {
-            document.getElementById('page-title').textContent = 'Serviços';
-            const html = `
-                <div class="space-y-6">
-                    <h2 class="text-lg font-semibold text-gray-900">Editar Serviços</h2>
-                    ${appData.servicos.map((s, idx) => `
-                        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Título</label>
-                                    <input 
-                                        type="text" 
-                                        value="${s.title}"
-                                        onchange="appData.servicos[${idx}].title = this.value"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
-                                    >
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Preço Base (R$)</label>
-                                    <input 
-                                        type="number" 
-                                        value="${s.preco}"
-                                        onchange="appData.servicos[${idx}].preco = parseInt(this.value)"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
-                                    >
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Imagem</label>
-                                    <input 
-                                        type="text" 
-                                        value="${s.image}"
-                                        onchange="appData.servicos[${idx}].image = this.value"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 text-sm"
-                                    >
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Descrição</label>
-                                <textarea 
-                                    onchange="appData.servicos[${idx}].description = this.value"
-                                    rows="2"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 text-sm"
-                                >${s.description}</textarea>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
+        function updatePreviewTransform() {
+            const img = document.getElementById('preview-image');
+            const scale = parseFloat(document.getElementById('hero-scale').value);
+            const posX = parseInt(document.getElementById('hero-pos-x').value, 10);
+            const posY = parseInt(document.getElementById('hero-pos-y').value, 10);
+
+            img.style.transform = `scale(${scale})`;
+            img.style.transformOrigin = `${posX}% ${posY}%`;
+            img.style.objectPosition = `${posX}% ${posY}%`;
         }
 
-        function renderClientes() {
-            document.getElementById('page-title').textContent = 'Clientes';
-            const html = `
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-semibold text-gray-900">Seus Clientes</h2>
-                    <button onclick="adicionarCliente()" class="bg-neutral-900 text-white px-4 py-2 rounded font-semibold hover:bg-gray-800 flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Novo Cliente
-                    </button>
-                </div>
-
-                <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Nome</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Email</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Tipo de Serviço</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            ${appData.clientes.length === 0 ? 
-                                '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500 text-sm">Nenhum cliente cadastrado ainda.</td></tr>' :
-                                appData.clientes.map((c, idx) => `
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm font-semibold text-gray-900">${c.nome}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">${c.email}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">${c.tipoServico}</td>
-                                        <td class="px-6 py-4 text-sm">
-                                            <button onclick="deletarCliente(${idx})" class="text-red-600 hover:text-red-700 font-semibold">Deletar</button>
-                                        </td>
-                                    </tr>
-                                `).join('')
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-            lucide.createIcons();
-        }
-
-        function renderRelatorios() {
-            document.getElementById('page-title').textContent = 'Relatórios';
-            const html = `
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                        <h2 class="text-lg font-serif font-bold text-gray-900 mb-6">Distribuição por Serviço</h2>
-                        <canvas id="chart-servicos"></canvas>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                        <h2 class="text-lg font-serif font-bold text-gray-900 mb-6">Galerias por Mês</h2>
-                        <canvas id="chart-meses"></canvas>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                    <h2 class="text-lg font-serif font-bold text-gray-900 mb-6">Estatísticas Gerais</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <p class="text-sm text-gray-600 mb-2">Total de Galerias</p>
-                            <p class="text-3xl font-serif font-bold text-neutral-900">${appData.galerias.length}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600 mb-2">Total de Clientes</p>
-                            <p class="text-3xl font-serif font-bold text-neutral-900">${appData.clientes.length}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600 mb-2">Serviços Ativos</p>
-                            <p class="text-3xl font-serif font-bold text-neutral-900">${appData.servicos.length}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-            
-            // Render charts
-            setTimeout(() => {
-                try {
-                    const ctx1 = document.getElementById('chart-servicos');
-                    new Chart(ctx1, {
-                        type: 'doughnut',
-                        data: {
-                            labels: appData.servicos.map(s => s.title),
-                            datasets: [{
-                                data: [1, 2, 1, 1], // Mock data
-                                backgroundColor: ['#000000', '#525252', '#a3a3a3', '#d4d4d8']
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: true }
-                    });
-
-                    const ctx2 = document.getElementById('chart-meses');
-                    new Chart(ctx2, {
-                        type: 'line',
-                        data: {
-                            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'],
-                            datasets: [{
-                                label: 'Galerias',
-                                data: [0, appData.galerias.length, 0, 0, 0],
-                                borderColor: '#000000',
-                                backgroundColor: 'rgba(0,0,0,0.05)',
-                                tension: 0.4
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: true }
-                    });
-                } catch (e) {
-                    console.error('Chart error:', e);
-                }
-            }, 100);
-        }
-
-        // ========== ACTIONS ==========
-        function criarGaleria() {
-            const nomeCliente = prompt('Nome do cliente:');
-            if (!nomeCliente) return;
-            
-            const novaGaleria = {
-                nomeCliente,
-                dataSessao: new Date().toISOString(),
-                tipoCliente: 'premium',
-                quantidadeFotos: 200,
-                preco: 400,
-                status: 'ativo',
-                marcaDagua: true,
-                podeCompartilhar: false
-            };
-            
-            appData.galerias.push(novaGaleria);
-            saveDados();
-            renderGalerias();
-        }
-
-        function editarGaleria(idx) {
-            alert('Edição de galeria em desenvolvimento');
-        }
-
-        function deletarGaleria(idx) {
-            if (confirm('Deletar esta galeria?')) {
-                appData.galerias.splice(idx, 1);
-                saveDados();
-                renderGalerias();
-            }
-        }
-
-        function adicionarCliente() {
-            const nome = prompt('Nome do cliente:');
-            if (!nome) return;
-            const email = prompt('Email do cliente:');
-            if (!email) return;
-            
-            const novoCliente = {
-                nome,
-                email,
-                tipoServico: 'familia',
-                dataSessao: new Date().toISOString()
-            };
-            
-            appData.clientes.push(novoCliente);
-            saveDados();
-            renderClientes();
-        }
-
-        function deletarCliente(idx) {
-            if (confirm('Deletar este cliente?')) {
-                appData.clientes.splice(idx, 1);
-                saveDados();
-                renderClientes();
-            }
-        }
-
-        function saveHero() {
-            appData.hero.title = document.getElementById('hero-title').value;
-            appData.hero.subtitle = document.getElementById('hero-subtitle').value;
-            appData.hero.image = document.getElementById('hero-image').value;
-            saveDados();
-            alert('Hero salvo!');
-        }
-
-        function handleHeroUpload(e) {
+        async function handleHeroUpload(e) {
             const file = e.target.files[0];
-            if (file) {
-                // TODO: Upload para /api/upload
-                document.getElementById('hero-image').value = file.name;
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error('Falha no upload');
+
+                const data = await res.json();
+                if (!data.url) throw new Error('Resposta inválida');
+
+                document.getElementById('hero-image').value = data.url;
+                document.getElementById('preview-image').src = data.url;
+                appData.hero.image = data.url;
+                saveDados();
+                alert('Upload concluído!');
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao fazer upload.');
             }
         }
 
-        // ========== STORAGE ==========
+        function renderSobre() {
+            document.getElementById('page-title').textContent = 'Seção Sobre';
+            const html = `
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-6">Editar Seção Sobre</h2>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Título</label>
+                        <input 
+                            type="text" 
+                            id="about-title"
+                            value="${appData.about.title}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Texto (cada parágrafo em uma linha)</label>
+                        <textarea 
+                            id="about-text"
+                            rows="6"
+                            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
+                        >${appData.about.text}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Imagem</label>
+                        <input 
+                            type="text" 
+                            id="about-image"
+                            value="${appData.about.image}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 mb-2"
+                        >
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            onchange="handleAboutUpload(event)"
+                            class="w-full px-4 py-3 border border-gray-300 rounded text-sm"
+                        >
+                    </div>
+                </div>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+        }
+
+        async function handleAboutUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error('Falha');
+                const data = await res.json();
+                
+                document.getElementById('about-image').value = data.url;
+                appData.about.image = data.url;
+                saveDados();
+                alert('Upload concluído!');
+            } catch (err) {
+                alert('Erro ao fazer upload.');
+            }
+        }
+
+        function renderPortfolio() {
+            document.getElementById('page-title').textContent = 'Portfólio';
+            const html = `
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">Fotos do Portfólio</h2>
+                        <button onclick="addPortfolioImage()" class="bg-neutral-900 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-800">
+                            <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i> Adicionar Foto
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
+                        ${appData.portfolio.map((p, idx) => `
+                            <div class="relative group">
+                                <div class="aspect-square bg-gray-200 rounded overflow-hidden">
+                                    <img src="/assets/${p.image}" alt="Portfolio" class="w-full h-full object-cover" />
+                                </div>
+                                <button onclick="deletePortfolioImage(${idx})" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition">
+                                    <i data-lucide="trash" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div id="portfolio-form" class="border-t border-gray-200 pt-6"></div>
+                </div>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function addPortfolioImage() {
+            const file = prompt('Nome da imagem (ex: IMG_8640.jpg):');
+            if (file) {
+                appData.portfolio.push({ image: file });
+                saveDados();
+                renderPortfolio();
+            }
+        }
+
+        function deletePortfolioImage(idx) {
+            if (confirm('Deletar esta foto?')) {
+                appData.portfolio.splice(idx, 1);
+                saveDados();
+                renderPortfolio();
+            }
+        }
+
+        function renderEstudio() {
+            document.getElementById('page-title').textContent = 'Estúdio';
+            const html = `
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-6">Informações do Estúdio</h2>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Endereço</label>
+                        <input 
+                            type="text" 
+                            id="studio-address"
+                            value="${appData.studio.address}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Horários (cada linha um horário)</label>
+                        <textarea 
+                            id="studio-hours"
+                            rows="3"
+                            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900"
+                        >${appData.studio.hours}</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Foto 1</label>
+                            <input 
+                                type="text" 
+                                id="studio-img1"
+                                value="${appData.studio.img1}"
+                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 mb-2"
+                            >
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onchange="handleStudioUpload(1, event)"
+                                class="w-full px-4 py-3 border border-gray-300 rounded text-sm"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Foto 2</label>
+                            <input 
+                                type="text" 
+                                id="studio-img2"
+                                value="${appData.studio.img2}"
+                                class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-neutral-900 mb-2"
+                            >
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onchange="handleStudioUpload(2, event)"
+                                class="w-full px-4 py-3 border border-gray-300 rounded text-sm"
+                            >
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+        }
+
+        async function handleStudioUpload(num, e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error('Falha');
+                const data = await res.json();
+                
+                const fieldId = num === 1 ? 'studio-img1' : 'studio-img2';
+                const dataKey = num === 1 ? 'img1' : 'img2';
+                
+                document.getElementById(fieldId).value = data.url;
+                appData.studio[dataKey] = data.url;
+                saveDados();
+                alert('Upload concluído!');
+            } catch (err) {
+                alert('Erro ao fazer upload.');
+            }
+        }
+
         function saveDados() {
+            // Salvar hero
+            appData.hero.title = document.getElementById('hero-title')?.value || appData.hero.title;
+            appData.hero.subtitle = document.getElementById('hero-subtitle')?.value || appData.hero.subtitle;
+            appData.hero.image = document.getElementById('hero-image')?.value || appData.hero.image;
+            appData.hero.transform = {
+                scale: parseFloat(document.getElementById('hero-scale')?.value ?? 1),
+                posX: parseInt(document.getElementById('hero-pos-x')?.value ?? 50, 10),
+                posY: parseInt(document.getElementById('hero-pos-y')?.value ?? 50, 10)
+            };
+
+            // Salvar about
+            appData.about.title = document.getElementById('about-title')?.value || appData.about.title;
+            appData.about.text = document.getElementById('about-text')?.value || appData.about.text;
+            appData.about.image = document.getElementById('about-image')?.value || appData.about.image;
+
+            // Salvar studio
+            appData.studio.address = document.getElementById('studio-address')?.value || appData.studio.address;
+            appData.studio.hours = document.getElementById('studio-hours')?.value || appData.studio.hours;
+            appData.studio.img1 = document.getElementById('studio-img1')?.value || appData.studio.img1;
+            appData.studio.img2 = document.getElementById('studio-img2')?.value || appData.studio.img2;
+
             localStorage.setItem('cliqueZoomAdmin', JSON.stringify(appData));
             alert('Dados salvos com sucesso!');
         }
@@ -620,7 +593,6 @@
             }
         }
 
-        // ========== INIT ==========
         window.addEventListener('load', () => {
             lucide.createIcons();
         });
