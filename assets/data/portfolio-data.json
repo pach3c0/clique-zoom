@@ -24,7 +24,7 @@
   },
   {
     "id": "criativo",
-    "tabName": "Criativo",
+    "tabName": "Criativo de mais",
     "image": "IMG_8607.jpg",
     "title": "Expressão Artística",
     "description": "Para quem busca fugir do óbvio. Uma abordagem editorial que brinca com cores vibrantes, contrastes, ângulos inusitados e a personalidade crua do sujeito. Onde a fotografia encontra a arte moderna.",
@@ -45,5 +45,13 @@
       "Foco total no traje e na pessoa",
       "Sem distrações de salão de festa"
     ]
+  },
+  {
+    "id": "nova-sessao-1769529285045",
+    "tabName": "Testes",
+    "image": "Captura de Tela 2026-01-05 Ã s 10.35.22.png",
+    "title": "Nova Sessão",
+    "description": "teste",
+    "items": []
   }
 ]

@@ -1,0 +1,28 @@
+{
+  "name": "clique-zoom-platform",
+  "version": "2.0.0",
+  "description": "Platform de portfólio fotográfico: Site público + Painel admin + Galeria privada do cliente",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^2.0.0",
+    "sharp": "^0.32.6",
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["fotografia", "portfolio", "admin", "galeria"],
+  "author": "CLIQUE·ZOOM",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,3 +1,29 @@
+// Renderização dinâmica dos cards do Guia de Estilo
+async function loadStyleCards() {
+    const response = await fetch('data/style-cards.json');
+    const cards = await response.json();
+    const grid = document.getElementById('style-cards-grid');
+    grid.innerHTML = '';
+    cards.forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'group relative h-[400px] group-hover:h-[800px] overflow-hidden group-hover:overflow-visible cursor-pointer transition-all duration-700';
+        div.onclick = () => openOverlay(card.image, card.icon, card.title, card.description);
+        div.innerHTML = `
+            <img src="${card.image}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-200 opacity-60 group-hover:opacity-40" alt="${card.title}">
+            <div class="absolute inset-0 p-8 flex flex-col justify-end bg-gradient-to-t from-black/90 to-transparent">
+                <div class="mb-4 text-white">
+                    <i data-lucide="${card.icon}" class="w-6 h-6 mb-3 opacity-80"></i>
+                    <h3 class="font-serif text-2xl mb-2">${card.title}</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-4 group-hover:translate-y-0">
+                        ${card.description}
+                    </p>
+                </div>
+            </div>
+        `;
+        grid.appendChild(div);
+    });
+    lucide.createIcons();
+}
 
 lucide.createIcons();
 
@@ -97,15 +123,13 @@ function generateStyle() {
 // Inicializa a calculadora e a agenda
 document.addEventListener('DOMContentLoaded', () => {
     calculateTotal();
-    
     const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const currentMonth = new Date().getMonth();
-
     document.getElementById('month-0').textContent = months[currentMonth];
     document.getElementById('month-1').textContent = months[(currentMonth + 1) % 12];
     document.getElementById('month-2').textContent = months[(currentMonth + 2) % 12];
-
     loadPortfolio();
+    loadStyleCards();
 });
 
 async function loadPortfolio() {
