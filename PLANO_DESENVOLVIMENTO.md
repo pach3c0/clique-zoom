@@ -19,10 +19,10 @@ Esta é uma **plataforma 3 em 1** para fotógrafos:
 - [x] Criar .env.example
 - [x] Documentação de requisitos
 
-### ⏳ TODO
-- [ ] Testar se `npm install` funciona sem erros
-- [ ] Testar se servidor inicia
-- [ ] Verificar se HTML antigo ainda funciona em `public/`
+### ✅ Validado
+- [x] Testar se `npm install` funciona sem erros (175 pacotes instalados)
+- [x] Testar se servidor inicia (✅ rodando em http://localhost:3050)
+- [x] Verificar se HTML antigo ainda funciona em `public/` (✅ assets link atualizado)
 
 ---
 
