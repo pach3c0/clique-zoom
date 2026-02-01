@@ -143,9 +143,20 @@ app.use((err, req, res, next) => {
 // ========================================
 // START SERVER
 // ========================================
-app.listen(PORT, () => {
-  console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
-  console.log(`📸 Site Público: http://localhost:${PORT}`);
-  console.log(`🔧 Painel Admin: http://localhost:${PORT}/admin`);
-  console.log(`👁️  Galeria Cliente: http://localhost:${PORT}/galeria/[id]`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  const env = process.env.NODE_ENV || 'development';
+  const host = process.env.VERCEL_URL || `localhost:${PORT}`;
+  console.log(`✅ Servidor rodando (${env}) em http://${host}`);
+  console.log(`📸 Site Público: http://${host}`);
+  console.log(`🔧 Painel Admin: http://${host}/admin`);
+  console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM recebido, fechando servidor...');
+  server.close(() => {
+    console.log('Servidor fechado');
+    process.exit(0);
+  });
 });
