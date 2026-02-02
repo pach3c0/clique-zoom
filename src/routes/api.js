@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const SiteData = require('../models/SiteData');
+const dataHelper = require('../helpers/data-helper');
 
 // GET - Obter todos os dados do site
 router.get('/site-data', async (req, res) => {
   try {
-    const data = await SiteData.getSiteData();
+    const data = await dataHelper.getSiteData();
     res.json(data);
   } catch (error) {
     console.error('Erro ao buscar dados:', error);
@@ -16,7 +16,7 @@ router.get('/site-data', async (req, res) => {
 // PUT - Atualizar dados do site
 router.put('/site-data', async (req, res) => {
   try {
-    const data = await SiteData.updateSiteData(req.body);
+    const data = await dataHelper.updateSiteData(req.body);
     res.json(data);
   } catch (error) {
     console.error('Erro ao atualizar dados:', error);
@@ -27,9 +27,9 @@ router.put('/site-data', async (req, res) => {
 // POST - Adicionar item ao portfolio
 router.post('/portfolio', async (req, res) => {
   try {
-    const data = await SiteData.getSiteData();
+    const data = await dataHelper.getSiteData();
     data.portfolio.push(req.body);
-    await data.save();
+    await dataHelper.updateSiteData(data);
     res.json(data);
   } catch (error) {
     console.error('Erro ao adicionar ao portfolio:', error);
@@ -41,14 +41,14 @@ router.post('/portfolio', async (req, res) => {
 router.put('/portfolio/:index', async (req, res) => {
   try {
     const index = parseInt(req.params.index);
-    const data = await SiteData.getSiteData();
+    const data = await dataHelper.getSiteData();
     
     if (index < 0 || index >= data.portfolio.length) {
       return res.status(404).json({ error: 'Item não encontrado' });
     }
     
-    data.portfolio[index] = { ...data.portfolio[index].toObject(), ...req.body };
-    await data.save();
+    data.portfolio[index] = { ...data.portfolio[index], ...req.body };
+    await dataHelper.updateSiteData(data);
     res.json(data);
   } catch (error) {
     console.error('Erro ao atualizar portfolio:', error);
@@ -60,14 +60,14 @@ router.put('/portfolio/:index', async (req, res) => {
 router.delete('/portfolio/:index', async (req, res) => {
   try {
     const index = parseInt(req.params.index);
-    const data = await SiteData.getSiteData();
+    const data = await dataHelper.getSiteData();
     
     if (index < 0 || index >= data.portfolio.length) {
       return res.status(404).json({ error: 'Item não encontrado' });
     }
     
     data.portfolio.splice(index, 1);
-    await data.save();
+    await dataHelper.updateSiteData(data);
     res.json(data);
   } catch (error) {
     console.error('Erro ao remover do portfolio:', error);

@@ -4,15 +4,15 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const connectDB = require('./config/database');
+const dataHelper = require('./helpers/data-helper');
 const apiRoutes = require('./routes/api');
-const SiteData = require('./models/SiteData');
 
 const app = express();
 const PORT = process.env.PORT || 3050;
 
 // Conectar ao MongoDB
-connectDB().catch(err => console.error('Erro fatal MongoDB:', err));
-const SITE_CONFIG_PATH = path.join(__dirname, '../assets/data/site-config.json');
+connectDB().catch(err => console.warn('MongoDB offline, usando fallback'));
+dataHelper.checkMongoDB();
 
 const defaultSiteConfig = {
   maintenance: {
@@ -21,32 +21,6 @@ const defaultSiteConfig = {
     message: 'Estamos ajustando alguns detalhes. Volte em breve.'
   }
 };
-
-function ensureSiteConfig() {
-  const dir = path.dirname(SITE_CONFIG_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(SITE_CONFIG_PATH)) {
-    fs.writeFileSync(SITE_CONFIG_PATH, JSON.stringify(defaultSiteConfig, null, 2), 'utf8');
-  }
-}
-
-function readSiteConfig() {
-  ensureSiteConfig();
-  try {
-    const raw = fs.readFileSync(SITE_CONFIG_PATH, 'utf8');
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error('Erro ao ler site-config.json:', err);
-    return JSON.parse(JSON.stringify(defaultSiteConfig));
-  }
-}
-
-function writeSiteConfig(config) {
-  ensureSiteConfig();
-  fs.writeFileSync(SITE_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf8');
-}
 
 function renderMaintenancePage(config) {
   const title = config?.maintenance?.title || defaultSiteConfig.maintenance.title;
@@ -149,7 +123,7 @@ app.get('/preview', (req, res) => {
 
 app.get('/', async (req, res) => {
   try {
-    const data = await SiteData.getSiteData();
+    const data = await dataHelper.getSiteData();
     const maintenanceEnabled = data?.maintenance?.enabled === true;
     if (maintenanceEnabled) {
       return res.status(503).send(renderMaintenancePage({ maintenance: data.maintenance }));
@@ -193,7 +167,7 @@ app.get('/admin', (req, res) => {
 // Site Config API (public)
 app.get('/api/site-config', async (req, res) => {
   try {
-    const data = await SiteData.getSiteData();
+    const data = await dataHelper.getSiteData();
     res.json({ maintenance: data?.maintenance || defaultSiteConfig.maintenance });
   } catch (error) {
     console.error('Erro ao buscar config do site:', error);
@@ -205,14 +179,16 @@ app.get('/api/site-config', async (req, res) => {
 app.post('/api/admin/site-config', async (req, res) => {
   try {
     const maintenance = req.body?.maintenance || {};
+    const current = await dataHelper.getSiteData();
     const next = {
+      ...current,
       maintenance: {
         enabled: maintenance.enabled === true,
         title: maintenance.title || defaultSiteConfig.maintenance.title,
         message: maintenance.message || defaultSiteConfig.maintenance.message
       }
     };
-    const data = await SiteData.updateSiteData(next);
+    const data = await dataHelper.updateSiteData(next);
     res.json({ success: true, maintenance: data.maintenance });
   } catch (error) {
     console.error('Erro ao salvar config do site:', error);
