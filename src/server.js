@@ -3,9 +3,14 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const connectDB = require('./config/database');
+const apiRoutes = require('./routes/api');
 
 const app = express();
 const PORT = process.env.PORT || 3050;
+
+// Conectar ao MongoDB
+connectDB().catch(err => console.error('Erro fatal MongoDB:', err));
 const SITE_CONFIG_PATH = path.join(__dirname, '../assets/data/site-config.json');
 
 const defaultSiteConfig = {
@@ -98,6 +103,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static assets
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
+
+// API Routes
+app.use('/api', apiRoutes);
 
 // ========================================
 // FILE UPLOAD CONFIGURATION
