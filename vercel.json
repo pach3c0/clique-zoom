@@ -4,7 +4,6 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "envPrefix": "CLIQUE_",
   "functions": {
     "src/server.js": {
       "memory": 1024,
