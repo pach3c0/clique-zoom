@@ -207,6 +207,7 @@
         </main>
     </div>
 
+    <script src="/assets/js/api-helper.js"></script>
     <script>
         const PASSWORD = "admin123";
         let isLoggedIn = false;
@@ -268,7 +269,7 @@
 
         let appData = JSON.parse(JSON.stringify(defaultData));
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const password = document.getElementById('login-password').value;
 
@@ -276,8 +277,8 @@
                 isLoggedIn = true;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
-                loadDados();
-                loadSiteConfig();
+                await loadDados();
+                await loadSiteConfig();
                 lucide.createIcons();
                 renderHero();
             } else {
@@ -1240,7 +1241,7 @@
             window.onmouseup = null;
         }
 
-        function savePhotoPosition() {
+        async function savePhotoPosition() {
             if (editingPhotoIndex === null) return;
 
             appData.portfolio[editingPhotoIndex].posX = Math.round(proEditorState.posX);
@@ -1248,17 +1249,11 @@
             appData.portfolio[editingPhotoIndex].scale = parseFloat(proEditorState.zoom.toFixed(2));
             appData.portfolio[editingPhotoIndex].ratio = proEditorState.ratio;
 
-            // Save to localStorage immediately
-            const saveData = {
-                hero: appData.hero,
-                about: appData.about,
-                portfolio: appData.portfolio,
-                studio: {
-                    ...appData.studio,
-                    whatsappMessages: appData.studio.whatsappMessages || defaultData.studio.whatsappMessages
-                }
-            };
-            localStorage.setItem('cliqueZoomAdmin', JSON.stringify(saveData));
+            try {
+                await api.updateSiteData(buildSaveData());
+            } catch (err) {
+                console.warn('Erro ao salvar posição da foto:', err);
+            }
 
             closePhotoEditor();
             renderPortfolio();
@@ -1779,7 +1774,7 @@
             return messages.length ? messages : [{ text: 'Olá! Como posso ajudar você hoje?', delay: 5 }];
         }
 
-        function saveDados() {
+        function buildSaveData() {
             // Coletar dados de todas as abas
             if (currentTab === 'sobre') {
                 appData.about.title = document.getElementById('about-title')?.value || appData.about.title;
@@ -1796,7 +1791,7 @@
             }
 
             // Converter para formato compatível com o site público
-            const saveData = {
+            return {
                 hero: {
                     title: appData.hero.title,
                     subtitle: appData.hero.subtitle,
@@ -1827,8 +1822,17 @@
                     whatsappMessages: appData.studio.whatsappMessages || defaultData.studio.whatsappMessages
                 }
             };
+        }
 
-            localStorage.setItem('cliqueZoomAdmin', JSON.stringify(saveData));
+        async function saveDados() {
+            const saveData = buildSaveData();
+
+            try {
+                await api.updateSiteData(saveData);
+            } catch (err) {
+                alert('Não foi possível salvar os dados.');
+                return;
+            }
 
             // Mostrar confirmação visual
             const btn = document.querySelector('[onclick="saveDados()"]');
@@ -1845,11 +1849,10 @@
             }, 2000);
         }
 
-        function loadDados() {
-            const saved = localStorage.getItem('cliqueZoomAdmin');
-            if (saved) {
-                try {
-                    const loaded = JSON.parse(saved);
+        async function loadDados() {
+            try {
+                const loaded = await api.getSiteData();
+                if (loaded) {
 
                     // Converter do formato do site para o formato do admin
                     if (loaded.hero) {
@@ -1900,9 +1903,9 @@
                             ];
                         }
                     }
-                } catch (e) {
-                    console.warn('Erro ao carregar dados:', e);
                 }
+            } catch (e) {
+                console.warn('Erro ao carregar dados:', e);
             }
         }
 

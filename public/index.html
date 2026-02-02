@@ -296,40 +296,38 @@
             return `/assets/${url}`;
         }
 
-        function applyAdminData(baseStore) {
-            const adminRaw = localStorage.getItem('cliqueZoomAdmin');
-            if (!adminRaw) return baseStore;
+        function applyRemoteData(baseStore, remote) {
+            if (!remote) return baseStore;
 
             try {
-                const admin = JSON.parse(adminRaw);
                 const merged = JSON.parse(JSON.stringify(baseStore));
 
-                if (admin.hero) {
+                if (remote.hero) {
                     merged.hero = {
-                        title: admin.hero.title || baseStore.hero.title,
-                        subtitle: admin.hero.subtitle || baseStore.hero.subtitle,
-                        bgImage: admin.hero.image || baseStore.hero.bgImage,
-                        transform: admin.hero.transform || baseStore.hero.transform,
-                        titleTransform: admin.hero.titleTransform || baseStore.hero.titleTransform,
-                        subtitleTransform: admin.hero.subtitleTransform || baseStore.hero.subtitleTransform,
-                        titleFontSize: admin.hero.titleFontSize ?? baseStore.hero.titleFontSize,
-                        subtitleFontSize: admin.hero.subtitleFontSize ?? baseStore.hero.subtitleFontSize,
-                        topBarHeight: admin.hero.topBarHeight ?? baseStore.hero.topBarHeight,
-                        bottomBarHeight: admin.hero.bottomBarHeight ?? baseStore.hero.bottomBarHeight,
-                        overlayOpacity: admin.hero.overlayOpacity ?? baseStore.hero.overlayOpacity
+                        title: remote.hero.title || baseStore.hero.title,
+                        subtitle: remote.hero.subtitle || baseStore.hero.subtitle,
+                        bgImage: remote.hero.image || baseStore.hero.bgImage,
+                        transform: remote.hero.transform || baseStore.hero.transform,
+                        titleTransform: remote.hero.titleTransform || baseStore.hero.titleTransform,
+                        subtitleTransform: remote.hero.subtitleTransform || baseStore.hero.subtitleTransform,
+                        titleFontSize: remote.hero.titleFontSize ?? baseStore.hero.titleFontSize,
+                        subtitleFontSize: remote.hero.subtitleFontSize ?? baseStore.hero.subtitleFontSize,
+                        topBarHeight: remote.hero.topBarHeight ?? baseStore.hero.topBarHeight,
+                        bottomBarHeight: remote.hero.bottomBarHeight ?? baseStore.hero.bottomBarHeight,
+                        overlayOpacity: remote.hero.overlayOpacity ?? baseStore.hero.overlayOpacity
                     };
                 }
 
-                if (admin.about) {
+                if (remote.about) {
                     merged.about = {
-                        title: admin.about.title || baseStore.about.title,
-                        text: admin.about.text || baseStore.about.text,
-                        image: admin.about.image || baseStore.about.image
+                        title: remote.about.title || baseStore.about.title,
+                        text: remote.about.text || baseStore.about.text,
+                        image: remote.about.image || baseStore.about.image
                     };
                 }
 
-                if (Array.isArray(admin.portfolio) && admin.portfolio.length) {
-                    merged.portfolio = admin.portfolio.map(p => ({
+                if (Array.isArray(remote.portfolio) && remote.portfolio.length) {
+                    merged.portfolio = remote.portfolio.map(p => ({
                         image: p.image || p,
                         posX: p.posX ?? 50,
                         posY: p.posY ?? 50,
@@ -338,13 +336,13 @@
                     }));
                 }
 
-                if (admin.studio) {
+                if (remote.studio) {
                     merged.studio = {
-                        address: admin.studio.address || baseStore.studio.address,
-                        hours: admin.studio.hours || baseStore.studio.hours,
-                        whatsapp: admin.studio.whatsapp || baseStore.studio.whatsapp,
-                        whatsappMessages: admin.studio.whatsappMessages || baseStore.studio.whatsappMessages,
-                        photos: admin.studio.photos ? admin.studio.photos.map(p => ({
+                        address: remote.studio.address || baseStore.studio.address,
+                        hours: remote.studio.hours || baseStore.studio.hours,
+                        whatsapp: remote.studio.whatsapp || baseStore.studio.whatsapp,
+                        whatsappMessages: remote.studio.whatsappMessages || baseStore.studio.whatsappMessages,
+                        photos: remote.studio.photos ? remote.studio.photos.map(p => ({
                             image: p.image,
                             posX: p.posX ?? 50,
                             posY: p.posY ?? 50,
@@ -352,26 +350,24 @@
                         })) : baseStore.studio.photos
                     };
                     // Migrar formato antigo (whatsappGreeting string -> whatsappMessages array)
-                    if (!admin.studio.whatsappMessages && admin.studio.whatsappGreeting) {
-                        merged.studio.whatsappMessages = [{ text: admin.studio.whatsappGreeting, delay: 5 }];
+                    if (!remote.studio.whatsappMessages && remote.studio.whatsappGreeting) {
+                        merged.studio.whatsappMessages = [{ text: remote.studio.whatsappGreeting, delay: 5 }];
                     }
                     // Migrar formato antigo de fotos
-                    if (!admin.studio.photos && (admin.studio.img1 || admin.studio.img2)) {
+                    if (!remote.studio.photos && (remote.studio.img1 || remote.studio.img2)) {
                         merged.studio.photos = [
-                            { image: admin.studio.img1, posX: 50, posY: 50, scale: 1 },
-                            { image: admin.studio.img2, posX: 50, posY: 50, scale: 1 }
+                            { image: remote.studio.img1, posX: 50, posY: 50, scale: 1 },
+                            { image: remote.studio.img2, posX: 50, posY: 50, scale: 1 }
                         ].filter(p => p.image);
                     }
                 }
 
                 return merged;
             } catch (e) {
-                console.warn('Erro ao ler dados do admin:', e);
+                console.warn('Erro ao ler dados do servidor:', e);
                 return baseStore;
             }
         }
-
-        store = applyAdminData(store);
 
         // ========== RENDER ==========
         function render() {
@@ -584,8 +580,16 @@
             }
         }
 
-        // Iniciar sistema de mensagens
-        startWhatsappMessages();
+        async function loadRemoteData() {
+            try {
+                const res = await fetch('/api/site-data');
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (error) {
+                console.warn('Erro ao buscar dados do servidor:', error);
+                return null;
+            }
+        }
 
         // ========== MOBILE MENU ==========
         document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
@@ -594,7 +598,12 @@
         });
 
         // ========== INIT ==========
-        window.addEventListener('load', render);
+        window.addEventListener('load', async () => {
+            const remote = await loadRemoteData();
+            store = applyRemoteData(store, remote);
+            render();
+            startWhatsappMessages();
+        });
 
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {

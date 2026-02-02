@@ -22,6 +22,7 @@ const aboutSchema = new mongoose.Schema({
 
 const maintenanceSchema = new mongoose.Schema({
   enabled: { type: Boolean, default: false },
+  title: { type: String, default: '' },
   message: { type: String, default: '' }
 }, { _id: false });
 
@@ -43,7 +44,7 @@ siteDataSchema.statics.getSiteData = async function() {
       hero: { title: '', subtitle: '', image: '' },
       portfolio: [],
       about: { title: '', content: '', image: '' },
-      maintenance: { enabled: false, message: '' }
+      maintenance: { enabled: false, title: '', message: '' }
     });
   }
   return data;

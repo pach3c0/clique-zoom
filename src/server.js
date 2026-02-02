@@ -5,6 +5,7 @@ const multer = require('multer');
 const fs = require('fs');
 const connectDB = require('./config/database');
 const apiRoutes = require('./routes/api');
+const SiteData = require('./models/SiteData');
 
 const app = express();
 const PORT = process.env.PORT || 3050;
@@ -146,13 +147,18 @@ app.get('/preview', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-app.get('/', (req, res) => {
-  const config = readSiteConfig();
-  const maintenanceEnabled = config?.maintenance?.enabled === true;
-  if (maintenanceEnabled) {
-    return res.status(503).send(renderMaintenancePage(config));
+app.get('/', async (req, res) => {
+  try {
+    const data = await SiteData.getSiteData();
+    const maintenanceEnabled = data?.maintenance?.enabled === true;
+    if (maintenanceEnabled) {
+      return res.status(503).send(renderMaintenancePage({ maintenance: data.maintenance }));
+    }
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+  } catch (error) {
+    console.error('Erro ao carregar dados do site:', error);
+    res.sendFile(path.join(__dirname, '../public/index.html'));
   }
-  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // API: Get portfolio data
@@ -185,24 +191,33 @@ app.get('/admin', (req, res) => {
 });
 
 // Site Config API (public)
-app.get('/api/site-config', (req, res) => {
-  const config = readSiteConfig();
-  res.json({ maintenance: config?.maintenance || defaultSiteConfig.maintenance });
+app.get('/api/site-config', async (req, res) => {
+  try {
+    const data = await SiteData.getSiteData();
+    res.json({ maintenance: data?.maintenance || defaultSiteConfig.maintenance });
+  } catch (error) {
+    console.error('Erro ao buscar config do site:', error);
+    res.status(500).json({ error: 'Erro ao buscar config do site' });
+  }
 });
 
 // Site Config API (admin)
-app.post('/api/admin/site-config', (req, res) => {
-  const config = readSiteConfig();
-  const maintenance = req.body?.maintenance || {};
-  const next = {
-    maintenance: {
-      enabled: maintenance.enabled === true,
-      title: maintenance.title || defaultSiteConfig.maintenance.title,
-      message: maintenance.message || defaultSiteConfig.maintenance.message
-    }
-  };
-  writeSiteConfig(next);
-  res.json({ success: true, maintenance: next.maintenance });
+app.post('/api/admin/site-config', async (req, res) => {
+  try {
+    const maintenance = req.body?.maintenance || {};
+    const next = {
+      maintenance: {
+        enabled: maintenance.enabled === true,
+        title: maintenance.title || defaultSiteConfig.maintenance.title,
+        message: maintenance.message || defaultSiteConfig.maintenance.message
+      }
+    };
+    const data = await SiteData.updateSiteData(next);
+    res.json({ success: true, maintenance: data.maintenance });
+  } catch (error) {
+    console.error('Erro ao salvar config do site:', error);
+    res.status(500).json({ error: 'Erro ao salvar config do site' });
+  }
 });
 
 // Admin API: Update portfolio data
