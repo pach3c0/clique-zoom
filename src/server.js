@@ -6,6 +6,7 @@ const fs = require('fs');
 const connectDB = require('./config/database');
 const dataHelper = require('./helpers/data-helper');
 const apiRoutes = require('./routes/api');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 3050;
@@ -21,6 +22,20 @@ const defaultSiteConfig = {
     message: 'Estamos ajustando alguns detalhes. Volte em breve.'
   }
 };
+
+const isCloudinaryConfigured = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
 
 function renderMaintenancePage(config) {
   const title = config?.maintenance?.title || defaultSiteConfig.maintenance.title;
@@ -105,6 +120,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!allowedImageTypes.has(file.mimetype)) {
+      return cb(new Error('INVALID_FILE_TYPE'));
+    }
+    cb(null, true);
+  }
+});
+
+const uploadMemory = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!allowedImageTypes.has(file.mimetype)) {
@@ -212,8 +238,38 @@ app.post('/api/admin/portfolio', (req, res) => {
 app.post('/api/admin/upload', (req, res) => {
   // Em produção (Vercel), filesystem é read-only
   if (process.env.NODE_ENV === 'production') {
-    return res.status(503).json({ 
-      error: 'Upload desabilitado em produção. Use URLs externas de imagens.' 
+    if (!isCloudinaryConfigured) {
+      return res.status(503).json({
+        error: 'Upload desabilitado em produção. Configure Cloudinary ou use URLs externas.'
+      });
+    }
+
+    return uploadMemory.single('image')(req, res, async (err) => {
+      if (err) {
+        if (err.message === 'INVALID_FILE_TYPE') {
+          return res.status(400).json({ error: 'Apenas imagens JPG ou PNG são permitidas' });
+        }
+        return res.status(500).json({ error: 'Erro ao fazer upload' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+      }
+
+      try {
+        const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+        const result = await cloudinary.uploader.upload(dataUri, {
+          folder: 'cliquezoom'
+        });
+
+        return res.json({
+          success: true,
+          filename: result.original_filename,
+          url: result.secure_url
+        });
+      } catch (uploadError) {
+        console.error('Erro Cloudinary:', uploadError);
+        return res.status(500).json({ error: 'Erro ao enviar imagem para Cloudinary' });
+      }
     });
   }
 
