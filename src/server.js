@@ -210,6 +210,13 @@ app.post('/api/admin/portfolio', (req, res) => {
 
 // Admin API: Upload image (Hero, Portfolio, etc)
 app.post('/api/admin/upload', (req, res) => {
+  // Em produção (Vercel), filesystem é read-only
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({ 
+      error: 'Upload desabilitado em produção. Use URLs externas de imagens.' 
+    });
+  }
+
   upload.single('image')(req, res, (err) => {
     if (err) {
       if (err.message === 'INVALID_FILE_TYPE') {
