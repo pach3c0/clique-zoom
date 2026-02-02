@@ -2,13 +2,24 @@
   "version": 2,
   "buildCommand": "npm install",
   "env": {
-    "NODE_ENV": "production",
-    "ADMIN_PASSWORD": "@ADMIN_PASSWORD"
+    "NODE_ENV": "production"
   },
+  "envPrefix": "CLIQUE_",
   "functions": {
     "src/server.js": {
       "memory": 1024,
       "maxDuration": 60
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
 }

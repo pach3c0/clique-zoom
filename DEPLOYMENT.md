@@ -1,23 +1,165 @@
-# 🚀 DEPLOYMENT CLIQUE·ZOOM
+# 🚀 CLIQUE·ZOOM - Guia de Deploy
 
-## Pré-requisitos
-- ✅ Conta GitHub (repositório já criado)
-- ✅ Conta Vercel (gratuita)
-- ✅ Código pronto em produção
+**Data:** 02/02/2026  
+**Status:** ✅ Pronto para Produção (Fase 1)  
+**Versão:** 2.0.1
 
-## Passo 1: Push para GitHub
+---
 
-```bash
-cd /Users/macbook/Documents/ProjetoEstudio/Site
-git remote -v  # Verificar se remote existe
-git branch -M main
-git push -u origin main
+## 📋 Estrutura do Projeto
+
+```
+Site/
+├── src/
+│   └── server.js              ← Backend Express (porta 3050)
+├── public/
+│   └── index.html             ← Site público (portfolio)
+├── admin/
+│   └── index.html             ← Painel admin (edição de conteúdo)
+├── cliente/
+│   └── index.html             ← Galeria privada do cliente
+├── assets/
+│   ├── css/                   ← Estilos adicionais
+│   ├── js/                    ← Scripts compartilhados
+│   ├── data/                  ← Configurações (site-config.json)
+│   └── *.jpg, *.png           ← Imagens do portfolio
+├── uploads/                   ← Fotos carregadas pelos admins (não commitar)
+├── package.json               ← Dependências Node.js
+├── .env.example              ← Variáveis de ambiente
+├── vercel.json               ← Configuração Vercel
+├── README.md                 ← Documentação principal
+└── docs/                     ← Documentação técnica e análises
 ```
 
-## Passo 2: Deploy no Vercel (2-3 minutos)
+---
 
-### Opção A: Interface Web (Recomendado)
-1. Ir para [https://vercel.com/dashboard](https://vercel.com/dashboard)
+## 🔧 Instalação Local
+
+### Pré-requisitos
+- **Node.js** >= 16.0
+- **npm** ou **yarn**
+
+### Setup
+
+```bash
+# 1. Clonar repositório
+git clone <seu-repo-url>
+cd Site
+
+# 2. Instalar dependências
+npm install
+
+# 3. Criar arquivo .env (copiar de .env.example)
+cp .env.example .env
+
+# 4. Iniciar servidor local
+npm start
+```
+
+**Servidor rodará em:**
+- 🌐 Site Público: http://localhost:3050
+- 🔧 Painel Admin: http://localhost:3050/admin
+- 👁️ Galeria Cliente: http://localhost:3050/galeria/[id]
+
+---
+
+## 🌍 Deploy em Produção
+
+### Opção 1: Vercel (Recomendado) ⭐
+
+#### 1.1 Preparar Repositório Git
+```bash
+git add .
+git commit -m "Deploy: Phase 1 - Editor de fotos com aspect ratios"
+git push origin main
+```
+
+#### 1.2 Conectar com Vercel
+```bash
+# Instalar CLI do Vercel
+npm install -g vercel
+
+# Fazer deploy
+vercel
+
+# Ou configurar no dashboard: https://vercel.com/new
+```
+
+#### 1.3 Variáveis de Ambiente
+No dashboard Vercel, adicione:
+```
+ADMIN_PASSWORD=admin123
+NODE_ENV=production
+PORT=3050
+```
+
+**Deploy automático:** Ao fazer push para `main`, Vercel automaticamente rebuilda e faz deploy.
+
+---
+
+### Opção 2: Heroku
+
+```bash
+# 1. Criar app no Heroku
+heroku create seu-app-name
+
+# 2. Adicionar variáveis
+heroku config:set ADMIN_PASSWORD=admin123
+heroku config:set NODE_ENV=production
+
+# 3. Deploy
+git push heroku main
+```
+
+---
+
+### Opção 3: Auto-Hospedagem (VPS/servidor dedicado)
+
+```bash
+# No servidor:
+
+# 1. Instalar Node.js
+curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# 2. Clonar repositório
+git clone <seu-repo-url> /var/www/clique-zoom
+cd /var/www/clique-zoom
+
+# 3. Instalar dependências
+npm ci --production
+
+# 4. Criar .env
+cp .env.example .env
+nano .env  # Editar com valores de produção
+
+# 5. Usar PM2 para manter servidor rodando
+npm install -g pm2
+pm2 start src/server.js --name "clique-zoom"
+pm2 startup
+pm2 save
+```
+
+---
+
+## 🔐 Configurações de Segurança
+
+### HTTPS (Obrigatório em Produção)
+
+#### Com Vercel
+✅ Automático (certificado SSL gratuito incluído)
+
+#### Com Heroku
+✅ Automático (use domínio .herokuapp.com ou custom domain com SSL)
+
+---
+
+## ✅ Pré-requisitos
+
+- ✅ Conta GitHub (repositório já criado)
+- ✅ Conta Vercel (gratuita em vercel.com)
+- ✅ Código testado localmente
+- ✅ .env configurado corretamente
 2. Clicar em **"Add New..."** → **"Project"**
 3. Selecionar repositório GitHub `ProjetoEstudio/Site`
 4. Configurar:

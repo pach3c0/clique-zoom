@@ -4,142 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLIQUE·ZOOM | Fotografia</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
-        
+
         :root {
             --font-sans: 'Inter', sans-serif;
             --font-serif: 'Playfair Display', serif;
         }
-        
+
         body { font-family: var(--font-sans); }
         h1, h2, h3, .font-serif { font-family: var(--font-serif); }
-        
-        .fade-in { animation: fadeIn 0.6s ease-in-out; }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+        }
+        .fade-in-delay { animation-delay: 0.3s; }
+
         @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero height */
+        .hero-section {
+            min-height: 100vh;
+        }
+
+        /* Smooth transitions */
+        .hero-image {
+            transition: transform 0.3s ease, object-position 0.3s ease;
+        }
+
+        /* WhatsApp Widget Animations */
+        @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+        #whatsapp-btn {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        #whatsapp-btn:hover {
+            animation: none;
+        }
+        #whatsapp-bubble {
+            position: relative;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        #whatsapp-bubble::after {
+            content: '';
+            position: absolute;
+            right: 20px;
+            bottom: -8px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid white;
         }
     </style>
 </head>
 <body class="bg-white text-gray-900">
 
     <!-- NAVBAR -->
-    <nav class="fixed top-0 w-full z-50 bg-white border-b border-gray-200">
+    <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <h1 class="font-serif text-xl font-bold text-neutral-900">CLIQUE·ZOOM</h1>
+            <a href="#hero" class="font-serif text-xl font-bold text-neutral-900 hover:text-gray-700 transition-colors">CLIQUE·ZOOM</a>
             <div class="hidden md:flex items-center space-x-8">
-                <a href="#hero" class="text-sm text-gray-600 hover:text-neutral-900">HOME</a>
-                <a href="#sobre" class="text-sm text-gray-600 hover:text-neutral-900">SOBRE</a>
-                <a href="#portfolio" class="text-sm text-gray-600 hover:text-neutral-900">PORTFÓLIO</a>
-                <a href="#estudio" class="text-sm text-gray-600 hover:text-neutral-900">ESTÚDIO</a>
-                <a href="#contato" class="text-sm text-gray-600 hover:text-neutral-900">CONTATO</a>
+                <a href="#hero" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">HOME</a>
+                <a href="#portfolio" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">GALERIA</a>
+                <a href="#estudio" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">ESTÚDIO</a>
+                <a href="#sobre" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">SOBRE</a>
             </div>
+            <button id="mobile-menu-btn" class="md:hidden p-2">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
         </div>
     </nav>
 
     <!-- HERO SECTION -->
-    <section id="hero" class="pt-24 min-h-screen flex items-center overflow-hidden bg-black">
-        <div class="w-full h-[600px] relative flex items-center justify-center">
-            <!-- Imagem Hero -->
-            <img id="dom-hero-img" src="/assets/IMG_8581.jpg" alt="Hero" class="absolute inset-0 w-full h-full object-cover" />
-            
-            <!-- Overlay com conteúdo -->
-            <div class="absolute inset-0 bg-black/30"></div>
-            <div class="relative z-10 max-w-4xl mx-auto px-6 text-center text-white">
-                <h1 id="dom-hero-title" class="font-serif text-5xl md:text-7xl font-bold mb-6 fade-in">
-                    A pureza do essencial.
-                </h1>
-                <p id="dom-hero-subtitle" class="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto font-light fade-in">
-                    Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.
-                </p>
-            </div>
+    <section id="hero" class="hero-section relative flex items-center overflow-hidden bg-black">
+        <!-- Imagem de fundo -->
+        <img id="dom-hero-img" src="/assets/IMG_8581.jpg" alt="Hero"
+            class="hero-image absolute inset-0 w-full h-full object-cover" />
+
+        <!-- Overlay escuro -->
+        <div id="dom-hero-overlay" class="absolute inset-0"></div>
+
+        <!-- Faixa superior (cinema) -->
+        <div id="dom-hero-top-bar" class="absolute top-0 left-0 right-0 bg-black z-20"></div>
+
+        <!-- Faixa inferior (cinema) -->
+        <div id="dom-hero-bottom-bar" class="absolute bottom-0 left-0 right-0 bg-black z-20"></div>
+
+        <!-- Conteúdo - posicionamento absoluto em relação ao hero -->
+        <div class="absolute inset-0 z-10">
+            <h1 id="dom-hero-title"
+                class="font-serif font-bold text-white fade-in absolute"
+                style="position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%);">
+                A pureza do essencial.
+            </h1>
+            <p id="dom-hero-subtitle"
+                class="text-gray-200 font-light fade-in fade-in-delay absolute"
+                style="position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%); max-width: 600px;">
+                Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.
+            </p>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 animate-bounce">
+            <a href="#portfolio" class="text-white/70 hover:text-white transition-colors">
+                <i data-lucide="chevron-down" class="w-8 h-8"></i>
+            </a>
         </div>
     </section>
 
-    <!-- SEÇÃO SOBRE -->
-    <section id="sobre" class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                <!-- Texto -->
-                <div>
-                    <h2 class="font-serif text-4xl font-bold mb-6 text-neutral-900">Quem Somos</h2>
-                    <div id="dom-about-text" class="space-y-4 text-gray-600 font-light leading-relaxed">
-                        <p>Somos fotógrafos que acreditam na força da simplicidade. Nosso estúdio foi projetado para eliminar distrações e focar no que realmente importa: você.</p>
-                        <p>Com mais de uma década de experiência, capturamos momentos autênticos em um ambiente controlado e minimalista. Cada sessão é uma oportunidade de criar algo único e atemporal.</p>
-                        <p>Nosso foco vai além de simplesmente tirar fotos. Oferecemos direção estratégica de imagem, posing especializado e uma abordagem que transforma como você se vê.</p>
-                    </div>
-                </div>
-                
-                <!-- Imagem -->
-                <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <img id="dom-about-img" src="/assets/IMG_8640.jpg" alt="Sobre nós" class="w-full h-full object-cover" />
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SEÇÃO PORTFÓLIO -->
-    <section id="portfolio" class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="font-serif text-4xl font-bold mb-4 text-neutral-900">Nosso Trabalho</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">Uma curadoria de momentos capturados em nosso estúdio. Cada imagem conta uma história de simplicidade e autenticidade.</p>
-            </div>
-
-            <!-- Grid de Portfólio -->
-            <div id="dom-portfolio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Fotos serão carregadas via JS -->
-                <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
-                <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
-                <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
-                <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
-                <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
-                <div class="aspect-square bg-gray-300 rounded-lg animate-pulse"></div>
-            </div>
+    <!-- SEÇÃO GALERIA / PORTFÓLIO -->
+    <section id="portfolio" class="bg-black">
+        <!-- Grid de Portfólio - Estilo Mosaico sem espaços -->
+        <div id="dom-portfolio-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <!-- Fotos serão carregadas via JS -->
         </div>
     </section>
 
     <!-- SEÇÃO ESTÚDIO -->
     <section id="estudio" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-6">
-            <h2 class="font-serif text-4xl font-bold mb-16 text-center text-neutral-900">Nosso Estúdio</h2>
+            <h2 class="font-serif text-4xl md:text-5xl font-bold mb-16 text-center text-neutral-900">Nosso Estúdio</h2>
 
-            <!-- Grid Fotos Estúdio -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-                <div class="aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                    <img id="dom-studio-img-1" src="/assets/IMG_8586.jpg" alt="Estúdio" class="w-full h-full object-cover" />
-                </div>
-                <div class="aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                    <img id="dom-studio-img-2" src="/assets/IMG_9153.jpg" alt="Estúdio" class="w-full h-full object-cover" />
-                </div>
+            <!-- Grid Fotos Estúdio - Dinâmico -->
+            <div id="dom-studio-photos" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+                <!-- Fotos serão carregadas via JS -->
             </div>
 
             <!-- Localização + Contato -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <!-- Mapa -->
-                <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <iframe 
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.1975508851937!2d-46.6744!3d-23.5505!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59c8da0edf8d%3A0x1234567890!2sMorumbi%2C%20S%C3%A3o%20Paulo!5e0!3m2!1spt-BR!2sbr!4v1234567890"
-                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                <div class="aspect-square bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
+                    <iframe id="dom-studio-map"
+                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Morumbi,+São+Paulo"
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
 
                 <!-- Info Estúdio -->
                 <div class="flex flex-col justify-center">
-                    <h3 class="font-serif text-2xl font-bold mb-6">Situado no Coração do Morumbi</h3>
-                    <div class="space-y-4 text-gray-600 font-light">
-                        <p>Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.</p>
-                        <div class="pt-4 border-t border-gray-200">
-                            <p class="text-sm font-semibold text-gray-900 mb-2">ENDEREÇO</p>
-                            <p id="dom-studio-address" class="text-sm text-gray-600">R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP</p>
+                    <h3 class="font-serif text-3xl font-bold mb-6">Situado no Coração do Morumbi</h3>
+                    <div class="space-y-6 text-gray-600 font-light">
+                        <p class="text-lg">Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.</p>
+                        <div class="pt-6 border-t border-gray-200">
+                            <p class="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">Endereço</p>
+                            <p id="dom-studio-address" class="text-gray-600">R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP</p>
                         </div>
-                        <div class="pt-4 border-t border-gray-200">
-                            <p class="text-sm font-semibold text-gray-900 mb-2">HORÁRIOS</p>
-                            <p id="dom-studio-hours" class="text-sm text-gray-600">Segunda a Sexta: 9h - 18h<br>Sábado: 10h - 16h</p>
+                        <div class="pt-6 border-t border-gray-200">
+                            <p class="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">Horários</p>
+                            <p id="dom-studio-hours" class="text-gray-600">Segunda a Sexta: 9h - 18h<br>Sábado: 10h - 16h</p>
                         </div>
                     </div>
                 </div>
@@ -147,60 +176,70 @@
         </div>
     </section>
 
-    <!-- SEÇÃO CONTATO -->
-    <section id="contato" class="py-24 bg-gray-50">
-        <div class="max-w-2xl mx-auto px-6">
-            <div class="text-center mb-12">
-                <h2 class="font-serif text-4xl font-bold mb-4 text-neutral-900">Vamos Conversar?</h2>
-                <p class="text-gray-600">Envie uma mensagem e entraremos em contato em até 24 horas.</p>
+    <!-- SEÇÃO SOBRE / QUEM SOMOS -->
+    <section id="sobre" class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <!-- Texto -->
+                <div>
+                    <h2 id="dom-about-title" class="font-serif text-4xl md:text-5xl font-bold mb-8 text-neutral-900">Quem Somos</h2>
+                    <div id="dom-about-text" class="space-y-4 text-gray-600 font-light leading-relaxed text-lg">
+                        <p>Somos fotógrafos que acreditam na força da simplicidade. Nosso estúdio foi projetado para eliminar distrações e focar no que realmente importa: você.</p>
+                        <p>Com mais de uma década de experiência, capturamos momentos autênticos em um ambiente controlado e minimalista. Cada sessão é uma oportunidade de criar algo único e atemporal.</p>
+                        <p>Nosso foco vai além de simplesmente tirar fotos. Oferecemos direção estratégica de imagem, posing especializado e uma abordagem que transforma como você se vê.</p>
+                    </div>
+                </div>
+
+                <!-- Imagem -->
+                <div class="aspect-square bg-gray-200 rounded-2xl overflow-hidden shadow-2xl">
+                    <img id="dom-about-img" src="/assets/IMG_8640.jpg" alt="Sobre nós" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                </div>
             </div>
-
-            <!-- Formulário -->
-            <form id="contact-form" class="space-y-6 bg-white p-8 rounded-lg border border-gray-200 shadow-sm">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nome</label>
-                        <input type="text" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900" placeholder="Seu nome">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                        <input type="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900" placeholder="seu@email.com">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Telefone</label>
-                    <input type="tel" name="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900" placeholder="(11) 99999-9999">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Sessão</label>
-                    <select name="session_type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">
-                        <option value="">Selecione...</option>
-                        <option value="individual">Retrato Individual</option>
-                        <option value="couple">Casal</option>
-                        <option value="family">Família</option>
-                        <option value="corporate">Corporativo</option>
-                        <option value="other">Outro</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Mensagem</label>
-                    <textarea name="message" rows="5" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900" placeholder="Conte-nos sobre seu projeto..."></textarea>
-                </div>
-
-                <button type="submit" class="w-full bg-neutral-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
-                    Enviar Mensagem
-                </button>
-            </form>
         </div>
     </section>
+
+    <!-- BOTÃO FLUTUANTE WHATSAPP -->
+    <div id="whatsapp-widget" class="fixed bottom-6 right-6 z-50 flex items-end gap-3">
+        <!-- Bolha de saudação -->
+        <div id="whatsapp-bubble" class="bg-white rounded-2xl shadow-2xl p-4 max-w-xs animate-fade-in-up hidden">
+            <button onclick="closeWhatsappBubble()" class="absolute -top-2 -right-2 bg-gray-200 hover:bg-gray-300 rounded-full p-1 transition-colors">
+                <i data-lucide="x" class="w-3 h-3 text-gray-600"></i>
+            </button>
+            <p id="whatsapp-greeting" class="text-gray-800 text-sm font-medium">Olá! Como posso ajudar você hoje?</p>
+            <p class="text-gray-500 text-xs mt-1">Clique para conversar no WhatsApp</p>
+        </div>
+
+        <!-- Botão WhatsApp -->
+        <button id="whatsapp-btn" onclick="openWhatsapp()" class="bg-[#25D366] hover:bg-[#20BA5C] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all hover:scale-110 group">
+            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+        </button>
+    </div>
 
     <!-- FOOTER -->
-    <footer class="bg-neutral-900 text-white py-8">
-        <div class="max-w-7xl mx-auto px-6 text-center text-sm text-gray-400">
-            <p>&copy; 2026 CLIQUE·ZOOM. Fotografia que captura essências.</p>
+    <footer class="bg-neutral-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <h3 class="font-serif text-2xl font-bold">CLIQUE·ZOOM</h3>
+                    <p class="text-gray-400 text-sm mt-1">Fotografia que captura essências.</p>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i data-lucide="instagram" class="w-5 h-5"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i data-lucide="facebook" class="w-5 h-5"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i data-lucide="mail" class="w-5 h-5"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
+                <p>&copy; 2026 CLIQUE·ZOOM. Todos os direitos reservados.</p>
+            </div>
         </div>
     </footer>
 
@@ -211,7 +250,14 @@
                 title: "A pureza do essencial.",
                 subtitle: "Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.",
                 bgImage: "IMG_8581.jpg",
-                transform: { scale: 1, posX: 50, posY: 50 }
+                transform: { scale: 1, posX: 50, posY: 50 },
+                titleTransform: { posX: 50, posY: 40 },
+                subtitleTransform: { posX: 50, posY: 55 },
+                titleFontSize: 48,
+                subtitleFontSize: 18,
+                topBarHeight: 0,
+                bottomBarHeight: 0,
+                overlayOpacity: 30
             },
             about: {
                 title: "Quem Somos",
@@ -229,12 +275,20 @@
             studio: {
                 address: "R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP",
                 hours: "Segunda a Sexta: 9h - 18h\nSábado: 10h - 16h",
-                img1: "IMG_8586.jpg",
-                img2: "IMG_9153.jpg"
+                whatsapp: "5511999999999",
+                whatsappMessages: [
+                    { text: "Olá! Como posso ajudar você hoje?", delay: 5 },
+                    { text: "Esse mês estamos com super preço de inauguração 10 Fotos por apenas R$180,00", delay: 5 },
+                    { text: "Me chame aqui no WhatsApp!", delay: 5 }
+                ],
+                photos: [
+                    { image: "IMG_8586.jpg", posX: 50, posY: 50, scale: 1 },
+                    { image: "IMG_9153.jpg", posX: 50, posY: 50, scale: 1 }
+                ]
             }
         };
 
-        let store = defaultStore;
+        let store = JSON.parse(JSON.stringify(defaultStore));
 
         function resolveImagePath(url) {
             if (!url) return '';
@@ -248,14 +302,21 @@
 
             try {
                 const admin = JSON.parse(adminRaw);
-                const merged = { ...baseStore };
+                const merged = JSON.parse(JSON.stringify(baseStore));
 
                 if (admin.hero) {
                     merged.hero = {
                         title: admin.hero.title || baseStore.hero.title,
                         subtitle: admin.hero.subtitle || baseStore.hero.subtitle,
                         bgImage: admin.hero.image || baseStore.hero.bgImage,
-                        transform: admin.hero.transform || baseStore.hero.transform
+                        transform: admin.hero.transform || baseStore.hero.transform,
+                        titleTransform: admin.hero.titleTransform || baseStore.hero.titleTransform,
+                        subtitleTransform: admin.hero.subtitleTransform || baseStore.hero.subtitleTransform,
+                        titleFontSize: admin.hero.titleFontSize ?? baseStore.hero.titleFontSize,
+                        subtitleFontSize: admin.hero.subtitleFontSize ?? baseStore.hero.subtitleFontSize,
+                        topBarHeight: admin.hero.topBarHeight ?? baseStore.hero.topBarHeight,
+                        bottomBarHeight: admin.hero.bottomBarHeight ?? baseStore.hero.bottomBarHeight,
+                        overlayOpacity: admin.hero.overlayOpacity ?? baseStore.hero.overlayOpacity
                     };
                 }
 
@@ -269,7 +330,11 @@
 
                 if (Array.isArray(admin.portfolio) && admin.portfolio.length) {
                     merged.portfolio = admin.portfolio.map(p => ({
-                        image: p.image || p
+                        image: p.image || p,
+                        posX: p.posX ?? 50,
+                        posY: p.posY ?? 50,
+                        scale: p.scale ?? 1,
+                        ratio: p.ratio ?? '3/4'
                     }));
                 }
 
@@ -277,9 +342,26 @@
                     merged.studio = {
                         address: admin.studio.address || baseStore.studio.address,
                         hours: admin.studio.hours || baseStore.studio.hours,
-                        img1: admin.studio.img1 || baseStore.studio.img1,
-                        img2: admin.studio.img2 || baseStore.studio.img2
+                        whatsapp: admin.studio.whatsapp || baseStore.studio.whatsapp,
+                        whatsappMessages: admin.studio.whatsappMessages || baseStore.studio.whatsappMessages,
+                        photos: admin.studio.photos ? admin.studio.photos.map(p => ({
+                            image: p.image,
+                            posX: p.posX ?? 50,
+                            posY: p.posY ?? 50,
+                            scale: p.scale ?? 1
+                        })) : baseStore.studio.photos
                     };
+                    // Migrar formato antigo (whatsappGreeting string -> whatsappMessages array)
+                    if (!admin.studio.whatsappMessages && admin.studio.whatsappGreeting) {
+                        merged.studio.whatsappMessages = [{ text: admin.studio.whatsappGreeting, delay: 5 }];
+                    }
+                    // Migrar formato antigo de fotos
+                    if (!admin.studio.photos && (admin.studio.img1 || admin.studio.img2)) {
+                        merged.studio.photos = [
+                            { image: admin.studio.img1, posX: 50, posY: 50, scale: 1 },
+                            { image: admin.studio.img2, posX: 50, posY: 50, scale: 1 }
+                        ].filter(p => p.image);
+                    }
                 }
 
                 return merged;
@@ -293,47 +375,237 @@
 
         // ========== RENDER ==========
         function render() {
-            // Hero
+            // ===== HERO =====
             const heroImg = document.getElementById('dom-hero-img');
+            const heroOverlay = document.getElementById('dom-hero-overlay');
+            const heroTopBar = document.getElementById('dom-hero-top-bar');
+            const heroBottomBar = document.getElementById('dom-hero-bottom-bar');
+            const heroTitle = document.getElementById('dom-hero-title');
+            const heroSubtitle = document.getElementById('dom-hero-subtitle');
+
+            // Imagem
             heroImg.src = resolveImagePath(store.hero.bgImage);
-            document.getElementById('dom-hero-title').innerHTML = store.hero.title;
-            document.getElementById('dom-hero-subtitle').innerHTML = store.hero.subtitle;
-
             const t = store.hero.transform || { scale: 1, posX: 50, posY: 50 };
-            heroImg.style.transform = `scale(${t.scale ?? 1})`;
-            heroImg.style.transformOrigin = `${t.posX ?? 50}% ${t.posY ?? 50}%`;
-            heroImg.style.objectPosition = `${t.posX ?? 50}% ${t.posY ?? 50}%`;
+            const imgScale = t.scale ?? 1;
+            const imgPosX = t.posX ?? 50;
+            const imgPosY = t.posY ?? 50;
 
-            // Sobre
+            console.log('Imagem - Scale:', imgScale, 'PosX:', imgPosX, 'PosY:', imgPosY);
+
+            heroImg.style.transform = `scale(${imgScale})`;
+            heroImg.style.transformOrigin = `${imgPosX}% ${imgPosY}%`;
+            heroImg.style.objectPosition = `${imgPosX}% ${imgPosY}%`;
+
+            // Overlay
+            const overlayOpacity = (store.hero.overlayOpacity ?? 30) / 100;
+            heroOverlay.style.background = `rgba(0,0,0,${overlayOpacity})`;
+
+            // Faixas cinema
+            heroTopBar.style.height = (store.hero.topBarHeight ?? 0) + '%';
+            heroBottomBar.style.height = (store.hero.bottomBarHeight ?? 0) + '%';
+
+            // Título
+            const titlePosX = store.hero.titleTransform?.posX ?? 50;
+            const titlePosY = store.hero.titleTransform?.posY ?? 40;
+            const titleFS = store.hero.titleFontSize ?? 48;
+
+            heroTitle.textContent = store.hero.title;
+            heroTitle.style.left = titlePosX + '%';
+            heroTitle.style.top = titlePosY + '%';
+            heroTitle.style.transform = 'translate(-50%, -50%)';
+            heroTitle.style.fontSize = titleFS + 'px';
+
+            // Subtítulo
+            const subPosX = store.hero.subtitleTransform?.posX ?? 50;
+            const subPosY = store.hero.subtitleTransform?.posY ?? 55;
+            const subtitleFS = store.hero.subtitleFontSize ?? 18;
+
+            heroSubtitle.textContent = store.hero.subtitle;
+            heroSubtitle.style.left = subPosX + '%';
+            heroSubtitle.style.top = subPosY + '%';
+            heroSubtitle.style.transform = 'translate(-50%, -50%)';
+            heroSubtitle.style.fontSize = subtitleFS + 'px';
+
+            // ===== SOBRE =====
+            document.getElementById('dom-about-title').textContent = store.about.title;
             document.getElementById('dom-about-img').src = resolveImagePath(store.about.image);
-            document.getElementById('dom-about-text').innerHTML = store.about.text.split('\n').map(p => p.trim()).filter(p => p).map(p => `<p>${p}</p>`).join('');
+            document.getElementById('dom-about-text').innerHTML = store.about.text
+                .split('\n')
+                .map(p => p.trim())
+                .filter(p => p)
+                .map(p => `<p>${p}</p>`)
+                .join('');
 
-            // Portfólio
+            // ===== PORTFÓLIO =====
             const portfolioGrid = document.getElementById('dom-portfolio-grid');
-            portfolioGrid.innerHTML = store.portfolio.map(item => `
-                <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-                    <img src="${resolveImagePath(item.image)}" alt="Portfolio" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            portfolioGrid.innerHTML = store.portfolio.map((item, idx) => {
+                const posX = item.posX ?? 50;
+                const posY = item.posY ?? 50;
+                const scale = item.scale ?? 1;
+                const ratio = item.ratio ?? '3/4';
+                const aspectMap = { '16/9': 'aspect-video', '3/4': 'aspect-[3/4]', '1/1': 'aspect-square' };
+                const aspectClass = aspectMap[ratio] || 'aspect-[3/4]';
+                return `
+                <div class="${aspectClass} overflow-hidden cursor-pointer group">
+                    <img src="${resolveImagePath(item.image)}" alt="Portfolio ${idx + 1}"
+                        class="w-full h-full object-cover transition-transform duration-700"
+                        style="object-position: ${posX}% ${posY}%; transform: scale(${scale});"
+                        onmouseenter="this.style.transform='scale(${scale * 1.05})'"
+                        onmouseleave="this.style.transform='scale(${scale})'" />
                 </div>
-            `).join('');
+            `}).join('');
 
-            // Estúdio
-            document.getElementById('dom-studio-img-1').src = resolveImagePath(store.studio.img1);
-            document.getElementById('dom-studio-img-2').src = resolveImagePath(store.studio.img2);
+            // ===== ESTÚDIO =====
+            const studioPhotosGrid = document.getElementById('dom-studio-photos');
+            const photos = store.studio.photos || [];
+
+            // Ajustar grid baseado na quantidade de fotos
+            const gridCols = photos.length === 1 ? 'grid-cols-1' :
+                            photos.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                            photos.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
+                            'grid-cols-2 md:grid-cols-2 lg:grid-cols-4';
+            studioPhotosGrid.className = `grid ${gridCols} gap-6 mb-16`;
+
+            studioPhotosGrid.innerHTML = photos.map((photo, idx) => {
+                const posX = photo.posX ?? 50;
+                const posY = photo.posY ?? 50;
+                const scale = photo.scale ?? 1;
+                return `
+                <div class="aspect-video bg-gray-200 rounded-2xl overflow-hidden shadow-lg group">
+                    <img src="${resolveImagePath(photo.image)}" alt="Estúdio ${idx + 1}"
+                        class="w-full h-full object-cover transition-transform duration-500"
+                        style="object-position: ${posX}% ${posY}%; transform: scale(${scale});"
+                        onmouseenter="this.style.transform='scale(${scale * 1.05})'"
+                        onmouseleave="this.style.transform='scale(${scale})'" />
+                </div>
+            `}).join('');
+
             document.getElementById('dom-studio-address').textContent = store.studio.address;
-            document.getElementById('dom-studio-hours').innerHTML = store.studio.hours.split('\n').map(h => h.trim()).filter(h => h).join('<br>');
+            document.getElementById('dom-studio-hours').innerHTML = store.studio.hours
+                .split('\n')
+                .map(h => h.trim())
+                .filter(h => h)
+                .join('<br>');
 
+            // Mapa dinâmico baseado no endereço
+            const mapIframe = document.getElementById('dom-studio-map');
+            if (mapIframe && store.studio.address) {
+                const encodedAddress = encodeURIComponent(store.studio.address);
+                mapIframe.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodedAddress}`;
+            }
+
+            // Icons
             lucide.createIcons();
         }
 
-        // ========== FORM ==========
-        document.getElementById('contact-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('Obrigado! Em breve entraremos em contato.');
-            e.target.reset();
+        // ========== WHATSAPP WIDGET ==========
+        let bubbleClosed = false;
+        let currentMessageIndex = 0;
+        let messageTimeouts = [];
+
+        function openWhatsapp() {
+            const whatsappNumber = store.studio.whatsapp || '5511999999999';
+            const defaultText = 'Olá! Vi seu site e gostaria de mais informações.';
+            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(defaultText)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function getWhatsappMessages() {
+            const messages = store.studio.whatsappMessages;
+            if (Array.isArray(messages) && messages.length > 0) {
+                return messages;
+            }
+            return [{ text: 'Olá! Como posso ajudar você hoje?', delay: 5 }];
+        }
+
+        function showWhatsappMessage(index) {
+            if (bubbleClosed) return;
+
+            const messages = getWhatsappMessages();
+            if (index >= messages.length) {
+                // Reiniciar ciclo após uma pausa
+                currentMessageIndex = 0;
+                messageTimeouts.push(setTimeout(() => showWhatsappMessage(0), 10000));
+                return;
+            }
+
+            const bubble = document.getElementById('whatsapp-bubble');
+            const greetingEl = document.getElementById('whatsapp-greeting');
+
+            if (bubble && greetingEl) {
+                const message = messages[index];
+
+                // Animar saída se já estiver visível
+                if (!bubble.classList.contains('hidden')) {
+                    bubble.style.opacity = '0';
+                    bubble.style.transform = 'translateY(10px)';
+
+                    setTimeout(() => {
+                        greetingEl.textContent = message.text;
+                        bubble.style.opacity = '1';
+                        bubble.style.transform = 'translateY(0)';
+                    }, 200);
+                } else {
+                    greetingEl.textContent = message.text;
+                    bubble.classList.remove('hidden');
+                }
+
+                currentMessageIndex = index;
+
+                // Agendar próxima mensagem
+                const nextDelay = (message.delay || 5) * 1000;
+                messageTimeouts.push(setTimeout(() => {
+                    showWhatsappMessage(index + 1);
+                }, nextDelay));
+            }
+        }
+
+        function startWhatsappMessages() {
+            if (bubbleClosed) return;
+
+            const messages = getWhatsappMessages();
+            if (messages.length === 0) return;
+
+            // Primeira mensagem após o delay configurado
+            const firstDelay = (messages[0].delay || 5) * 1000;
+            messageTimeouts.push(setTimeout(() => {
+                showWhatsappMessage(0);
+            }, firstDelay));
+        }
+
+        function closeWhatsappBubble() {
+            const bubble = document.getElementById('whatsapp-bubble');
+            if (bubble) {
+                bubble.classList.add('hidden');
+                bubbleClosed = true;
+                // Cancelar todos os timeouts pendentes
+                messageTimeouts.forEach(t => clearTimeout(t));
+                messageTimeouts = [];
+            }
+        }
+
+        // Iniciar sistema de mensagens
+        startWhatsappMessages();
+
+        // ========== MOBILE MENU ==========
+        document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+            // Simple toggle - you can expand this
+            alert('Menu mobile em desenvolvimento');
         });
 
         // ========== INIT ==========
         window.addEventListener('load', render);
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
     </script>
 </body>
 </html>

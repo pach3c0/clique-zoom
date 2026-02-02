@@ -82,6 +82,9 @@ Site/
 - 👥 CRM básico de clientes
 - 📈 Relatórios e estatísticas
 - 🖼️ Upload de imagens
+- **Novo:** 🎬 Editor de Fotos com Aspect Ratios (16:9 HERO, 3:4 PORTFÓLIO, 1:1 SQUARE)
+- **Novo:** 📐 Controles de Drag, Zoom e Posição de Imagem
+- **Novo:** 🔄 Sincronização Automática Admin → Site Público
 - **Status:** Em desenvolvimento
 
 ### Galeria Cliente (cliente/index.html)
@@ -172,11 +175,14 @@ JWT_SECRET=sua_chave_secreta
 ### ✅ Concluído
 - [x] Estrutura do projeto organizada
 - [x] Server.js com 3 camadas
+- [x] Editor profissional de fotos (drag, zoom, grid)
+- [x] Aspect ratios dinâmicos (16:9, 3:4, 1:1)
+- [x] Sincronização automática admin → site público
 
 ### 🔄 Em Progresso
-- [ ] Painel admin funcional
-- [ ] Galeria do cliente
-- [ ] Autenticação JWT
+- [ ] Aplicar editor ao Estúdio (studio photos)
+- [ ] Salvamento em backend (database)
+- [ ] Autenticação JWT completa
 
 ### 📅 Próximos
 - [ ] Marca d'água com Sharp
@@ -234,6 +240,6 @@ MIT - Sinta-se livre para usar e modificar.
 
 ---
 
-**Última atualização:** 01/02/2026  
-**Versão:** 2.0.0  
+**Última atualização:** 02/02/2026  
+**Versão:** 2.0.1  
 **Status:** Em desenvolvimento
