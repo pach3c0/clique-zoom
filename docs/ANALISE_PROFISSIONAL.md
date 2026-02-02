@@ -1,5 +1,10 @@
 # 📸 ANÁLISE PROFISSIONAL - CLIQUE·ZOOM
 
+## ✅ Atualização (02/02/2026)
+- Produção: API e persistência via MongoDB com fallback em memória.
+- Upload de imagens: em produção (Vercel) o filesystem é read-only; upload depende de Cloudinary (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`). Sem isso, usar URL externa.
+- Pendência: rotacionar a senha do MongoDB Atlas e atualizar o `MONGODB_URI` no Vercel.
+
 ## 🎯 RESUMO EXECUTIVO
 
 Seu site é um **portfólio fotográfico moderno e bem estruturado** para um estúdio de fotografia que oferece sessões personalizadas com foco em retratos minimalistas e high-key. A plataforma combina uma interface elegante com um painel administrativo funcional.

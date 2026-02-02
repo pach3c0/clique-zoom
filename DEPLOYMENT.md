@@ -1,5 +1,10 @@
 # 🚀 CLIQUE·ZOOM - Guia de Deploy
 
+## ✅ Atualização (02/02/2026)
+- Produção: API e persistência via MongoDB com fallback em memória.
+- Upload de imagens: em produção (Vercel) o filesystem é read-only; upload depende de Cloudinary (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`). Sem isso, usar URL externa.
+- Pendência: rotacionar a senha do MongoDB Atlas e atualizar o `MONGODB_URI` no Vercel.
+
 **Data:** 02/02/2026  
 **Status:** ✅ Pronto para Produção (Fase 1)  
 **Versão:** 2.0.1
@@ -11,7 +16,12 @@
 ```
 Site/
 ├── src/
-│   └── server.js              ← Backend Express (porta 3050)
+│   ├── server.js              ← Backend Express (porta 3050)
+│   ├── config/database.js      ← Conexão MongoDB
+│   ├── data/fallback-data.js   ← Dados em memória
+│   ├── helpers/data-helper.js  ← Fallback MongoDB
+│   ├── models/SiteData.js      ← Schema MongoDB
+│   └── routes/api.js           ← API REST
 ├── public/
 │   └── index.html             ← Site público (portfolio)
 ├── admin/
@@ -21,6 +31,7 @@ Site/
 ├── assets/
 │   ├── css/                   ← Estilos adicionais
 │   ├── js/                    ← Scripts compartilhados
+│   │   └── api-helper.js       ← Cliente HTTP da API
 │   ├── data/                  ← Configurações (site-config.json)
 │   └── *.jpg, *.png           ← Imagens do portfolio
 ├── uploads/                   ← Fotos carregadas pelos admins (não commitar)

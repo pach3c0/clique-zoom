@@ -1,11 +1,26 @@
 # 📁 ESTRUTURA ORGANIZADA - CLIQUE·ZOOM
 
+## ✅ Atualização (02/02/2026)
+- Produção: API e persistência via MongoDB com fallback em memória.
+- Upload de imagens: em produção (Vercel) o filesystem é read-only; upload depende de Cloudinary (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`). Sem isso, usar URL externa.
+- Pendência: rotacionar a senha do MongoDB Atlas e atualizar o `MONGODB_URI` no Vercel.
+
 ## ✅ Reorganização Concluída
 
 ```
 Site/
 ├─ src/
-│  └─ server.js                    (Express server para 3 camadas)
+│  ├─ server.js                    (Express server para 3 camadas)
+│  ├─ config/
+│  │  └─ database.js               (Conexão MongoDB)
+│  ├─ data/
+│  │  └─ fallback-data.js          (Dados em memória)
+│  ├─ helpers/
+│  │  └─ data-helper.js            (Fallback MongoDB)
+│  ├─ models/
+│  │  └─ SiteData.js               (Schema MongoDB)
+│  └─ routes/
+│     └─ api.js                    (API REST)
 │
 ├─ public/                         (CAMADA 1: Site Público)
 │  └─ index.html                   (Portfolio do fotógrafo)
@@ -19,6 +34,7 @@ Site/
 ├─ assets/                         (Recursos Compartilhados)
 │  ├─ css/
 │  ├─ js/
+│  │  └─ api-helper.js             (Cliente HTTP da API)
 │  ├─ data/
 │  │  ├─ portfolio-data.json
 │  │  └─ style-cards.json
@@ -56,10 +72,9 @@ Site/
 
 ### package.json
 - ✅ Adicionadas dependências:
-  - `sharp` (processamento de imagens + marca d'água)
-  - `jsonwebtoken` (autenticação)
-  - `dotenv` (variáveis de ambiente)
-  - `nodemon` (dev)
+  - `mongoose` (MongoDB)
+  - `multer` (upload local)
+  - `cloudinary` (upload em produção)
 - ✅ Main aponta para `src/server.js`
 
 ---

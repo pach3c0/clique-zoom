@@ -1,5 +1,10 @@
 # Editor de Fotos com Aspect Ratios - Documentação Técnica
 
+## ✅ Atualização (02/02/2026)
+- Produção: API e persistência via MongoDB com fallback em memória.
+- Upload de imagens: em produção (Vercel) o filesystem é read-only; upload depende de Cloudinary (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`). Sem isso, usar URL externa.
+- Pendência: rotacionar a senha do MongoDB Atlas e atualizar o `MONGODB_URI` no Vercel.
+
 **Data:** 2 de fevereiro de 2026  
 **Status:** ✅ Implementado e Funcionando  
 **Versão:** 1.0
