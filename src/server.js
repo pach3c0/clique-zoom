@@ -13,18 +13,7 @@ const cloudinary = require('cloudinary').v2;
 const app = express();
 const PORT = process.env.PORT || 3050;
 
-// Conectar ao MongoDB
-connectDB().catch(err => console.warn('MongoDB offline, usando fallback'));
-dataHelper.checkMongoDB();
-
-const defaultSiteConfig = {
-  maintenance: {
-    enabled: false,
-    title: 'Estamos em manutenção',
-    message: 'Estamos ajustando alguns detalhes. Volte em breve.'
-  }
-};
-
+// Configurar Cloudinary
 const isCloudinaryConfigured = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_API_KEY &&
@@ -38,6 +27,14 @@ if (isCloudinaryConfigured) {
     api_secret: process.env.CLOUDINARY_API_SECRET
   });
 }
+
+const defaultSiteConfig = {
+  maintenance: {
+    enabled: false,
+    title: 'Estamos em manutenção',
+    message: 'Estamos ajustando alguns detalhes. Volte em breve.'
+  }
+};
 
 function renderMaintenancePage(config) {
   const title = config?.maintenance?.title || defaultSiteConfig.maintenance.title;
@@ -342,20 +339,67 @@ app.use((err, req, res, next) => {
 // ========================================
 // START SERVER
 // ========================================
-const server = app.listen(PORT, '0.0.0.0', () => {
-  const env = process.env.NODE_ENV || 'development';
-  const host = process.env.VERCEL_URL || `localhost:${PORT}`;
-  console.log(`✅ Servidor rodando (${env}) em http://${host}`);
-  console.log(`📸 Site Público: http://${host}`);
-  console.log(`🔧 Painel Admin: http://${host}/admin`);
-  console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
-});
+async function startServer() {
+  try {
+    console.log('\n🚀 Iniciando servidor...\n');
+    
+    // Tentar conectar ao MongoDB
+    console.log('1️⃣  Conectando ao MongoDB...');
+    await connectDB();
+    
+    // Verificar disponibilidade
+    console.log('2️⃣  Verificando disponibilidade do MongoDB...');
+    await dataHelper.checkMongoDB();
+    
+    // Iniciar servidor
+    console.log('3️⃣  Iniciando servidor Express...\n');
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      const env = process.env.NODE_ENV || 'development';
+      const host = process.env.VERCEL_URL || `localhost:${PORT}`;
+      console.log(`✅ Servidor rodando (${env}) em http://${host}`);
+      console.log(`📸 Site Público: http://${host}`);
+      console.log(`🔧 Painel Admin: http://${host}/admin`);
+      console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
+      console.log(`🧪 Teste MongoDB: http://${host}/api/test-connection\n`);
+    });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM recebido, fechando servidor...');
-  server.close(() => {
-    console.log('Servidor fechado');
-    process.exit(0);
-  });
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM recebido, fechando servidor...');
+      server.close(() => {
+        console.log('Servidor fechado');
+        process.exit(0);
+      });
+    });
+  } catch (error) {
+    console.error('❌ Erro ao iniciar servidor:', error.message);
+    console.log('\n⚠️  Iniciando em modo offline (fallback em memória)...\n');
+    
+    // Iniciar servidor mesmo sem MongoDB
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      const env = process.env.NODE_ENV || 'development';
+      const host = process.env.VERCEL_URL || `localhost:${PORT}`;
+      console.log(`✅ Servidor rodando (${env}) em http://${host}`);
+      console.log(`📸 Site Público: http://${host}`);
+      console.log(`🔧 Painel Admin: http://${host}/admin`);
+      console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
+      console.log(`🧪 Teste MongoDB: http://${host}/api/test-connection`);
+      console.log('\n⚠️  MongoDB está offline. Dados serão salvos em memória.\n');
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM recebido, fechando servidor...');
+      server.close(() => {
+        console.log('Servidor fechado');
+        process.exit(0);
+      });
+    });
+  }
+}
+
+// Iniciar servidor
+startServer().catch(err => {
+  console.error('Erro fatal:', err);
+  process.exit(1);
 });
