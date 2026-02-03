@@ -1933,18 +1933,18 @@
                             title: loaded.hero.title || defaultData.hero.title,
                             subtitle: loaded.hero.subtitle || defaultData.hero.subtitle,
                             image: loaded.hero.image || defaultData.hero.image,
-                            imageScale: loaded.hero.transform?.scale || defaultData.hero.imageScale,
-                            imagePosX: loaded.hero.transform?.posX || defaultData.hero.imagePosX,
-                            imagePosY: loaded.hero.transform?.posY || defaultData.hero.imagePosY,
-                            titlePosX: loaded.hero.titleTransform?.posX || defaultData.hero.titlePosX,
-                            titlePosY: loaded.hero.titleTransform?.posY || defaultData.hero.titlePosY,
-                            subtitlePosX: loaded.hero.subtitleTransform?.posX || defaultData.hero.subtitlePosX,
-                            subtitlePosY: loaded.hero.subtitleTransform?.posY || defaultData.hero.subtitlePosY,
-                            titleSize: loaded.hero.titleFontSize || defaultData.hero.titleSize,
-                            subtitleSize: loaded.hero.subtitleFontSize || defaultData.hero.subtitleSize,
-                            topBarHeight: loaded.hero.topBarHeight || defaultData.hero.topBarHeight,
-                            bottomBarHeight: loaded.hero.bottomBarHeight || defaultData.hero.bottomBarHeight,
-                            overlayOpacity: loaded.hero.overlayOpacity || defaultData.hero.overlayOpacity
+                            imageScale: loaded.hero.transform?.scale ?? defaultData.hero.imageScale,
+                            imagePosX: loaded.hero.transform?.posX ?? defaultData.hero.imagePosX,
+                            imagePosY: loaded.hero.transform?.posY ?? defaultData.hero.imagePosY,
+                            titlePosX: loaded.hero.titleTransform?.posX ?? defaultData.hero.titlePosX,
+                            titlePosY: loaded.hero.titleTransform?.posY ?? defaultData.hero.titlePosY,
+                            subtitlePosX: loaded.hero.subtitleTransform?.posX ?? defaultData.hero.subtitlePosX,
+                            subtitlePosY: loaded.hero.subtitleTransform?.posY ?? defaultData.hero.subtitlePosY,
+                            titleSize: loaded.hero.titleFontSize ?? defaultData.hero.titleSize,
+                            subtitleSize: loaded.hero.subtitleFontSize ?? defaultData.hero.subtitleSize,
+                            topBarHeight: loaded.hero.topBarHeight ?? defaultData.hero.topBarHeight,
+                            bottomBarHeight: loaded.hero.bottomBarHeight ?? defaultData.hero.bottomBarHeight,
+                            overlayOpacity: loaded.hero.overlayOpacity ?? defaultData.hero.overlayOpacity
                         };
                     }
 
@@ -1958,6 +1958,8 @@
 
                     if (loaded.studio) {
                         appData.studio = {
+                            title: loaded.studio.title || defaultData.studio.title,
+                            description: loaded.studio.description || defaultData.studio.description,
                             address: loaded.studio.address || defaultData.studio.address,
                             hours: loaded.studio.hours || defaultData.studio.hours,
                             whatsapp: loaded.studio.whatsapp || defaultData.studio.whatsapp,

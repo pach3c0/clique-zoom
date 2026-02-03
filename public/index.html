@@ -338,6 +338,8 @@
 
                 if (remote.studio) {
                     merged.studio = {
+                        title: remote.studio.title || baseStore.studio.title,
+                        description: remote.studio.description || baseStore.studio.description,
                         address: remote.studio.address || baseStore.studio.address,
                         hours: remote.studio.hours || baseStore.studio.hours,
                         whatsapp: remote.studio.whatsapp || baseStore.studio.whatsapp,
