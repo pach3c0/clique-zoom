@@ -1,11 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "npm install",
   "env": {
     "NODE_ENV": "production"
   },
   "functions": {
-    "src/server.js": {
+    "api.js": {
       "memory": 1024,
       "maxDuration": 60,
       "runtime": "nodejs18.x"
@@ -14,7 +13,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/src/server.js"
+      "dest": "/api.js"
     }
   ],
   "headers": [
