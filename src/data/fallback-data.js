@@ -40,6 +40,8 @@ const fallbackData = {
     }
   ],
   studio: {
+    title: 'Situado no Coração do Morumbi',
+    description: 'Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.',
     address: 'São Paulo, SP',
     hours: '09:00 - 18:00',
     whatsapp: '+5511999999999',

@@ -52,6 +52,8 @@ const studioPhotoSchema = new mongoose.Schema({
 }, { _id: false });
 
 const studioSchema = new mongoose.Schema({
+  title: { type: String, default: '' },
+  description: { type: String, default: '' },
   address: { type: String, default: '' },
   hours: { type: String, default: '' },
   whatsapp: { type: String, default: '' },

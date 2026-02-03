@@ -159,9 +159,9 @@
 
                 <!-- Info Estúdio -->
                 <div class="flex flex-col justify-center">
-                    <h3 class="font-serif text-3xl font-bold mb-6">Situado no Coração do Morumbi</h3>
+                    <h3 id="dom-studio-title" class="font-serif text-3xl font-bold mb-6">Situado no Coração do Morumbi</h3>
                     <div class="space-y-6 text-gray-600 font-light">
-                        <p class="text-lg">Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.</p>
+                        <p id="dom-studio-description" class="text-lg">Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.</p>
                         <div class="pt-6 border-t border-gray-200">
                             <p class="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">Endereço</p>
                             <p id="dom-studio-address" class="text-gray-600">R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP</p>
@@ -480,6 +480,12 @@
                 </div>
             `}).join('');
 
+            if (store.studio.title) {
+                document.getElementById('dom-studio-title').textContent = store.studio.title;
+            }
+            if (store.studio.description) {
+                document.getElementById('dom-studio-description').textContent = store.studio.description;
+            }
             document.getElementById('dom-studio-address').textContent = store.studio.address;
             document.getElementById('dom-studio-hours').innerHTML = store.studio.hours
                 .split('\n')
