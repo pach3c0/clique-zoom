@@ -37,14 +37,14 @@ const defaultSiteConfig = {
   }
 };
 
-// Inicializar MongoDB em background
-connectDB().catch(err => {
-  console.warn('⚠️  MongoDB offline:', err.message);
-});
-
-dataHelper.checkMongoDB().catch(err => {
-  console.warn('⚠️  MongoDB check falhou:', err.message);
-});
+// Garantir conexão MongoDB antes de cada requisição
+let dbReady = false;
+const dbPromise = connectDB()
+  .then(() => dataHelper.checkMongoDB())
+  .then(() => { dbReady = true; })
+  .catch(err => {
+    console.warn('⚠️  MongoDB offline:', err.message);
+  });
 
 // ========================================
 // MIDDLEWARE
@@ -52,6 +52,18 @@ dataHelper.checkMongoDB().catch(err => {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Aguardar MongoDB estar pronto antes de processar requisições
+app.use(async (req, res, next) => {
+  if (!dbReady) {
+    try {
+      await dbPromise;
+    } catch (e) {
+      // continua sem MongoDB
+    }
+  }
+  next();
+});
 
 // Serve static assets
 app.use('/assets', express.static(path.join(rootDir, 'assets')));
