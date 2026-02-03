@@ -6,12 +6,13 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
-const connectDB = require('./src/config/database');
-const dataHelper = require('./src/helpers/data-helper');
-const apiRoutes = require('./src/routes/api');
+const connectDB = require('../src/config/database');
+const dataHelper = require('../src/helpers/data-helper');
+const apiRoutes = require('../src/routes/api');
 const cloudinary = require('cloudinary').v2;
 
 const app = express();
+const rootDir = path.join(__dirname, '..');
 
 // Configurar Cloudinary
 const isCloudinaryConfigured = Boolean(
@@ -53,7 +54,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static assets
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/assets', express.static(path.join(rootDir, 'assets')));
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -64,7 +65,7 @@ app.use('/api', apiRoutes);
 const allowedImageTypes = new Set(['image/jpeg', 'image/png']);
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, 'uploads');
+    const uploadDir = path.join(rootDir, 'uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -72,7 +73,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const safeName = path.basename(file.originalname).replace(/\s+/g, '-');
-    const targetPath = path.join(__dirname, 'uploads', safeName);
+    const targetPath = path.join(rootDir, 'uploads', safeName);
     if (fs.existsSync(targetPath)) {
       return cb(new Error('FILE_EXISTS'));
     }
@@ -106,18 +107,18 @@ const uploadMemory = multer({
 // CAMADA 1: SITE PÚBLICO (Portfolio)
 // ========================================
 app.get('/preview', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(path.join(rootDir, 'public/index.html'));
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(path.join(rootDir, 'public/index.html'));
 });
 
 // ========================================
 // CAMADA 2: PAINEL ADMIN
 // ========================================
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin/index.html'));
+  res.sendFile(path.join(rootDir, 'admin/index.html'));
 });
 
 // Admin API: Get site config
@@ -154,7 +155,7 @@ app.post('/api/admin/site-config', async (req, res) => {
 
 // Admin API: Update portfolio data
 app.post('/api/admin/portfolio', (req, res) => {
-  const filePath = path.join(__dirname, 'assets/data/portfolio-data.json');
+  const filePath = path.join(rootDir, 'assets/data/portfolio-data.json');
   fs.writeFile(filePath, JSON.stringify(req.body, null, 2), 'utf8', (err) => {
     if (err) {
       return res.status(500).json({ error: 'Erro ao salvar portfólio' });
@@ -226,7 +227,7 @@ app.post('/api/admin/upload', (req, res) => {
 // CAMADA 3: GALERIA PRIVADA DO CLIENTE
 // ========================================
 app.get('/galeria/:galleryId', (req, res) => {
-  res.sendFile(path.join(__dirname, 'cliente/index.html'));
+  res.sendFile(path.join(rootDir, 'cliente/index.html'));
 });
 
 app.get('/api/galeria/:galleryId', (req, res) => {
@@ -251,7 +252,7 @@ app.post('/api/galeria/:galleryId/download', (req, res) => {
 // ========================================
 // ROTAS PÚBLICAS (Assets)
 // ========================================
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(rootDir, 'uploads')));
 
 // ========================================
 // ERROR HANDLER

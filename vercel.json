@@ -4,16 +4,14 @@
     "NODE_ENV": "production"
   },
   "functions": {
-    "api.js": {
-      "memory": 1024,
-      "maxDuration": 60,
-      "runtime": "nodejs22.x"
+    "api/index.js": {
+      "maxDuration": 60
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/api.js"
+      "source": "/(.*)",
+      "destination": "/api"
     }
   ],
   "headers": [
