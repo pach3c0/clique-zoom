@@ -7,9 +7,16 @@
   "functions": {
     "src/server.js": {
       "memory": 1024,
-      "maxDuration": 60
+      "maxDuration": 60,
+      "runtime": "nodejs18.x"
     }
   },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/src/server.js"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

@@ -337,69 +337,42 @@ app.use((err, req, res, next) => {
 });
 
 // ========================================
+// INITIALIZE DATABASE
+// ========================================
+// Inicializar MongoDB quando o app iniciar (não esperar)
+connectDB().catch(err => {
+  console.warn('⚠️  MongoDB offline no startup:', err.message);
+});
+
+// Verificar MongoDB disponibilidade
+dataHelper.checkMongoDB().catch(err => {
+  console.warn('⚠️  MongoDB check falhou:', err.message);
+});
+
+// ========================================
 // START SERVER
 // ========================================
-async function startServer() {
-  try {
-    console.log('\n🚀 Iniciando servidor...\n');
-    
-    // Tentar conectar ao MongoDB
-    console.log('1️⃣  Conectando ao MongoDB...');
-    await connectDB();
-    
-    // Verificar disponibilidade
-    console.log('2️⃣  Verificando disponibilidade do MongoDB...');
-    await dataHelper.checkMongoDB();
-    
-    // Iniciar servidor
-    console.log('3️⃣  Iniciando servidor Express...\n');
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      const env = process.env.NODE_ENV || 'development';
-      const host = process.env.VERCEL_URL || `localhost:${PORT}`;
-      console.log(`✅ Servidor rodando (${env}) em http://${host}`);
-      console.log(`📸 Site Público: http://${host}`);
-      console.log(`🔧 Painel Admin: http://${host}/admin`);
-      console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
-      console.log(`🧪 Teste MongoDB: http://${host}/api/test-connection\n`);
-    });
+if (process.env.NODE_ENV !== 'production') {
+  // Modo desenvolvimento: usar app.listen
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    const env = process.env.NODE_ENV || 'development';
+    const host = `localhost:${PORT}`;
+    console.log(`\n✅ Servidor rodando (${env}) em http://${host}`);
+    console.log(`📸 Site Público: http://${host}`);
+    console.log(`🔧 Painel Admin: http://${host}/admin`);
+    console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
+    console.log(`🧪 Teste MongoDB: http://${host}/api/test-connection\n`);
+  });
 
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM recebido, fechando servidor...');
-      server.close(() => {
-        console.log('Servidor fechado');
-        process.exit(0);
-      });
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM recebido, fechando servidor...');
+    server.close(() => {
+      console.log('Servidor fechado');
+      process.exit(0);
     });
-  } catch (error) {
-    console.error('❌ Erro ao iniciar servidor:', error.message);
-    console.log('\n⚠️  Iniciando em modo offline (fallback em memória)...\n');
-    
-    // Iniciar servidor mesmo sem MongoDB
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      const env = process.env.NODE_ENV || 'development';
-      const host = process.env.VERCEL_URL || `localhost:${PORT}`;
-      console.log(`✅ Servidor rodando (${env}) em http://${host}`);
-      console.log(`📸 Site Público: http://${host}`);
-      console.log(`🔧 Painel Admin: http://${host}/admin`);
-      console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
-      console.log(`🧪 Teste MongoDB: http://${host}/api/test-connection`);
-      console.log('\n⚠️  MongoDB está offline. Dados serão salvos em memória.\n');
-    });
-
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM recebido, fechando servidor...');
-      server.close(() => {
-        console.log('Servidor fechado');
-        process.exit(0);
-      });
-    });
-  }
+  });
+} else {
+  // Modo produção (Vercel): exportar como handler
+  module.exports = app;
 }
-
-// Iniciar servidor
-startServer().catch(err => {
-  console.error('Erro fatal:', err);
-  process.exit(1);
-});
