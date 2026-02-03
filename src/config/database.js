@@ -23,7 +23,7 @@ const connectDB = async () => {
 
     isConnected = true;
     console.log('✅ MongoDB conectado com sucesso');
-    console.log('📦 Banco de dados:', connection.connection.db.name);
+    console.log('📦 Banco de dados:', connection.connection.db?.databaseName || connection.connection.name);
     
     return connection;
   } catch (error) {
