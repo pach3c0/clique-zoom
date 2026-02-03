@@ -95,9 +95,9 @@
 
     <!-- HERO SECTION -->
     <section id="hero" class="hero-section relative flex items-center overflow-hidden bg-black">
-        <!-- Imagem de fundo -->
-        <img id="dom-hero-img" src="/assets/IMG_8581.jpg" alt="Hero"
-            class="hero-image absolute inset-0 w-full h-full object-cover" />
+        <!-- Imagem de fundo (sem src default - carregada via JS) -->
+        <img id="dom-hero-img" src="" alt="Hero"
+            class="hero-image absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500" />
 
         <!-- Overlay escuro -->
         <div id="dom-hero-overlay" class="absolute inset-0"></div>
@@ -380,17 +380,21 @@
             const heroSubtitle = document.getElementById('dom-hero-subtitle');
 
             // Imagem
-            heroImg.src = resolveImagePath(store.hero.bgImage);
+            const heroImageUrl = resolveImagePath(store.hero.bgImage);
             const t = store.hero.transform || { scale: 1, posX: 50, posY: 50 };
             const imgScale = t.scale ?? 1;
             const imgPosX = t.posX ?? 50;
             const imgPosY = t.posY ?? 50;
 
-            console.log('Imagem - Scale:', imgScale, 'PosX:', imgPosX, 'PosY:', imgPosY);
-
             heroImg.style.transform = `scale(${imgScale})`;
             heroImg.style.transformOrigin = `${imgPosX}% ${imgPosY}%`;
             heroImg.style.objectPosition = `${imgPosX}% ${imgPosY}%`;
+
+            // Carrega imagem e mostra com fade-in quando pronta
+            if (heroImg.src !== heroImageUrl) {
+                heroImg.onload = () => heroImg.classList.remove('opacity-0');
+                heroImg.src = heroImageUrl;
+            }
 
             // Overlay
             const overlayOpacity = (store.hero.overlayOpacity ?? 30) / 100;
