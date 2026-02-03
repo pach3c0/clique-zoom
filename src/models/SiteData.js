@@ -77,15 +77,44 @@ const siteDataSchema = new mongoose.Schema({
   strict: false  // Permite campos extras não definidos no schema
 });
 
+// Função para merge profundo de objetos
+function deepMerge(target, source) {
+  if (!source) return target;
+
+  const output = { ...target };
+
+  for (const key of Object.keys(source)) {
+    if (source[key] === null || source[key] === undefined) {
+      continue; // Ignora valores nulos/undefined para não sobrescrever dados existentes
+    }
+
+    // Arrays são substituídos completamente (portfolio, whatsappMessages, photos)
+    if (Array.isArray(source[key])) {
+      output[key] = source[key];
+    }
+    // Objetos são mesclados recursivamente
+    else if (typeof source[key] === 'object' && typeof target[key] === 'object' && !Array.isArray(target[key])) {
+      output[key] = deepMerge(target[key] || {}, source[key]);
+    }
+    // Valores primitivos são substituídos
+    else {
+      output[key] = source[key];
+    }
+  }
+
+  return output;
+}
+
 // Garantir que sempre existe apenas 1 documento
 siteDataSchema.statics.getSiteData = async function() {
   let data = await this.findOne();
   if (!data) {
     data = await this.create({
-      hero: { title: '', subtitle: '', image: '' },
+      hero: {},
       portfolio: [],
-      about: { title: '', content: '', image: '' },
-      maintenance: { enabled: false, title: '', message: '' }
+      about: {},
+      studio: {},
+      maintenance: { enabled: false }
     });
   }
   return data;
@@ -96,7 +125,28 @@ siteDataSchema.statics.updateSiteData = async function(updates) {
   if (!data) {
     data = await this.create(updates);
   } else {
-    Object.assign(data, updates);
+    // Fazer merge profundo para não perder dados existentes
+    const currentData = data.toObject();
+    delete currentData._id;
+    delete currentData.__v;
+    delete currentData.createdAt;
+    delete currentData.updatedAt;
+
+    const merged = deepMerge(currentData, updates);
+
+    // Atualizar cada campo individualmente
+    if (merged.hero) data.hero = merged.hero;
+    if (merged.about) data.about = merged.about;
+    if (merged.studio) data.studio = merged.studio;
+    if (merged.maintenance) data.maintenance = merged.maintenance;
+    if (merged.portfolio) data.portfolio = merged.portfolio;
+
+    data.markModified('hero');
+    data.markModified('about');
+    data.markModified('studio');
+    data.markModified('maintenance');
+    data.markModified('portfolio');
+
     await data.save();
   }
   return data;
