@@ -7,12 +7,6 @@ const JWT_EXPIRES_IN = '7d'; // Token válido por 7 dias
 
 async function login(password) {
     try {
-        console.log('🔐 Login attempt:', { 
-          providedPassword: password,
-          adminPassword: ADMIN_PASSWORD,
-          match: password === ADMIN_PASSWORD
-        });
-        
         // Verificar se a senha corresponde
         // TODO: Em produção, usar bcryptjs para hash (instalar: npm install bcryptjs)
         if (password !== ADMIN_PASSWORD) {
