@@ -681,6 +681,118 @@
         }
 
         function renderFooter() {
+            const f = appData.footer || {};
+            const socials = f.socialMedia || {};
+            const quickLinks = f.quickLinks || [];
+            const newsletter = f.newsletter || { enabled: true, title: '', description: '' };
+            const copyright = f.copyright || '';
+
+            const html = `
+                <div class="max-w-5xl mx-auto space-y-6">
+                    <!-- REDES SOCIAIS -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Redes Sociais</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Instagram</label>
+                                <input id="footer-instagram" type="url" value="${socials.instagram || ''}" placeholder="https://instagram.com/seu_perfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Facebook</label>
+                                <input id="footer-facebook" type="url" value="${socials.facebook || ''}" placeholder="https://facebook.com/seu_perfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">LinkedIn</label>
+                                <input id="footer-linkedin" type="url" value="${socials.linkedin || ''}" placeholder="https://linkedin.com/in/seu_perfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">TikTok</label>
+                                <input id="footer-tiktok" type="url" value="${socials.tiktok || ''}" placeholder="https://tiktok.com/@seu_perfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">YouTube</label>
+                                <input id="footer-youtube" type="url" value="${socials.youtube || ''}" placeholder="https://youtube.com/seu_canal" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                                <input id="footer-email" type="email" value="${socials.email || ''}" placeholder="contato@seu_site.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LINKS ÚTEIS -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Links Úteis</h2>
+                        <div id="quick-links-list" class="space-y-3 mb-4">
+                            ${quickLinks.map((link, idx) => `
+                                <div class="flex gap-2 items-end">
+                                    <div class="flex-1">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                                        <input type="text" class="quick-link-label w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900" value="${link.label || ''}" data-index="${idx}">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">URL</label>
+                                        <input type="url" class="quick-link-url w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900" value="${link.url || ''}" data-index="${idx}">
+                                    </div>
+                                    <button type="button" onclick="removeQuickLink(${idx})" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" onclick="addQuickLink()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50">
+                            <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i> Adicionar Link
+                        </button>
+                    </div>
+
+                    <!-- NEWSLETTER -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Newsletter</h2>
+                            <label class="inline-flex items-center gap-3 text-sm font-medium text-gray-700">
+                                <input id="footer-newsletter-enabled" type="checkbox" class="w-4 h-4" ${newsletter.enabled ? 'checked' : ''}>
+                                Ativo
+                            </label>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Título</label>
+                                <input id="footer-newsletter-title" type="text" value="${newsletter.title || 'Receba Novidades'}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Descrição</label>
+                                <textarea id="footer-newsletter-desc" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">${newsletter.description || 'Inscreva-se para atualizações e promoções exclusivas.'}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COPYRIGHT -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Copyright</h2>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Texto do Rodapé</label>
+                            <textarea id="footer-copyright" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">${copyright}</textarea>
+                            <p class="text-xs text-gray-500 mt-1">Ex: © 2026 CLIQUE·ZOOM. Todos os direitos reservados.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('content-area').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function addQuickLink() {
+            appData.footer.quickLinks.push({ label: '', url: '' });
+            renderFooter();
+        }
+
+        function removeQuickLink(index) {
+            appData.footer.quickLinks.splice(index, 1);
+            renderFooter();
+        }
+
+        function renderFooter() {
             const footer = appData.footer || {
                 socialMedia: { instagram: '', facebook: '', linkedin: '', tiktok: '', youtube: '', email: '' },
                 quickLinks: [],
@@ -2103,6 +2215,43 @@
             const whatsappMsgList = document.getElementById('whatsapp-messages-list');
             if (whatsappMsgList) {
                 appData.studio.whatsappMessages = collectWhatsappMessages();
+            }
+
+            // FOOTER - Coletar dados do footer
+            const footerInstagram = document.getElementById('footer-instagram');
+            const footerFacebook = document.getElementById('footer-facebook');
+            const footerLinkedin = document.getElementById('footer-linkedin');
+            const footerTiktok = document.getElementById('footer-tiktok');
+            const footerYoutube = document.getElementById('footer-youtube');
+            const footerEmail = document.getElementById('footer-email');
+            const footerNewsletterEnabled = document.getElementById('footer-newsletter-enabled');
+            const footerNewsletterTitle = document.getElementById('footer-newsletter-title');
+            const footerNewsletterDesc = document.getElementById('footer-newsletter-desc');
+            const footerCopyright = document.getElementById('footer-copyright');
+
+            if (appData.footer) {
+                if (footerInstagram) appData.footer.socialMedia.instagram = footerInstagram.value;
+                if (footerFacebook) appData.footer.socialMedia.facebook = footerFacebook.value;
+                if (footerLinkedin) appData.footer.socialMedia.linkedin = footerLinkedin.value;
+                if (footerTiktok) appData.footer.socialMedia.tiktok = footerTiktok.value;
+                if (footerYoutube) appData.footer.socialMedia.youtube = footerYoutube.value;
+                if (footerEmail) appData.footer.socialMedia.email = footerEmail.value;
+
+                // Coletar quick links
+                const quickLinkLabels = document.querySelectorAll('.quick-link-label');
+                const quickLinkUrls = document.querySelectorAll('.quick-link-url');
+                appData.footer.quickLinks = [];
+                quickLinkLabels.forEach((label, idx) => {
+                    const url = quickLinkUrls[idx];
+                    if (label.value && url.value) {
+                        appData.footer.quickLinks.push({ label: label.value, url: url.value });
+                    }
+                });
+
+                if (footerNewsletterEnabled) appData.footer.newsletter.enabled = footerNewsletterEnabled.checked;
+                if (footerNewsletterTitle) appData.footer.newsletter.title = footerNewsletterTitle.value;
+                if (footerNewsletterDesc) appData.footer.newsletter.description = footerNewsletterDesc.value;
+                if (footerCopyright) appData.footer.copyright = footerCopyright.value;
             }
 
             // Converter para formato compatível com o site público
