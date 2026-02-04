@@ -316,8 +316,20 @@
                 isLoggedIn = true;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
-                await loadDados();
-                await loadSiteConfig();
+                console.log('✅ Login realizado');
+                try {
+                    await loadDados();
+                    console.log('✅ Dados carregados');
+                    console.log('appData.footer:', appData.footer);
+                } catch (err) {
+                    console.error('❌ Erro ao carregar dados:', err);
+                }
+                try {
+                    await loadSiteConfig();
+                    console.log('✅ Config de site carregada');
+                } catch (err) {
+                    console.error('❌ Erro ao carregar config:', err);
+                }
                 lucide.createIcons();
                 renderHero();
             } else {
@@ -2295,6 +2307,7 @@
         }
 
         async function saveDados() {
+            console.log('💾 saveDados() chamado');
             const saveData = buildSaveData();
             
             console.log('📤 Enviando dados para o API:', {
