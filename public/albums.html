@@ -197,6 +197,12 @@
 
         // ========== RENDER ÁLBUNS ==========
         function renderAlbums(albums) {
+            // Validar que albums é um array
+            if (!Array.isArray(albums)) {
+                console.warn('Albums não é um array:', albums);
+                albums = [];
+            }
+
             const albumsSorted = [...albums].sort((a, b) => {
                 const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
                 const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -205,30 +211,33 @@
             albumsCache = albumsSorted;
 
             const galleryContainer = document.getElementById('dom-albums-gallery');
-            if (galleryContainer) {
-                if (albumsSorted.length === 0) {
-                    galleryContainer.innerHTML = '<div class="col-span-full text-center py-16"><p class="text-gray-500 text-lg">Nenhum álbum disponível ainda.</p></div>';
-                    return;
-                }
-
-                galleryContainer.innerHTML = albumsSorted.map((album, idx) => {
-                    const cover = album.cover || album.photos?.[0] || '';
-                    const title = album.title || 'Álbum';
-                    const subtitle = album.subtitle || '';
-                    return `
-                        <div onclick="openAlbum(${idx})" class="group cursor-pointer fade-in">
-                            <div class="aspect-[4/5] rounded-xl overflow-hidden mb-4 relative shadow-2xl bg-black">
-                                <img src="${resolveImagePath(cover)}" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
-                                    <span class="text-white text-xs border border-white/30 px-3 py-1 rounded-full">VER ÁLBUM</span>
-                                </div>
-                            </div>
-                            ${subtitle ? `<p class="text-neutral-500 text-[10px] uppercase tracking-widest mb-1">${subtitle}</p>` : ''}
-                            <h4 class="font-serif text-lg text-neutral-900 group-hover:text-neutral-600 transition-colors">${title}</h4>
-                        </div>
-                    `;
-                }).join('');
+            if (!galleryContainer) {
+                console.error('Elemento dom-albums-gallery não encontrado');
+                return;
             }
+
+            if (albumsSorted.length === 0) {
+                galleryContainer.innerHTML = '<div class="col-span-full text-center py-16"><p class="text-gray-500 text-lg">Nenhum álbum disponível ainda.</p></div>';
+                return;
+            }
+
+            galleryContainer.innerHTML = albumsSorted.map((album, idx) => {
+                const cover = album.cover || album.photos?.[0] || '';
+                const title = album.title || 'Álbum';
+                const subtitle = album.subtitle || '';
+                return `
+                    <div onclick="openAlbum(${idx})" class="group cursor-pointer fade-in">
+                        <div class="aspect-[4/5] rounded-xl overflow-hidden mb-4 relative shadow-2xl bg-black">
+                            <img src="${resolveImagePath(cover)}" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                                <span class="text-white text-xs border border-white/30 px-3 py-1 rounded-full">VER ÁLBUM</span>
+                            </div>
+                        </div>
+                        ${subtitle ? `<p class="text-neutral-500 text-[10px] uppercase tracking-widest mb-1">${subtitle}</p>` : ''}
+                        <h4 class="font-serif text-lg text-neutral-900 group-hover:text-neutral-600 transition-colors">${title}</h4>
+                    </div>
+                `;
+            }).join('');
 
             lucide.createIcons();
         }
@@ -372,11 +381,16 @@
         async function loadData() {
             try {
                 const response = await fetch('/api/site-data');
-                const data = await response.json();
                 
-                if (data.albums) {
-                    renderAlbums(data.albums);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                
+                const data = await response.json();
+                console.log('Dados carregados:', data); // Debug
+                
+                // Sempre chama renderAlbums, mesmo que seja com array vazio
+                renderAlbums(data.albums || []);
                 
                 footerData = data.footer || {};
                 studioData = data.studio || {};
@@ -384,7 +398,10 @@
                 
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
-                document.getElementById('dom-albums-gallery').innerHTML = '<div class="col-span-full text-center py-16"><p class="text-red-500">Erro ao carregar álbuns. Tente novamente mais tarde.</p></div>';
+                const galleryContainer = document.getElementById('dom-albums-gallery');
+                if (galleryContainer) {
+                    galleryContainer.innerHTML = '<div class="col-span-full text-center py-16"><p class="text-red-500">Erro ao carregar álbuns. Tente novamente mais tarde.</p></div>';
+                }
             } finally {
                 // Esconde splash screen após carregar (com ou sem erro)
                 hideSplashScreen();
