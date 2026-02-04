@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dataHelper = require('../helpers/data-helper');
 const mongoose = require('mongoose');
+const Newsletter = require('../models/Newsletter');
 
 // GET - Teste de conexão MongoDB
 router.get('/test-connection', async (req, res) => {
@@ -189,6 +190,113 @@ router.delete('/portfolio/:index', async (req, res) => {
   } catch (error) {
     console.error('Erro ao remover do portfolio:', error);
     res.status(500).json({ error: 'Erro ao remover item do portfolio' });
+  }
+});
+
+// ========== NEWSLETTER ==========
+
+// POST - Inscrever email na newsletter
+router.post('/newsletter/subscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email é obrigatório' });
+    }
+
+    // Verificar se já está inscrito
+    const existing = await Newsletter.findOne({ email: email.toLowerCase() });
+    
+    if (existing) {
+      if (existing.active) {
+        return res.status(200).json({ 
+          message: 'Email já está inscrito',
+          alreadySubscribed: true 
+        });
+      } else {
+        // Reativar inscrição
+        existing.active = true;
+        existing.subscribedAt = new Date();
+        await existing.save();
+        return res.status(200).json({ 
+          message: 'Inscrição reativada com sucesso!',
+          reactivated: true 
+        });
+      }
+    }
+
+    // Nova inscrição
+    const subscription = new Newsletter({ email: email.toLowerCase() });
+    await subscription.save();
+    
+    console.log('✅ Nova inscrição na newsletter:', email);
+    
+    res.status(201).json({ 
+      message: 'Inscrição realizada com sucesso!',
+      success: true 
+    });
+  } catch (error) {
+    console.error('Erro ao inscrever na newsletter:', error);
+    
+    if (error.code === 11000) {
+      return res.status(200).json({ 
+        message: 'Email já está inscrito',
+        alreadySubscribed: true 
+      });
+    }
+    
+    res.status(500).json({ error: 'Erro ao processar inscrição' });
+  }
+});
+
+// GET - Listar emails da newsletter (para admin)
+router.get('/newsletter', async (req, res) => {
+  try {
+    const { active = 'true', page = 1, limit = 50 } = req.query;
+    
+    const query = active === 'all' ? {} : { active: active === 'true' };
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const total = await Newsletter.countDocuments(query);
+    const subscribers = await Newsletter.find(query)
+      .sort({ subscribedAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select('email subscribedAt active');
+    
+    res.json({
+      subscribers,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao listar newsletter:', error);
+    res.status(500).json({ error: 'Erro ao listar inscrições' });
+  }
+});
+
+// DELETE - Cancelar inscrição
+router.delete('/newsletter/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    const subscription = await Newsletter.findOne({ email: email.toLowerCase() });
+    
+    if (!subscription) {
+      return res.status(404).json({ error: 'Email não encontrado' });
+    }
+    
+    subscription.active = false;
+    await subscription.save();
+    
+    res.json({ message: 'Inscrição cancelada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao cancelar newsletter:', error);
+    res.status(500).json({ error: 'Erro ao cancelar inscrição' });
   }
 });
 

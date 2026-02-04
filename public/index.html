@@ -690,7 +690,7 @@
         }
 
         // ========== NEWSLETTER ==========
-        function handleNewsletterSubscribe(event) {
+        async function handleNewsletterSubscribe(event) {
             event.preventDefault();
             const form = event.target;
             const emailInput = form.querySelector('input[type="email"]');
@@ -707,27 +707,42 @@
             button.disabled = true;
             button.textContent = 'Inscrevendo...';
 
-            // Simular envio (você pode conectar com um serviço real depois)
-            setTimeout(() => {
-                // Limpar formulário
-                emailInput.value = '';
-                
-                // Feedback de sucesso
-                button.textContent = '✓ Inscrito!';
+            try {
+                const response = await fetch('/api/newsletter/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Limpar formulário
+                    emailInput.value = '';
+                    
+                    // Feedback de sucesso
+                    button.textContent = data.alreadySubscribed ? '✓ Já inscrito!' : '✓ Inscrito!';
+                    button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                    button.classList.add('bg-green-600');
+                    
+                    console.log('✅ Newsletter:', data.message);
+                } else {
+                    throw new Error(data.error || 'Erro ao inscrever');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                button.textContent = '✗ Erro';
                 button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                button.classList.add('bg-green-600');
-                
-                // Log para você implementar backend depois
-                console.log('📧 Newsletter signup:', email);
-                
-                // Resetar botão após 3 segundos
-                setTimeout(() => {
-                    button.disabled = false;
-                    button.textContent = originalText;
-                    button.classList.remove('bg-green-600');
-                    button.classList.add('bg-gray-700', 'hover:bg-gray-600');
-                }, 3000);
-            }, 1000);
+                button.classList.add('bg-red-600');
+            }
+
+            // Resetar botão após 3 segundos
+            setTimeout(() => {
+                button.disabled = false;
+                button.textContent = originalText;
+                button.classList.remove('bg-green-600', 'bg-red-600');
+                button.classList.add('bg-gray-700', 'hover:bg-gray-600');
+            }, 3000);
         }
 
         // ========== MOBILE MENU ==========
