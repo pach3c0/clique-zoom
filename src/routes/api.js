@@ -103,10 +103,18 @@ router.get('/test-create', async (req, res) => {
 // GET - Obter todos os dados do site
 router.get('/site-data', async (req, res) => {
   try {
-    // Cache por 60 segundos no browser e CDN
-    res.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    // SEM cache para debug - forçar sempre pegar dados frescos
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     
+    console.log('📥 GET /api/site-data');
     const data = await dataHelper.getSiteData();
+    console.log('📤 Respondendo com:', {
+      hasHero: !!data.hero,
+      hasFooter: !!data.footer,
+      footerQuickLinks: data.footer?.quickLinks?.length || 0
+    });
     res.json(data);
   } catch (error) {
     console.error('Erro ao buscar dados:', error);
