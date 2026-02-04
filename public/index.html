@@ -345,6 +345,12 @@
                             posY: p.posY ?? 50,
                             scale: p.scale ?? 1
                         })) : []
+                    },
+                    footer: {
+                        socialMedia: remote.footer?.socialMedia ?? {},
+                        quickLinks: remote.footer?.quickLinks ?? [],
+                        newsletter: remote.footer?.newsletter ?? { enabled: true, title: '', description: '' },
+                        copyright: remote.footer?.copyright ?? ''
                     }
                 };
             } catch (e) {
