@@ -15,10 +15,12 @@ const connectDB = async () => {
     console.log('URI:', MONGODB_URI.replace(/:[^:]*@/, ':****@')); // Hide password
     
     const connection = await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 5000,  // Reduzido de 10s para 5s
+      connectTimeoutMS: 5000,           // Reduzido de 10s para 5s
       retryWrites: true,
-      w: 'majority'
+      w: 'majority',
+      maxPoolSize: 10,                  // Pool de conexões
+      minPoolSize: 2
     });
 
     isConnected = true;

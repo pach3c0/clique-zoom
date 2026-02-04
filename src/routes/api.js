@@ -103,6 +103,9 @@ router.get('/test-create', async (req, res) => {
 // GET - Obter todos os dados do site
 router.get('/site-data', async (req, res) => {
   try {
+    // Cache por 60 segundos no browser e CDN
+    res.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    
     const data = await dataHelper.getSiteData();
     res.json(data);
   } catch (error) {

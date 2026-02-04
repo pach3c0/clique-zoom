@@ -73,6 +73,21 @@
             border-right: 8px solid transparent;
             border-top: 8px solid white;
         }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .loaded .skeleton {
+            animation: none;
+            background: none;
+        }
     </style>
 </head>
 <body class="bg-white text-gray-900">
@@ -301,6 +316,9 @@
 
         // ========== RENDER ==========
         function render() {
+            // Marca página como carregada (remove skeleton)
+            document.body.classList.add('loaded');
+            
             // ===== HERO =====
             const heroImg = document.getElementById('dom-hero-img');
             const heroOverlay = document.getElementById('dom-hero-overlay');
@@ -538,7 +556,14 @@
         });
 
         // ========== INIT ==========
-        window.addEventListener('load', async () => {
+        // Usar DOMContentLoaded em vez de 'load' para iniciar mais rápido
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        async function init() {
             const remote = await loadRemoteData();
             store = processRemoteData(remote);
             if (store) {
@@ -547,7 +572,7 @@
             } else {
                 console.warn('Nenhum dado disponível do servidor');
             }
-        });
+        }
 
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
