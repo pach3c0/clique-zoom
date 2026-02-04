@@ -2229,29 +2229,32 @@
             const footerNewsletterDesc = document.getElementById('footer-newsletter-desc');
             const footerCopyright = document.getElementById('footer-copyright');
 
-            if (appData.footer) {
-                if (footerInstagram) appData.footer.socialMedia.instagram = footerInstagram.value;
-                if (footerFacebook) appData.footer.socialMedia.facebook = footerFacebook.value;
-                if (footerLinkedin) appData.footer.socialMedia.linkedin = footerLinkedin.value;
-                if (footerTiktok) appData.footer.socialMedia.tiktok = footerTiktok.value;
-                if (footerYoutube) appData.footer.socialMedia.youtube = footerYoutube.value;
-                if (footerEmail) appData.footer.socialMedia.email = footerEmail.value;
+            // Só atualizar footer se os elementos existirem (quando estamos na aba footer)
+            if (footerInstagram) {
+                if (appData.footer) {
+                    appData.footer.socialMedia.instagram = footerInstagram.value;
+                    appData.footer.socialMedia.facebook = footerFacebook.value;
+                    appData.footer.socialMedia.linkedin = footerLinkedin.value;
+                    appData.footer.socialMedia.tiktok = footerTiktok.value;
+                    appData.footer.socialMedia.youtube = footerYoutube.value;
+                    appData.footer.socialMedia.email = footerEmail.value;
 
-                // Coletar quick links
-                const quickLinkLabels = document.querySelectorAll('.quick-link-label');
-                const quickLinkUrls = document.querySelectorAll('.quick-link-url');
-                appData.footer.quickLinks = [];
-                quickLinkLabels.forEach((label, idx) => {
-                    const url = quickLinkUrls[idx];
-                    if (label.value && url.value) {
-                        appData.footer.quickLinks.push({ label: label.value, url: url.value });
-                    }
-                });
+                    // Coletar quick links
+                    const quickLinkLabels = document.querySelectorAll('.quick-link-label');
+                    const quickLinkUrls = document.querySelectorAll('.quick-link-url');
+                    appData.footer.quickLinks = [];
+                    quickLinkLabels.forEach((label, idx) => {
+                        const url = quickLinkUrls[idx];
+                        if (label.value && url.value) {
+                            appData.footer.quickLinks.push({ label: label.value, url: url.value });
+                        }
+                    });
 
-                if (footerNewsletterEnabled) appData.footer.newsletter.enabled = footerNewsletterEnabled.checked;
-                if (footerNewsletterTitle) appData.footer.newsletter.title = footerNewsletterTitle.value;
-                if (footerNewsletterDesc) appData.footer.newsletter.description = footerNewsletterDesc.value;
-                if (footerCopyright) appData.footer.copyright = footerCopyright.value;
+                    appData.footer.newsletter.enabled = footerNewsletterEnabled.checked;
+                    appData.footer.newsletter.title = footerNewsletterTitle.value;
+                    appData.footer.newsletter.description = footerNewsletterDesc.value;
+                    appData.footer.copyright = footerCopyright.value;
+                }
             }
 
             // Converter para formato compatível com o site público
