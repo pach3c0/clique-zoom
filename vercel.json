@@ -18,6 +18,10 @@
       "destination": "/admin/$1"
     },
     {
+      "source": "/(diagnostico|check-version)\\.html",
+      "destination": "/$1.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api"
     }
