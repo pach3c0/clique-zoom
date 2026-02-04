@@ -10,7 +10,7 @@
   },
   "rewrites": [
     {
-      "source": "/admin/?$",
+      "source": "/admin",
       "destination": "/admin/index.html"
     },
     {
@@ -18,8 +18,12 @@
       "destination": "/admin/$1"
     },
     {
-      "source": "/(diagnostico|check-version)\\.html",
-      "destination": "/$1.html"
+      "source": "/diagnostico.html",
+      "destination": "/diagnostico.html"
+    },
+    {
+      "source": "/check-version.html",
+      "destination": "/check-version.html"
     },
     {
       "source": "/(.*)",
