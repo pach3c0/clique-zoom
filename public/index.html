@@ -228,27 +228,66 @@
     </div>
 
     <!-- FOOTER -->
-    <footer class="bg-neutral-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-6 md:mb-0">
-                    <h3 class="font-serif text-2xl font-bold">CLIQUE·ZOOM</h3>
-                    <p class="text-gray-400 text-sm mt-1">Fotografia que captura essências.</p>
+    <footer id="footer" class="bg-gray-900 border-t border-gray-800 text-gray-300">
+        <div class="max-w-7xl mx-auto px-6 py-16">
+            <!-- Grid de Footer -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <!-- Branding -->
+                <div class="space-y-4">
+                    <h3 class="text-white font-serif font-bold text-lg">CLIQUE·ZOOM</h3>
+                    <p class="text-sm text-gray-400">Fotografia minimalista e autêntica para capturar momentos que importam.</p>
+                    <!-- Social Media -->
+                    <div id="footer-social" class="flex gap-4 pt-4">
+                        <!-- Redes serão preenchidas via JS -->
+                    </div>
                 </div>
-                <div class="flex items-center space-x-6">
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                        <i data-lucide="instagram" class="w-5 h-5"></i>
-                    </a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                        <i data-lucide="facebook" class="w-5 h-5"></i>
-                    </a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                        <i data-lucide="mail" class="w-5 h-5"></i>
-                    </a>
+
+                <!-- Links Úteis -->
+                <div>
+                    <h4 class="text-white font-semibold mb-6 uppercase text-sm tracking-wide">Links Úteis</h4>
+                    <nav id="footer-links" class="space-y-3">
+                        <!-- Links serão preenchidos via JS -->
+                    </nav>
+                </div>
+
+                <!-- Contato -->
+                <div>
+                    <h4 class="text-white font-semibold mb-6 uppercase text-sm tracking-wide">Contato</h4>
+                    <div id="footer-contact" class="space-y-4 text-sm">
+                        <!-- Contatos serão preenchidos via JS -->
+                    </div>
+                </div>
+
+                <!-- Newsletter -->
+                <div id="footer-newsletter">
+                    <h4 class="text-white font-semibold mb-6 uppercase text-sm tracking-wide" id="footer-newsletter-title">Receba Novidades</h4>
+                    <p class="text-sm text-gray-400 mb-4" id="footer-newsletter-desc">Inscreva-se para atualizações e promoções exclusivas.</p>
+                    <form onsubmit="handleNewsletterSubscribe(event)" class="space-y-3">
+                        <input 
+                            type="email" 
+                            placeholder="seu@email.com" 
+                            class="w-full px-4 py-2 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg focus:outline-none focus:border-gray-500 text-sm"
+                            required
+                        >
+                        <button 
+                            type="submit"
+                            class="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg font-medium text-sm transition-colors"
+                        >
+                            Inscrever
+                        </button>
+                    </form>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
-                <p>&copy; 2026 CLIQUE·ZOOM. Todos os direitos reservados.</p>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-800 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+                    <p id="footer-copyright">© 2026 CLIQUE·ZOOM. Todos os direitos reservados.</p>
+                    <div class="space-x-6">
+                        <a href="#" class="hover:text-gray-300 transition-colors">Política de Privacidade</a>
+                        <a href="#" class="hover:text-gray-300 transition-colors">Termos de Serviço</a>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>
@@ -450,6 +489,101 @@
 
             // Icons
             lucide.createIcons();
+
+            // ===== FOOTER =====
+            if (store.footer) {
+                // Redes Sociais
+                const footerSocial = document.getElementById('footer-social');
+                if (footerSocial && store.footer.socialMedia) {
+                    footerSocial.innerHTML = '';
+                    const socials = store.footer.socialMedia;
+                    const platforms = [
+                        { name: 'Instagram', key: 'instagram', icon: 'instagram' },
+                        { name: 'Facebook', key: 'facebook', icon: 'facebook' },
+                        { name: 'LinkedIn', key: 'linkedin', icon: 'linkedin' },
+                        { name: 'TikTok', key: 'tiktok', icon: 'music' },
+                        { name: 'YouTube', key: 'youtube', icon: 'youtube' },
+                    ];
+                    
+                    platforms.forEach(platform => {
+                        if (socials[platform.key]) {
+                            const link = document.createElement('a');
+                            link.href = socials[platform.key];
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            link.className = 'inline-flex items-center justify-center w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors';
+                            link.innerHTML = `<i data-lucide="${platform.icon}" class="w-5 h-5"></i>`;
+                            footerSocial.appendChild(link);
+                        }
+                    });
+                    
+                    // Email
+                    if (socials.email) {
+                        const emailLink = document.createElement('a');
+                        emailLink.href = `mailto:${socials.email}`;
+                        emailLink.className = 'inline-flex items-center justify-center w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors';
+                        emailLink.innerHTML = `<i data-lucide="mail" class="w-5 h-5"></i>`;
+                        footerSocial.appendChild(emailLink);
+                    }
+                    
+                    lucide.createIcons();
+                }
+
+                // Links Úteis
+                const footerLinks = document.getElementById('footer-links');
+                if (footerLinks && store.footer.quickLinks) {
+                    footerLinks.innerHTML = '';
+                    store.footer.quickLinks.forEach(link => {
+                        const a = document.createElement('a');
+                        a.href = link.url || '#';
+                        a.textContent = link.label || 'Link';
+                        a.className = 'block hover:text-white transition-colors text-sm';
+                        footerLinks.appendChild(a);
+                    });
+                }
+
+                // Contato (vindo de studio)
+                const footerContact = document.getElementById('footer-contact');
+                if (footerContact && store.studio) {
+                    footerContact.innerHTML = '';
+                    
+                    if (store.studio.address) {
+                        const addr = document.createElement('div');
+                        addr.innerHTML = `<strong class="text-white">📍 Localização</strong><p class="text-xs mt-1">${store.studio.address}</p>`;
+                        footerContact.appendChild(addr);
+                    }
+                    
+                    if (store.studio.hours) {
+                        const hrs = document.createElement('div');
+                        hrs.innerHTML = `<strong class="text-white">🕐 Horário</strong><p class="text-xs mt-1">${store.studio.hours.replace(/\n/g, '<br>')}</p>`;
+                        footerContact.appendChild(hrs);
+                    }
+                    
+                    if (store.studio.whatsapp) {
+                        const wa = document.createElement('div');
+                        wa.innerHTML = `<strong class="text-white">📱 WhatsApp</strong><p><a href="https://wa.me/${store.studio.whatsapp}" class="text-xs text-green-400 hover:text-green-300">${store.studio.whatsapp}</a></p>`;
+                        footerContact.appendChild(wa);
+                    }
+                }
+
+                // Newsletter
+                const newsletterTitle = document.getElementById('footer-newsletter-title');
+                const newsletterDesc = document.getElementById('footer-newsletter-desc');
+                if (store.footer.newsletter) {
+                    if (newsletterTitle && store.footer.newsletter.title) {
+                        newsletterTitle.textContent = store.footer.newsletter.title;
+                    }
+                    if (newsletterDesc && store.footer.newsletter.description) {
+                        newsletterDesc.textContent = store.footer.newsletter.description;
+                    }
+                }
+
+                // Copyright
+                const footerCopyright = document.getElementById('footer-copyright');
+                if (footerCopyright && store.footer.copyright) {
+                    footerCopyright.textContent = store.footer.copyright;
+                }
+            }
         }
 
         // ========== WHATSAPP WIDGET ==========
