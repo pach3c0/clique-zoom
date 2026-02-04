@@ -8,6 +8,7 @@ const newsletterSchema = new mongoose.Schema({
     trim: true,
     unique: true,
     match: [/^\S+@\S+\.\S+$/, 'Email inválido']
+    // Unique constraint already creates an index
   },
   subscribedAt: {
     type: Date,
@@ -25,8 +26,7 @@ const newsletterSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Índice para busca rápida
-newsletterSchema.index({ email: 1 });
+// Índice para busca rápida (não repetir email pois já é unique)
 newsletterSchema.index({ active: 1, subscribedAt: -1 });
 
 module.exports = mongoose.model('Newsletter', newsletterSchema);

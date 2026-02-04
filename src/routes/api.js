@@ -1,7 +1,55 @@
 const express = require('express');
 const router = express.Router();
 const dataHelper = require('../helpers/data-helper');
+const authHelper = require('../helpers/auth-helper');
+const { verifyToken } = require('../middleware/auth');
 const Newsletter = require('../models/Newsletter');
+
+// ========== AUTENTICAÇÃO ==========
+
+// POST - Login (obter JWT token)
+router.post('/auth/login', async (req, res) => {
+  console.log('🔓 POST /auth/login recebido');
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: 'Senha é obrigatória' });
+    }
+
+    const result = await authHelper.login(password);
+
+    if (!result.success) {
+      return res.status(401).json({ error: result.message });
+    }
+
+    res.json({
+      success: true,
+      token: result.token,
+      expiresIn: result.expiresIn
+    });
+  } catch (error) {
+    console.error('Erro no login:', error);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// POST - Verificar token (para validar no frontend)
+router.post('/auth/verify', (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ valid: false });
+    }
+
+    const result = authHelper.verifyToken(token);
+
+    res.json({ valid: result.valid });
+  } catch (error) {
+    res.status(401).json({ valid: false });
+  }
+});
 
 // GET - Obter todos os dados do site
 router.get('/site-data', async (req, res) => {
@@ -25,8 +73,8 @@ router.get('/site-data', async (req, res) => {
   }
 });
 
-// PUT - Atualizar dados do site
-router.put('/site-data', async (req, res) => {
+// PUT - Atualizar dados do site (PROTEGIDO)
+router.put('/site-data', verifyToken, async (req, res) => {
   try {
     console.log('📥 Recebido PUT /site-data com body:', {
       heroTitle: req.body.hero?.title,
@@ -44,8 +92,8 @@ router.put('/site-data', async (req, res) => {
   }
 });
 
-// POST - Adicionar item ao portfolio
-router.post('/portfolio', async (req, res) => {
+// POST - Adicionar item ao portfolio (PROTEGIDO)
+router.post('/portfolio', verifyToken, async (req, res) => {
   try {
     const data = await dataHelper.getSiteData();
     data.portfolio.push(req.body);
@@ -57,8 +105,8 @@ router.post('/portfolio', async (req, res) => {
   }
 });
 
-// PUT - Atualizar item do portfolio
-router.put('/portfolio/:index', async (req, res) => {
+// PUT - Atualizar item do portfolio (PROTEGIDO)
+router.put('/portfolio/:index', verifyToken, async (req, res) => {
   try {
     const index = parseInt(req.params.index);
     const data = await dataHelper.getSiteData();
@@ -76,8 +124,8 @@ router.put('/portfolio/:index', async (req, res) => {
   }
 });
 
-// DELETE - Remover item do portfolio
-router.delete('/portfolio/:index', async (req, res) => {
+// DELETE - Remover item do portfolio (PROTEGIDO)
+router.delete('/portfolio/:index', verifyToken, async (req, res) => {
   try {
     const index = parseInt(req.params.index);
     const data = await dataHelper.getSiteData();
@@ -151,8 +199,8 @@ router.post('/newsletter/subscribe', async (req, res) => {
   }
 });
 
-// GET - Listar emails da newsletter (para admin)
-router.get('/newsletter', async (req, res) => {
+// GET - Listar emails da newsletter (para admin) (PROTEGIDO)
+router.get('/newsletter', verifyToken, async (req, res) => {
   try {
     const { active = 'true', page = 1, limit = 50 } = req.query;
     
@@ -181,8 +229,8 @@ router.get('/newsletter', async (req, res) => {
   }
 });
 
-// DELETE - Cancelar inscrição
-router.delete('/newsletter/:email', async (req, res) => {
+// DELETE - Cancelar inscrição (PROTEGIDO)
+router.delete('/newsletter/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
     
@@ -202,4 +250,18 @@ router.delete('/newsletter/:email', async (req, res) => {
   }
 });
 
+// ========== UPLOAD (PROTEGIDO) ==========
+
+router.post('/admin/upload', verifyToken, async (req, res) => {
+  // Este endpoint é protegido - só admin pode fazer upload
+  // O middleware verifyToken vai validar o token antes de chegar aqui
+  try {
+    // Lógica de upload aqui
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro no upload' });
+  }
+});
+
 module.exports = router;
+

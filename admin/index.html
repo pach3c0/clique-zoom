@@ -260,7 +260,7 @@
 
     <script src="/assets/js/api-helper.js"></script>
     <script>
-        const PASSWORD = "admin123";
+        let authToken = null; // JWT token armazenado
         let isLoggedIn = false;
         let currentTab = 'hero';
 
@@ -318,16 +318,41 @@
         async function handleLogin(e) {
             e.preventDefault();
             const password = document.getElementById('login-password').value;
+            const button = e.target.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
 
-            if (password === PASSWORD) {
+            button.disabled = true;
+            button.textContent = 'Aguarde...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.error || 'Erro ao fazer login');
+                    return;
+                }
+
+                // Salvar token no localStorage
+                authToken = data.token;
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('tokenExpires', Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dias
+
                 isLoggedIn = true;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
-                console.log('✅ Login realizado');
+                document.getElementById('login-password').value = '';
+                
+                console.log('✅ Login realizado com sucesso');
+                
                 try {
                     await loadDados();
                     console.log('✅ Dados carregados');
-                    console.log('appData.footer:', appData.footer);
                 } catch (err) {
                     console.error('❌ Erro ao carregar dados:', err);
                 }
@@ -339,18 +364,62 @@
                 }
                 lucide.createIcons();
                 renderHero();
-            } else {
-                alert('Senha incorreta!');
+            } catch (error) {
+                console.error('Erro no login:', error);
+                alert('Erro ao conectar com o servidor');
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
             }
         }
 
         function handleLogout() {
             if (confirm('Tem certeza que quer sair?')) {
+                // Limpar token
+                authToken = null;
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('tokenExpires');
+                
                 isLoggedIn = false;
                 document.getElementById('admin-panel').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('login-password').value = '';
+                
+                console.log('✅ Logout realizado');
             }
+        }
+
+        // Verificar token ao iniciar
+        function checkToken() {
+            const token = localStorage.getItem('authToken');
+            const expires = localStorage.getItem('tokenExpires');
+
+            if (!token || !expires) {
+                return;
+            }
+
+            if (Date.now() > parseInt(expires)) {
+                // Token expirou
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('tokenExpires');
+                alert('Sua sessão expirou. Faça login novamente.');
+                return;
+            }
+
+            // Token ainda é válido
+            authToken = token;
+            isLoggedIn = true;
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
+            console.log('✅ Sessão restaurada');
+            
+            // Carregar dados
+            loadDados().then(() => {
+                loadSiteConfig().then(() => {
+                    lucide.createIcons();
+                    renderHero();
+                });
+            });
         }
 
         function switchTab(tabName) {
@@ -2635,6 +2704,12 @@
         }
 
         async function saveDados() {
+            // Verificar se está autenticado
+            if (!authToken) {
+                alert('Você precisa estar logado para salvar alterações');
+                return;
+            }
+
             console.log('💾 saveDados() chamado');
             const saveData = buildSaveData();
             
@@ -2649,12 +2724,27 @@
             });
 
             try {
-                const response = await api.updateSiteData(saveData);
-                console.log('✅ Resposta do API:', response);
-                console.log('✅ Footer retornado:', response.footer);
+                // Enviar com token JWT no header
+                const response = await fetch('/api/site-data', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(saveData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erro ao salvar dados');
+                }
+
+                const data = await response.json();
+                console.log('✅ Resposta do API:', data);
+                console.log('✅ Footer retornado:', data.footer);
             } catch (err) {
                 console.error('❌ Erro ao salvar:', err);
-                alert('Não foi possível salvar os dados.');
+                alert('Não foi possível salvar os dados: ' + err.message);
                 return;
             }
 
@@ -2761,7 +2851,4 @@
 
         window.addEventListener('load', () => {
             lucide.createIcons();
-        });
-    </script>
-</body>
-</html>
+            checkToken(); // Verificar se há sessão salva
