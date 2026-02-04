@@ -2296,12 +2296,16 @@
                 studioWhatsapp: saveData.studio?.whatsapp,
                 studioTitle: saveData.studio?.title,
                 aboutTitle: saveData.about?.title,
-                heroTitle: saveData.hero?.title
+                heroTitle: saveData.hero?.title,
+                footerSocialMediaInstagram: saveData.footer?.socialMedia?.instagram,
+                footerQuickLinksCount: saveData.footer?.quickLinks?.length,
+                footerCopyright: saveData.footer?.copyright
             });
 
             try {
                 const response = await api.updateSiteData(saveData);
                 console.log('✅ Resposta do API:', response);
+                console.log('✅ Footer retornado:', response.footer);
             } catch (err) {
                 console.error('❌ Erro ao salvar:', err);
                 alert('Não foi possível salvar os dados.');

@@ -67,11 +67,35 @@ const maintenanceSchema = new mongoose.Schema({
   message: { type: String, default: '' }
 }, { _id: false });
 
+const socialMediaSchema = new mongoose.Schema({
+  instagram: { type: String, default: '' },
+  facebook: { type: String, default: '' },
+  linkedin: { type: String, default: '' },
+  tiktok: { type: String, default: '' },
+  youtube: { type: String, default: '' },
+  email: { type: String, default: '' }
+}, { _id: false });
+
+const footerSchema = new mongoose.Schema({
+  socialMedia: { type: socialMediaSchema, default: () => ({}) },
+  quickLinks: [{
+    label: { type: String, default: '' },
+    url: { type: String, default: '' }
+  }],
+  newsletter: {
+    enabled: { type: Boolean, default: true },
+    title: { type: String, default: 'Receba novidades' },
+    description: { type: String, default: 'Inscreva-se para atualizações' }
+  },
+  copyright: { type: String, default: '© 2026 CLIQUE·ZOOM. Todos os direitos reservados.' }
+}, { _id: false });
+
 const siteDataSchema = new mongoose.Schema({
   hero: { type: heroSchema, default: () => ({}) },
   portfolio: { type: [portfolioItemSchema], default: [] },
   about: { type: aboutSchema, default: () => ({}) },
   studio: { type: studioSchema, default: () => ({}) },
+  footer: { type: footerSchema, default: () => ({}) },
   maintenance: { type: maintenanceSchema, default: () => ({}) }
 }, {
   timestamps: true,
