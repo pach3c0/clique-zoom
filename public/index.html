@@ -689,6 +689,47 @@
             }
         }
 
+        // ========== NEWSLETTER ==========
+        function handleNewsletterSubscribe(event) {
+            event.preventDefault();
+            const form = event.target;
+            const emailInput = form.querySelector('input[type="email"]');
+            const button = form.querySelector('button[type="submit"]');
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                alert('Por favor, insira um email válido');
+                return;
+            }
+
+            // Desabilitar botão durante o processo
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Inscrevendo...';
+
+            // Simular envio (você pode conectar com um serviço real depois)
+            setTimeout(() => {
+                // Limpar formulário
+                emailInput.value = '';
+                
+                // Feedback de sucesso
+                button.textContent = '✓ Inscrito!';
+                button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                button.classList.add('bg-green-600');
+                
+                // Log para você implementar backend depois
+                console.log('📧 Newsletter signup:', email);
+                
+                // Resetar botão após 3 segundos
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    button.classList.remove('bg-green-600');
+                    button.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                }, 3000);
+            }, 1000);
+        }
+
         // ========== MOBILE MENU ==========
         document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
             // Simple toggle - you can expand this
