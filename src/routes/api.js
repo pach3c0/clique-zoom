@@ -128,7 +128,6 @@ router.put('/site-data', async (req, res) => {
     console.error('Erro ao atualizar dados:', error);
     res.status(500).json({ error: 'Erro ao atualizar dados do site' });
   }
-  }
 });
 
 // POST - Adicionar item ao portfolio
