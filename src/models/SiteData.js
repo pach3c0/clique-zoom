@@ -182,6 +182,10 @@ siteDataSchema.statics.updateSiteData = async function(updates) {
       data.portfolio = merged.portfolio;
       data.markModified('portfolio');
     }
+    if (merged.footer) {
+      data.footer = merged.footer;
+      data.markModified('footer');
+    }
 
     console.log('📝 Atualizando documento com studio.whatsapp:', data.studio.whatsapp);
     await data.save();
