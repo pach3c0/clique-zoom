@@ -2258,7 +2258,7 @@
             }
 
             // Converter para formato compatível com o site público
-            return {
+            const result = {
                 hero: {
                     title: appData.hero.title,
                     subtitle: appData.hero.subtitle,
@@ -2287,6 +2287,11 @@
                 studio: appData.studio,
                 footer: appData.footer
             };
+
+            console.log('🔍 buildSaveData - appData.footer:', JSON.stringify(appData.footer, null, 2));
+            console.log('🔍 buildSaveData - result.footer:', JSON.stringify(result.footer, null, 2));
+
+            return result;
         }
 
         async function saveDados() {
