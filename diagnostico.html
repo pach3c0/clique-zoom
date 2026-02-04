@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnóstico - WhatsApp Update</title>
+    <style>
+        body { 
+            font-family: 'Courier New', monospace; 
+            padding: 20px; 
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .log-line { 
+            padding: 5px 0; 
+            border-left: 3px solid #007acc; 
+            padding-left: 10px;
+            margin: 2px 0;
+        }
+        .success { border-left-color: #4ec9b0; color: #4ec9b0; }
+        .error { border-left-color: #f48771; color: #f48771; }
+        .info { border-left-color: #569cd6; color: #569cd6; }
+        .warn { border-left-color: #dcdcaa; color: #dcdcaa; }
+        h1 { color: #fff; }
+        button {
+            margin: 10px 5px;
+            padding: 10px 20px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover { background: #005a9e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Diagnóstico - WhatsApp Update</h1>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="testAPI()">1️⃣ Testar API Diretamente</button>
+            <button onclick="testFrontend()">2️⃣ Testar Frontend</button>
+            <button onclick="testBuildSaveData()">3️⃣ Testar buildSaveData()</button>
+            <button onclick="checkDiagnostico()">4️⃣ Diagnóstico do Servidor</button>
+        </div>
+
+        <div id="logs" style="background: #252526; padding: 15px; border-radius: 4px; max-height: 400px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        const logs = document.getElementById('logs');
+
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(line);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        async function testAPI() {
+            logs.innerHTML = '';
+            log('🚀 Testando API Diretamente...', 'info');
+            
+            try {
+                const testData = {
+                    studio: {
+                        whatsapp: '+5511999888777'
+                    }
+                };
+
+                log(`📤 Enviando: ${JSON.stringify(testData)}`, 'info');
+                
+                const response = await fetch('/api/site-data', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ API respondeu sucesso`, 'success');
+                    log(`📥 Resposta studio.whatsapp: ${data.studio?.whatsapp}`, 'success');
+                } else {
+                    log(`❌ API retornou status ${response.status}`, 'error');
+                }
+            } catch (err) {
+                log(`❌ Erro: ${err.message}`, 'error');
+            }
+        }
+
+        async function testFrontend() {
+            logs.innerHTML = '';
+            log('🌐 Testando Frontend...', 'info');
+            
+            try {
+                if (typeof api === 'undefined') {
+                    log('❌ API helper não carregado!', 'error');
+                    return;
+                }
+                log('✅ API helper está disponível', 'success');
+
+                const data = await api.getSiteData();
+                log(`✅ getSiteData() funcionou`, 'success');
+                log(`📦 WhatsApp atual no banco: ${data.studio?.whatsapp}`, 'info');
+
+            } catch (err) {
+                log(`❌ Erro: ${err.message}`, 'error');
+            }
+        }
+
+        async function testBuildSaveData() {
+            logs.innerHTML = '';
+            log('🔨 Testando buildSaveData()...', 'info');
+            
+            try {
+                if (typeof buildSaveData === 'undefined') {
+                    log('❌ buildSaveData não está definida!', 'error');
+                    log('(Você precisa estar em /admin ou ter o admin.html carregado)', 'warn');
+                    return;
+                }
+
+                const saveData = buildSaveData();
+                log('✅ buildSaveData() executada', 'success');
+                log(`Studio whatsapp: ${saveData.studio?.whatsapp}`, 'info');
+                log(`About title: ${saveData.about?.title}`, 'info');
+                
+                if (!saveData.studio?.whatsapp) {
+                    log('⚠️ AVISO: studio.whatsapp está vazio!', 'warn');
+                }
+
+            } catch (err) {
+                log(`❌ Erro: ${err.message}`, 'error');
+            }
+        }
+
+        async function checkDiagnostico() {
+            logs.innerHTML = '';
+            log('📊 Verificando diagnóstico do servidor...', 'info');
+            
+            try {
+                const response = await fetch('/api/diagnostico');
+                if (response.ok) {
+                    const diag = await response.json();
+                    log('✅ Resposta recebida', 'success');
+                    log(`MongoDB: ${diag.mongo.readyStateText}`, diag.mongo.connected ? 'success' : 'error');
+                    log(`Data Fetch: ${diag.dataFetch.ok ? '✅ OK' : '❌ ERRO'}`, diag.dataFetch.ok ? 'success' : 'error');
+                    log(`Último WhatsApp no banco: ${diag.dataFetch.lastStudioWhatsapp}`, 'info');
+                    log(`Ambiente: ${diag.environment.nodeEnv}`, 'info');
+                    log(`MongoDB URI: ${diag.environment.mongodbUri}`, 'info');
+                } else {
+                    log(`❌ Erro ${response.status}`, 'error');
+                }
+            } catch (err) {
+                log(`❌ Erro: ${err.message}`, 'error');
+            }
+        }
+
+        log('Página de diagnóstico carregada. Clique em um botão para começar.', 'info');
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verificar Versão Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .info { background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .success { background: #c8e6c9; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .error { background: #ffcdd2; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Verificador de Versão Admin</h1>
+        
+        <div class="info">
+            <strong>Versão Local:</strong> Abra DevTools (F12) → Console<br/>
+            Cole este código e veja qual versão está rodando:
+        </div>
+
+        <code style="display: block; white-space: pre; overflow-x: auto; padding: 10px;">
+fetch('/admin/')
+  .then(r => r.text())
+  .then(html => {
+    const match = html.match(/<!-- Version: (.*?) -->/);
+    console.log('Admin Versão:', match ? match[1] : 'Não encontrada');
+    console.log('Se vê "3.1.1" = Fix está instalado ✅');
+    console.log('Se vê versão antiga = Cache do navegador ❌');
+  });
+        </code>
+
+        <div class="info">
+            <strong>Ou visite:</strong> <code>cliquezoom.com.br/admin/</code><br/>
+            Abra DevTools → Console e copie/cole:
+        </div>
+
+        <code style="display: block; white-space: pre; overflow-x: auto; padding: 10px; background: #fafafa;">
+// Verificar se o fix está instalado
+const hasNewFix = document.documentElement.outerHTML.includes('Version: 3.1.1');
+console.log('Fix WhatsApp instalado?', hasNewFix ? '✅ SIM' : '❌ NÃO');
+        </code>
+
+        <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 4px;">
+            <strong>⚠️ Se o fix não estiver:</strong><br/>
+            1. Faça Cmd+Shift+Delete (limpar cache)<br/>
+            2. Aguarde 30 segundos (Vercel propaga)<br/>
+            3. Recarregue a página
+        </div>
+    </div>
+
+    <script>
+        // Verificar automaticamente
+        window.addEventListener('load', () => {
+            const hasVersion = document.documentElement.outerHTML.includes('Version: 3.1.1');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = hasVersion ? 'success' : 'error';
+            resultDiv.innerHTML = hasVersion 
+                ? '<strong>✅ Fix detectado!</strong> Versão 3.1.1 está em produção.'
+                : '<strong>❌ Fix NÃO detectado.</strong> Provavelmente em cache. Limpe o cache do navegador.';
+            document.querySelector('.container').insertBefore(resultDiv, document.querySelector('.info'));
+        });
+    </script>
+</body>
+</html>

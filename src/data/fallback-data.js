@@ -1,9 +1,9 @@
-// Dados padrão para quando MongoDB não está disponível
+// Dados padrão para quando MongoDB não está disponível - VAZIOS
 const fallbackData = {
   hero: {
-    title: 'A pureza do essencial.',
-    subtitle: 'Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.',
-    image: 'IMG_8581.jpg',
+    title: '',
+    subtitle: '',
+    image: '',
     transform: {
       scale: 1,
       posX: 50,
@@ -21,42 +21,27 @@ const fallbackData = {
     subtitleFontSize: 18,
     topBarHeight: 0,
     bottomBarHeight: 0,
-    overlayOpacity: 0.3
+    overlayOpacity: 30
   },
   about: {
-    title: 'Quem Somos',
-    text: 'CLIQUE·ZOOM é um estúdio de fotografia dedicado a capturar momentos autênticos e emocionais.'
+    title: '',
+    text: '',
+    image: ''
   },
-  portfolio: [
-    {
-      title: 'Casamento',
-      description: 'Celebrações e momentos especiais',
-      image: 'wedding.jpg'
-    },
-    {
-      title: 'Retratos',
-      description: 'Trabalhos autorais e sessions personalizadas',
-      image: 'portraits.jpg'
-    }
-  ],
+  portfolio: [],
   studio: {
-    title: 'Situado no Coração do Morumbi',
-    description: 'Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.',
-    address: 'São Paulo, SP',
-    hours: '09:00 - 18:00',
-    whatsapp: '+5511999999999',
-    whatsappMessages: [
-      { text: 'Olá! Como posso ajudar?', delay: 5 }
-    ],
-    photos: [
-      { image: 'studio1.jpg', posX: 50, posY: 50, scale: 1 },
-      { image: 'studio2.jpg', posX: 50, posY: 50, scale: 1 }
-    ]
+    title: '',
+    description: '',
+    address: '',
+    hours: '',
+    whatsapp: '',
+    whatsappMessages: [],
+    photos: []
   },
   maintenance: {
     enabled: false,
-    title: 'Manutenção',
-    message: 'Site em manutenção. Voltaremos em breve!'
+    title: '',
+    message: ''
   }
 };
 

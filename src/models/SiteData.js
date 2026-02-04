@@ -86,8 +86,9 @@ function deepMerge(target, source) {
   const output = { ...target };
 
   for (const key of Object.keys(source)) {
-    if (source[key] === null || source[key] === undefined) {
-      continue; // Ignora valores nulos/undefined para não sobrescrever dados existentes
+    // Se source[key] é undefined ou null, mantém o valor do target
+    if (source[key] === undefined || source[key] === null) {
+      continue;
     }
 
     // Arrays são substituídos completamente (portfolio, whatsappMessages, photos)
@@ -98,7 +99,7 @@ function deepMerge(target, source) {
     else if (typeof source[key] === 'object' && typeof target[key] === 'object' && !Array.isArray(target[key])) {
       output[key] = deepMerge(target[key] || {}, source[key]);
     }
-    // Valores primitivos são substituídos
+    // Valores primitivos (incluindo strings) são substituídos
     else {
       output[key] = source[key];
     }
@@ -137,19 +138,30 @@ siteDataSchema.statics.updateSiteData = async function(updates) {
     const merged = deepMerge(currentData, updates);
 
     // Atualizar cada campo individualmente
-    if (merged.hero) data.hero = merged.hero;
-    if (merged.about) data.about = merged.about;
-    if (merged.studio) data.studio = merged.studio;
-    if (merged.maintenance) data.maintenance = merged.maintenance;
-    if (merged.portfolio) data.portfolio = merged.portfolio;
+    if (merged.hero) {
+      data.hero = merged.hero;
+      data.markModified('hero');
+    }
+    if (merged.about) {
+      data.about = merged.about;
+      data.markModified('about');
+    }
+    if (merged.studio) {
+      data.studio = merged.studio;
+      data.markModified('studio');
+    }
+    if (merged.maintenance) {
+      data.maintenance = merged.maintenance;
+      data.markModified('maintenance');
+    }
+    if (merged.portfolio) {
+      data.portfolio = merged.portfolio;
+      data.markModified('portfolio');
+    }
 
-    data.markModified('hero');
-    data.markModified('about');
-    data.markModified('studio');
-    data.markModified('maintenance');
-    data.markModified('portfolio');
-
+    console.log('📝 Atualizando documento com studio.whatsapp:', data.studio.whatsapp);
     await data.save();
+    console.log('✅ Documento salvo. Novo whatsapp:', data.studio.whatsapp);
   }
   return data;
 };

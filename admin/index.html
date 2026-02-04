@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Version: 3.2.0 (2026-02-04 - Valores default removidos) -->
 <html lang="pt-BR" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
@@ -219,12 +220,12 @@
             message: 'Estamos ajustando alguns detalhes. Volte em breve.'
         };
 
-        // Dados padrão
+        // Dados padrão - VAZIOS (sem valores default)
         const defaultData = {
             hero: {
-                title: "A pureza do essencial.",
-                subtitle: "Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.",
-                image: "IMG_8581.jpg",
+                title: "",
+                subtitle: "",
+                image: "",
                 imageScale: 1,
                 imagePosX: 50,
                 imagePosY: 50,
@@ -239,33 +240,19 @@
                 overlayOpacity: 30
             },
             about: {
-                title: "Quem Somos",
-                text: "Somos fotógrafos que acreditam na força da simplicidade. Nosso estúdio foi projetado para eliminar distrações e focar no que realmente importa: você.\n\nCom mais de uma década de experiência, capturamos momentos autênticos em um ambiente controlado e minimalista. Cada sessão é uma oportunidade de criar algo único e atemporal.\n\nNosso foco vai além de simplesmente tirar fotos. Oferecemos direção estratégica de imagem, posing especializado e uma abordagem que transforma como você se vê.",
-                image: "IMG_8640.jpg"
+                title: "",
+                text: "",
+                image: ""
             },
-            portfolio: [
-                { image: "Gemini_Generated_Image_hbltjzhbltjzhblt.png" },
-                { image: "IMG_8640.jpg" },
-                { image: "IMG_8607.jpg" },
-                { image: "Gemini_Generated_Image_zedrb9zedrb9zedr.png" },
-                { image: "IMG_8581.jpg" },
-                { image: "IMG_9153.jpg" }
-            ],
+            portfolio: [],
             studio: {
-                title: "Situado no Coração do Morumbi",
-                description: "Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.",
-                address: "R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP",
-                hours: "Segunda a Sexta: 9h - 18h\nSábado: 10h - 16h",
-                whatsapp: "5511999999999",
-                whatsappMessages: [
-                    { text: "Olá! Como posso ajudar você hoje?", delay: 5 },
-                    { text: "Esse mês estamos com super preço de inauguração 10 Fotos por apenas R$180,00", delay: 5 },
-                    { text: "Me chame aqui no WhatsApp!", delay: 5 }
-                ],
-                photos: [
-                    { image: "IMG_8586.jpg", posX: 50, posY: 50, scale: 1 },
-                    { image: "IMG_9153.jpg", posX: 50, posY: 50, scale: 1 }
-                ]
+                title: "",
+                description: "",
+                address: "",
+                hours: "",
+                whatsapp: "",
+                whatsappMessages: [],
+                photos: []
             }
         };
 
@@ -1846,21 +1833,66 @@
         }
 
         function buildSaveData() {
-            // Coletar dados de todas as abas
-            if (currentTab === 'sobre') {
-                appData.about.title = document.getElementById('about-title')?.value || appData.about.title;
-                appData.about.text = document.getElementById('about-text')?.value || appData.about.text;
-                appData.about.image = document.getElementById('about-image')?.value || appData.about.image;
-            }
+            // Coletar dados de TODAS as abas, sempre
+            
+            // HERO - Coletar todos os inputs do hero
+            const heroTitle = document.getElementById('hero-title');
+            const heroSubtitle = document.getElementById('hero-subtitle');
+            const heroImage = document.getElementById('hero-image');
+            const heroScale = document.getElementById('hero-scale');
+            const heroImgX = document.getElementById('hero-img-x');
+            const heroImgY = document.getElementById('hero-img-y');
+            const heroTitleX = document.getElementById('hero-title-x');
+            const heroTitleY = document.getElementById('hero-title-y');
+            const heroTitleSize = document.getElementById('hero-title-size');
+            const heroSubX = document.getElementById('hero-sub-x');
+            const heroSubY = document.getElementById('hero-sub-y');
+            const heroSubSize = document.getElementById('hero-sub-size');
+            const heroTopBar = document.getElementById('hero-top-bar');
+            const heroBottomBar = document.getElementById('hero-bottom-bar');
+            const heroOverlay = document.getElementById('hero-overlay');
+            
+            if (heroTitle && heroTitle.value) appData.hero.title = heroTitle.value;
+            if (heroSubtitle && heroSubtitle.value) appData.hero.subtitle = heroSubtitle.value;
+            if (heroImage && heroImage.value) appData.hero.image = heroImage.value;
+            if (heroScale) appData.hero.imageScale = parseFloat(heroScale.value);
+            if (heroImgX) appData.hero.imagePosX = parseFloat(heroImgX.value);
+            if (heroImgY) appData.hero.imagePosY = parseFloat(heroImgY.value);
+            if (heroTitleX) appData.hero.titlePosX = parseFloat(heroTitleX.value);
+            if (heroTitleY) appData.hero.titlePosY = parseFloat(heroTitleY.value);
+            if (heroTitleSize) appData.hero.titleSize = parseFloat(heroTitleSize.value);
+            if (heroSubX) appData.hero.subtitlePosX = parseFloat(heroSubX.value);
+            if (heroSubY) appData.hero.subtitlePosY = parseFloat(heroSubY.value);
+            if (heroSubSize) appData.hero.subtitleSize = parseFloat(heroSubSize.value);
+            if (heroTopBar) appData.hero.topBarHeight = parseFloat(heroTopBar.value);
+            if (heroBottomBar) appData.hero.bottomBarHeight = parseFloat(heroBottomBar.value);
+            if (heroOverlay) appData.hero.overlayOpacity = parseFloat(heroOverlay.value);
+            
+            // Sobre
+            const aboutTitle = document.getElementById('about-title');
+            const aboutText = document.getElementById('about-text');
+            const aboutImage = document.getElementById('about-image');
+            if (aboutTitle && aboutTitle.value) appData.about.title = aboutTitle.value;
+            if (aboutText && aboutText.value) appData.about.text = aboutText.value;
+            if (aboutImage && aboutImage.value) appData.about.image = aboutImage.value;
 
-            if (currentTab === 'estudio') {
-                appData.studio.title = document.getElementById('studio-title')?.value || appData.studio.title;
-                appData.studio.description = document.getElementById('studio-description')?.value || appData.studio.description;
-                appData.studio.address = document.getElementById('studio-address')?.value || appData.studio.address;
-                appData.studio.hours = document.getElementById('studio-hours')?.value || appData.studio.hours;
-                appData.studio.whatsapp = document.getElementById('studio-whatsapp')?.value || appData.studio.whatsapp;
+            // Estúdio
+            const studioTitle = document.getElementById('studio-title');
+            const studioDescription = document.getElementById('studio-description');
+            const studioAddress = document.getElementById('studio-address');
+            const studioHours = document.getElementById('studio-hours');
+            const studioWhatsapp = document.getElementById('studio-whatsapp');
+            
+            if (studioTitle && studioTitle.value) appData.studio.title = studioTitle.value;
+            if (studioDescription && studioDescription.value) appData.studio.description = studioDescription.value;
+            if (studioAddress && studioAddress.value) appData.studio.address = studioAddress.value;
+            if (studioHours && studioHours.value) appData.studio.hours = studioHours.value;
+            if (studioWhatsapp && studioWhatsapp.value) appData.studio.whatsapp = studioWhatsapp.value;
+            
+            // Sempre coletar mensagens de WhatsApp
+            const whatsappMsgList = document.getElementById('whatsapp-messages-list');
+            if (whatsappMsgList) {
                 appData.studio.whatsappMessages = collectWhatsappMessages();
-                // photos já está sendo atualizado diretamente no appData
             }
 
             // Converter para formato compatível com o site público
@@ -1890,19 +1922,25 @@
                 },
                 about: appData.about,
                 portfolio: appData.portfolio,
-                studio: {
-                    ...appData.studio,
-                    whatsappMessages: appData.studio.whatsappMessages || defaultData.studio.whatsappMessages
-                }
+                studio: appData.studio
             };
         }
 
         async function saveDados() {
             const saveData = buildSaveData();
+            
+            console.log('📤 Enviando dados para o API:', {
+                studioWhatsapp: saveData.studio?.whatsapp,
+                studioTitle: saveData.studio?.title,
+                aboutTitle: saveData.about?.title,
+                heroTitle: saveData.hero?.title
+            });
 
             try {
-                await api.updateSiteData(saveData);
+                const response = await api.updateSiteData(saveData);
+                console.log('✅ Resposta do API:', response);
             } catch (err) {
+                console.error('❌ Erro ao salvar:', err);
                 alert('Não foi possível salvar os dados.');
                 return;
             }
@@ -1930,26 +1968,30 @@
                     // Converter do formato do site para o formato do admin
                     if (loaded.hero) {
                         appData.hero = {
-                            title: loaded.hero.title || defaultData.hero.title,
-                            subtitle: loaded.hero.subtitle || defaultData.hero.subtitle,
-                            image: loaded.hero.image || defaultData.hero.image,
-                            imageScale: loaded.hero.transform?.scale ?? defaultData.hero.imageScale,
-                            imagePosX: loaded.hero.transform?.posX ?? defaultData.hero.imagePosX,
-                            imagePosY: loaded.hero.transform?.posY ?? defaultData.hero.imagePosY,
-                            titlePosX: loaded.hero.titleTransform?.posX ?? defaultData.hero.titlePosX,
-                            titlePosY: loaded.hero.titleTransform?.posY ?? defaultData.hero.titlePosY,
-                            subtitlePosX: loaded.hero.subtitleTransform?.posX ?? defaultData.hero.subtitlePosX,
-                            subtitlePosY: loaded.hero.subtitleTransform?.posY ?? defaultData.hero.subtitlePosY,
-                            titleSize: loaded.hero.titleFontSize ?? defaultData.hero.titleSize,
-                            subtitleSize: loaded.hero.subtitleFontSize ?? defaultData.hero.subtitleSize,
-                            topBarHeight: loaded.hero.topBarHeight ?? defaultData.hero.topBarHeight,
-                            bottomBarHeight: loaded.hero.bottomBarHeight ?? defaultData.hero.bottomBarHeight,
-                            overlayOpacity: loaded.hero.overlayOpacity ?? defaultData.hero.overlayOpacity
+                            title: loaded.hero.title ?? '',
+                            subtitle: loaded.hero.subtitle ?? '',
+                            image: loaded.hero.image ?? '',
+                            imageScale: loaded.hero.transform?.scale ?? 1,
+                            imagePosX: loaded.hero.transform?.posX ?? 50,
+                            imagePosY: loaded.hero.transform?.posY ?? 50,
+                            titlePosX: loaded.hero.titleTransform?.posX ?? 50,
+                            titlePosY: loaded.hero.titleTransform?.posY ?? 40,
+                            subtitlePosX: loaded.hero.subtitleTransform?.posX ?? 50,
+                            subtitlePosY: loaded.hero.subtitleTransform?.posY ?? 55,
+                            titleSize: loaded.hero.titleFontSize ?? 48,
+                            subtitleSize: loaded.hero.subtitleFontSize ?? 18,
+                            topBarHeight: loaded.hero.topBarHeight ?? 0,
+                            bottomBarHeight: loaded.hero.bottomBarHeight ?? 0,
+                            overlayOpacity: loaded.hero.overlayOpacity ?? 30
                         };
                     }
 
                     if (loaded.about) {
-                        appData.about = { ...defaultData.about, ...loaded.about };
+                        appData.about = {
+                            title: loaded.about.title ?? '',
+                            text: loaded.about.text ?? '',
+                            image: loaded.about.image ?? ''
+                        };
                     }
 
                     if (loaded.portfolio) {
@@ -1958,13 +2000,13 @@
 
                     if (loaded.studio) {
                         appData.studio = {
-                            title: loaded.studio.title || defaultData.studio.title,
-                            description: loaded.studio.description || defaultData.studio.description,
-                            address: loaded.studio.address || defaultData.studio.address,
-                            hours: loaded.studio.hours || defaultData.studio.hours,
-                            whatsapp: loaded.studio.whatsapp || defaultData.studio.whatsapp,
-                            whatsappMessages: loaded.studio.whatsappMessages || defaultData.studio.whatsappMessages,
-                            photos: loaded.studio.photos || defaultData.studio.photos
+                            title: loaded.studio.title ?? '',
+                            description: loaded.studio.description ?? '',
+                            address: loaded.studio.address ?? '',
+                            hours: loaded.studio.hours ?? '',
+                            whatsapp: loaded.studio.whatsapp ?? '',
+                            whatsappMessages: loaded.studio.whatsappMessages ?? [],
+                            photos: loaded.studio.photos ?? []
                         };
                         // Migrar formato antigo (whatsappGreeting) para novo (whatsappMessages)
                         if (!loaded.studio.whatsappMessages && loaded.studio.whatsappGreeting) {
@@ -1973,8 +2015,8 @@
                         // Migrar formato antigo (img1, img2) para novo (photos)
                         if (!loaded.studio.photos && (loaded.studio.img1 || loaded.studio.img2)) {
                             appData.studio.photos = [
-                                { image: loaded.studio.img1 || defaultData.studio.photos[0].image, posX: 50, posY: 50, scale: 1 },
-                                { image: loaded.studio.img2 || defaultData.studio.photos[1].image, posX: 50, posY: 50, scale: 1 }
+                                { image: loaded.studio.img1 || '', posX: 50, posY: 50, scale: 1 },
+                                { image: loaded.studio.img2 || '', posX: 50, posY: 50, scale: 1 }
                             ];
                         }
                     }
