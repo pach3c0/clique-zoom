@@ -92,6 +92,20 @@
 </head>
 <body class="bg-white text-gray-900">
 
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center transition-opacity duration-700">
+        <div class="text-center space-y-8 animate-fade-in">
+            <!-- Logo -->
+            <h1 class="font-serif text-4xl md:text-5xl font-bold text-white tracking-wider">CLIQUE·ZOOM</h1>
+            <!-- Mensagem -->
+            <p class="text-gray-400 text-lg font-light">Bem-vindo</p>
+            <!-- Loader animado -->
+            <div class="flex justify-center mt-8">
+                <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- NAVBAR -->
     <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -851,6 +865,17 @@
             }, 3000);
         }
 
+        // ========== SPLASH SCREEN ==========
+        function hideSplashScreen() {
+            const splash = document.getElementById('splash-screen');
+            if (splash) {
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 700);
+            }
+        }
+
         // ========== MOBILE MENU ==========
         document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
             // Simple toggle - you can expand this
@@ -866,13 +891,18 @@
         }
 
         async function init() {
-            const remote = await loadRemoteData();
-            store = processRemoteData(remote);
-            if (store) {
-                render();
-                startWhatsappMessages();
-            } else {
-                console.warn('Nenhum dado disponível do servidor');
+            try {
+                const remote = await loadRemoteData();
+                store = processRemoteData(remote);
+                if (store) {
+                    render();
+                    startWhatsappMessages();
+                } else {
+                    console.warn('Nenhum dado disponível do servidor');
+                }
+            } finally {
+                // Esconde splash screen após carregar (com ou sem erro)
+                hideSplashScreen();
             }
         }
 
