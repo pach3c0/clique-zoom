@@ -113,12 +113,10 @@
             <h1 id="dom-hero-title"
                 class="font-serif font-bold text-white fade-in absolute"
                 style="position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%);">
-                A pureza do essencial.
             </h1>
             <p id="dom-hero-subtitle"
                 class="text-gray-200 font-light fade-in fade-in-delay absolute"
                 style="position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%); max-width: 600px;">
-                Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.
             </p>
         </div>
 
@@ -141,7 +139,7 @@
     <!-- SEÇÃO ESTÚDIO -->
     <section id="estudio" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-6">
-            <h2 class="font-serif text-4xl md:text-5xl font-bold mb-16 text-center text-neutral-900">Nosso Estúdio</h2>
+            <h2 class="font-serif text-4xl md:text-5xl font-bold mb-16 text-center text-neutral-900"></h2>
 
             <!-- Grid Fotos Estúdio - Dinâmico -->
             <div id="dom-studio-photos" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
@@ -159,16 +157,16 @@
 
                 <!-- Info Estúdio -->
                 <div class="flex flex-col justify-center">
-                    <h3 id="dom-studio-title" class="font-serif text-3xl font-bold mb-6">Situado no Coração do Morumbi</h3>
+                    <h3 id="dom-studio-title" class="font-serif text-3xl font-bold mb-6"></h3>
                     <div class="space-y-6 text-gray-600 font-light">
-                        <p id="dom-studio-description" class="text-lg">Nosso estúdio é mais que um espaço para clicar. É um ambiente meticulosamente projetado para atender às demandas dos profissionais que buscam qualidade e excelência em cada detalhe.</p>
+                        <p id="dom-studio-description" class="text-lg"></p>
                         <div class="pt-6 border-t border-gray-200">
                             <p class="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">Endereço</p>
-                            <p id="dom-studio-address" class="text-gray-600">R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP</p>
+                            <p id="dom-studio-address" class="text-gray-600"></p>
                         </div>
                         <div class="pt-6 border-t border-gray-200">
                             <p class="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">Horários</p>
-                            <p id="dom-studio-hours" class="text-gray-600">Segunda a Sexta: 9h - 18h<br>Sábado: 10h - 16h</p>
+                            <p id="dom-studio-hours" class="text-gray-600"></p>
                         </div>
                     </div>
                 </div>
@@ -182,17 +180,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
                 <!-- Texto -->
                 <div>
-                    <h2 id="dom-about-title" class="font-serif text-4xl md:text-5xl font-bold mb-8 text-neutral-900">Quem Somos</h2>
+                    <h2 id="dom-about-title" class="font-serif text-4xl md:text-5xl font-bold mb-8 text-neutral-900"></h2>
                     <div id="dom-about-text" class="space-y-4 text-gray-600 font-light leading-relaxed text-lg">
-                        <p>Somos fotógrafos que acreditam na força da simplicidade. Nosso estúdio foi projetado para eliminar distrações e focar no que realmente importa: você.</p>
-                        <p>Com mais de uma década de experiência, capturamos momentos autênticos em um ambiente controlado e minimalista. Cada sessão é uma oportunidade de criar algo único e atemporal.</p>
-                        <p>Nosso foco vai além de simplesmente tirar fotos. Oferecemos direção estratégica de imagem, posing especializado e uma abordagem que transforma como você se vê.</p>
                     </div>
                 </div>
 
                 <!-- Imagem -->
                 <div class="aspect-square bg-gray-200 rounded-2xl overflow-hidden shadow-2xl">
-                    <img id="dom-about-img" src="/assets/IMG_8640.jpg" alt="Sobre nós" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                    <img id="dom-about-img" src="" alt="Sobre nós" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                 </div>
             </div>
         </div>
@@ -245,50 +240,7 @@
 
     <script>
         // ========== STATE ==========
-        const defaultStore = {
-            hero: {
-                title: "A pureza do essencial.",
-                subtitle: "Removemos o ruído visual para capturar o que realmente importa: a conexão, o gesto e a emoção crua.",
-                bgImage: "IMG_8581.jpg",
-                transform: { scale: 1, posX: 50, posY: 50 },
-                titleTransform: { posX: 50, posY: 40 },
-                subtitleTransform: { posX: 50, posY: 55 },
-                titleFontSize: 48,
-                subtitleFontSize: 18,
-                topBarHeight: 0,
-                bottomBarHeight: 0,
-                overlayOpacity: 30
-            },
-            about: {
-                title: "Quem Somos",
-                text: "Somos fotógrafos que acreditam na força da simplicidade. Nosso estúdio foi projetado para eliminar distrações e focar no que realmente importa: você.\n\nCom mais de uma década de experiência, capturamos momentos autênticos em um ambiente controlado e minimalista. Cada sessão é uma oportunidade de criar algo único e atemporal.\n\nNosso foco vai além de simplesmente tirar fotos. Oferecemos direção estratégica de imagem, posing especializado e uma abordagem que transforma como você se vê.",
-                image: "IMG_8640.jpg"
-            },
-            portfolio: [
-                { image: "Gemini_Generated_Image_hbltjzhbltjzhblt.png" },
-                { image: "IMG_8640.jpg" },
-                { image: "IMG_8607.jpg" },
-                { image: "Gemini_Generated_Image_zedrb9zedrb9zedr.png" },
-                { image: "IMG_8581.jpg" },
-                { image: "IMG_9153.jpg" }
-            ],
-            studio: {
-                address: "R. Auréliano Guimarães, 172 - Morumbi, São Paulo - SP",
-                hours: "Segunda a Sexta: 9h - 18h\nSábado: 10h - 16h",
-                whatsapp: "5511999999999",
-                whatsappMessages: [
-                    { text: "Olá! Como posso ajudar você hoje?", delay: 5 },
-                    { text: "Esse mês estamos com super preço de inauguração 10 Fotos por apenas R$180,00", delay: 5 },
-                    { text: "Me chame aqui no WhatsApp!", delay: 5 }
-                ],
-                photos: [
-                    { image: "IMG_8586.jpg", posX: 50, posY: 50, scale: 1 },
-                    { image: "IMG_9153.jpg", posX: 50, posY: 50, scale: 1 }
-                ]
-            }
-        };
-
-        let store = JSON.parse(JSON.stringify(defaultStore));
+        let store = null;
 
         function resolveImagePath(url) {
             if (!url) return '';
@@ -296,78 +248,54 @@
             return `/assets/${url}`;
         }
 
-        function applyRemoteData(baseStore, remote) {
-            if (!remote) return baseStore;
+        function processRemoteData(remote) {
+            if (!remote) return null;
 
             try {
-                const merged = JSON.parse(JSON.stringify(baseStore));
-
-                if (remote.hero) {
-                    merged.hero = {
-                        title: remote.hero.title || baseStore.hero.title,
-                        subtitle: remote.hero.subtitle || baseStore.hero.subtitle,
-                        bgImage: remote.hero.image || baseStore.hero.bgImage,
-                        transform: remote.hero.transform || baseStore.hero.transform,
-                        titleTransform: remote.hero.titleTransform || baseStore.hero.titleTransform,
-                        subtitleTransform: remote.hero.subtitleTransform || baseStore.hero.subtitleTransform,
-                        titleFontSize: remote.hero.titleFontSize ?? baseStore.hero.titleFontSize,
-                        subtitleFontSize: remote.hero.subtitleFontSize ?? baseStore.hero.subtitleFontSize,
-                        topBarHeight: remote.hero.topBarHeight ?? baseStore.hero.topBarHeight,
-                        bottomBarHeight: remote.hero.bottomBarHeight ?? baseStore.hero.bottomBarHeight,
-                        overlayOpacity: remote.hero.overlayOpacity ?? baseStore.hero.overlayOpacity
-                    };
-                }
-
-                if (remote.about) {
-                    merged.about = {
-                        title: remote.about.title || baseStore.about.title,
-                        text: remote.about.text || baseStore.about.text,
-                        image: remote.about.image || baseStore.about.image
-                    };
-                }
-
-                if (Array.isArray(remote.portfolio) && remote.portfolio.length) {
-                    merged.portfolio = remote.portfolio.map(p => ({
+                return {
+                    hero: {
+                        title: remote.hero?.title ?? "",
+                        subtitle: remote.hero?.subtitle ?? "",
+                        bgImage: remote.hero?.image ?? "",
+                        transform: remote.hero?.transform ?? { scale: 1, posX: 50, posY: 50 },
+                        titleTransform: remote.hero?.titleTransform ?? { posX: 50, posY: 40 },
+                        subtitleTransform: remote.hero?.subtitleTransform ?? { posX: 50, posY: 55 },
+                        titleFontSize: remote.hero?.titleFontSize ?? 48,
+                        subtitleFontSize: remote.hero?.subtitleFontSize ?? 18,
+                        topBarHeight: remote.hero?.topBarHeight ?? 0,
+                        bottomBarHeight: remote.hero?.bottomBarHeight ?? 0,
+                        overlayOpacity: remote.hero?.overlayOpacity ?? 30
+                    },
+                    about: {
+                        title: remote.about?.title ?? "",
+                        text: remote.about?.text ?? "",
+                        image: remote.about?.image ?? ""
+                    },
+                    portfolio: Array.isArray(remote.portfolio) ? remote.portfolio.map(p => ({
                         image: p.image || p,
                         posX: p.posX ?? 50,
                         posY: p.posY ?? 50,
                         scale: p.scale ?? 1,
                         ratio: p.ratio ?? '3/4'
-                    }));
-                }
-
-                if (remote.studio) {
-                    merged.studio = {
-                        title: remote.studio.title || baseStore.studio.title,
-                        description: remote.studio.description || baseStore.studio.description,
-                        address: remote.studio.address || baseStore.studio.address,
-                        hours: remote.studio.hours || baseStore.studio.hours,
-                        whatsapp: remote.studio.whatsapp || baseStore.studio.whatsapp,
-                        whatsappMessages: remote.studio.whatsappMessages || baseStore.studio.whatsappMessages,
-                        photos: remote.studio.photos ? remote.studio.photos.map(p => ({
+                    })) : [],
+                    studio: {
+                        title: remote.studio?.title ?? "",
+                        description: remote.studio?.description ?? "",
+                        address: remote.studio?.address ?? "",
+                        hours: remote.studio?.hours ?? "",
+                        whatsapp: remote.studio?.whatsapp ?? "",
+                        whatsappMessages: remote.studio?.whatsappMessages ?? [],
+                        photos: remote.studio?.photos ? remote.studio.photos.map(p => ({
                             image: p.image,
                             posX: p.posX ?? 50,
                             posY: p.posY ?? 50,
                             scale: p.scale ?? 1
-                        })) : baseStore.studio.photos
-                    };
-                    // Migrar formato antigo (whatsappGreeting string -> whatsappMessages array)
-                    if (!remote.studio.whatsappMessages && remote.studio.whatsappGreeting) {
-                        merged.studio.whatsappMessages = [{ text: remote.studio.whatsappGreeting, delay: 5 }];
+                        })) : []
                     }
-                    // Migrar formato antigo de fotos
-                    if (!remote.studio.photos && (remote.studio.img1 || remote.studio.img2)) {
-                        merged.studio.photos = [
-                            { image: remote.studio.img1, posX: 50, posY: 50, scale: 1 },
-                            { image: remote.studio.img2, posX: 50, posY: 50, scale: 1 }
-                        ].filter(p => p.image);
-                    }
-                }
-
-                return merged;
+                };
             } catch (e) {
-                console.warn('Erro ao ler dados do servidor:', e);
-                return baseStore;
+                console.warn('Erro ao processar dados do servidor:', e);
+                return null;
             }
         }
 
@@ -612,9 +540,13 @@
         // ========== INIT ==========
         window.addEventListener('load', async () => {
             const remote = await loadRemoteData();
-            store = applyRemoteData(store, remote);
-            render();
-            startWhatsappMessages();
+            store = processRemoteData(remote);
+            if (store) {
+                render();
+                startWhatsappMessages();
+            } else {
+                console.warn('Nenhum dado disponível do servidor');
+            }
         });
 
         // Smooth scroll for anchor links

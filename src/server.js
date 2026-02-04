@@ -160,28 +160,6 @@ app.get('/', async (req, res) => {
   }
 });
 
-// API: Get portfolio data
-app.get('/api/portfolio', (req, res) => {
-  const filePath = path.join(__dirname, '../assets/data/portfolio-data.json');
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      return res.status(500).json({ error: 'Erro ao ler dados de portfólio' });
-    }
-    res.json(JSON.parse(data));
-  });
-});
-
-// API: Get style guide data
-app.get('/api/style-guide', (req, res) => {
-  const filePath = path.join(__dirname, '../assets/data/style-cards.json');
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      return res.status(500).json({ error: 'Erro ao ler guia de estilo' });
-    }
-    res.json(JSON.parse(data));
-  });
-});
-
 // ========================================
 // CAMADA 2: PAINEL ADMINISTRATIVO (Admin)
 // ========================================
@@ -219,18 +197,6 @@ app.post('/api/admin/site-config', async (req, res) => {
     console.error('Erro ao salvar config do site:', error);
     res.status(500).json({ error: 'Erro ao salvar config do site' });
   }
-});
-
-// Admin API: Update portfolio data
-app.post('/api/admin/portfolio', (req, res) => {
-  // TODO: Adicionar autenticação aqui
-  const filePath = path.join(__dirname, '../assets/data/portfolio-data.json');
-  fs.writeFile(filePath, JSON.stringify(req.body, null, 2), 'utf8', (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Erro ao salvar portfólio' });
-    }
-    res.json({ success: true, message: 'Portfólio atualizado' });
-  });
 });
 
 // Admin API: Upload image (Hero, Portfolio, etc)

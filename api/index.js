@@ -165,17 +165,6 @@ app.post('/api/admin/site-config', async (req, res) => {
   }
 });
 
-// Admin API: Update portfolio data
-app.post('/api/admin/portfolio', (req, res) => {
-  const filePath = path.join(rootDir, 'assets/data/portfolio-data.json');
-  fs.writeFile(filePath, JSON.stringify(req.body, null, 2), 'utf8', (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Erro ao salvar portfólio' });
-    }
-    res.json({ success: true, message: 'Portfólio atualizado' });
-  });
-});
-
 // Admin API: Upload image
 app.post('/api/admin/upload', (req, res) => {
   if (process.env.NODE_ENV === 'production') {

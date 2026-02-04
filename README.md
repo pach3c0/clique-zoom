@@ -1,250 +1,119 @@
 # 📸 CLIQUE·ZOOM - Plataforma Fotográfica
 
-## ✅ Atualização (02/02/2026)
-- Produção: API e persistência via MongoDB com fallback em memória.
-- Upload de imagens: em produção (Vercel) o filesystem é read-only; upload depende de Cloudinary (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`). Sem isso, usar URL externa.
-- Pendência: rotacionar a senha do MongoDB Atlas e atualizar o `MONGODB_URI` no Vercel.
+Sistema completo de gestão de conteúdo para estúdio fotográfico com painel administrativo e site público.
 
-## Sobre
+## 🚀 Stack Tecnológico
 
-CLIQUE·ZOOM é uma **plataforma completa** para fotógrafos apresentarem portfólios e gerenciarem sessões com clientes, tudo em um único lugar.
-
-### 3 Camadas Integradas:
-1. **Site Público** - Portfolio para atrair clientes
-2. **Painel Admin** - Fotógrafo gerencia tudo (WordPress-style)
-3. **Galeria Privada** - Cliente vê/baixa suas fotos
-
----
-
-## 🚀 Quick Start
-
-### Pré-requisitos
-- Node.js >= 16.0
-- npm ou yarn
-
-### Instalação & Execução
-
-```bash
-# Entrar no diretório
-cd Site
-
-# Instalar dependências
-npm install
-
-# Criar arquivo .env (cópia de .env.example)
-cp .env.example .env
-
-# Iniciar servidor
-npm start
-```
-
-**O servidor estará disponível em:**
-- 📸 Site: http://localhost:3050
-- 🔧 Admin: http://localhost:3050/admin
-- 👁️ Galeria: http://localhost:3050/galeria/[id]
-
----
+- **Frontend**: HTML5, TailwindCSS, JavaScript Vanilla
+- **Backend**: Node.js + Express.js
+- **Database**: MongoDB Atlas
+- **Deploy**: Vercel (Serverless Functions)
+- **Storage**: Cloudinary (imagens em produção)
 
 ## 📁 Estrutura do Projeto
 
 ```
 Site/
-├─ src/                      Backend (Express)
-│  └─ server.js             Servidor principal
-├─ public/                   Camada 1: Site Público
-│  └─ index.html            Portfolio do fotógrafo
-├─ admin/                    Camada 2: Painel Admin
-│  └─ index.html            Dashboard (WordPress-style)
-├─ cliente/                  Camada 3: Galeria Privada
-│  └─ index.html            Galeria para cliente
-├─ assets/                   Recursos Compartilhados
-│  ├─ css/
-│  ├─ js/
-│  ├─ data/
-│  └─ [imagens & logos]
-├─ uploads/                  Arquivos enviados
-├─ package.json
-├─ .env.example             Variáveis de ambiente
-└─ REQUISITOS_PLATAFORMA.md Especificação completa
+├── admin/           # Painel administrativo
+├── api/             # Serverless functions (Vercel)
+├── assets/          # Imagens estáticas
+├── cliente/         # Galeria privada (futuro)
+├── public/          # Site público
+├── src/             # Código backend
+│   ├── config/      # Configuração MongoDB
+│   ├── data/        # Dados fallback
+│   ├── helpers/     # Lógica de negócios
+│   ├── models/      # Schemas Mongoose
+│   └── routes/      # Rotas API REST
+└── uploads/         # Upload local (dev)
 ```
 
----
+## 🔧 Instalação
 
-## 📋 Funcionalidades
+```bash
+# 1. Clone o repositório
+git clone https://github.com/pach3c0/clique-zoom.git
+cd Site
 
-### Site Público (public/index.html)
-- ✅ Hero section dinâmico
-- ✅ 4 tipos de serviço (Família, Profissional, Criativo, Festivos)
-- ✅ Guia de estilos (6 looks visuais)
-- ✅ Calculadora de preço interativa
-- ✅ Curadoria com IA (integração Gemini)
-- ✅ Responsivo (mobile-first)
+# 2. Instale dependências
+npm install
 
-### Painel Admin (admin/index.html)
-- 📊 Dashboard com métricas
-- 📁 Gerenciar galerias de clientes
-- ⚙️ Editar hero, serviços, preços
-- 👥 CRM básico de clientes
-- 📈 Relatórios e estatísticas
-- 🖼️ Upload de imagens
-- **Novo:** 🎬 Editor de Fotos com Aspect Ratios (16:9 HERO, 3:4 PORTFÓLIO, 1:1 SQUARE)
-- **Novo:** 📐 Controles de Drag, Zoom e Posição de Imagem
-- **Novo:** 🔄 Sincronização Automática Admin → Site Público
-- **Status:** Em desenvolvimento
+# 3. Configure variáveis de ambiente
+cp .env.example .env
+# Edite .env com suas credenciais
 
-### Galeria Cliente (cliente/index.html)
-- 🖼️ Grade de fotos com miniaturas
-- 💾 Download de fotos individuais
-- 📦 Download em lote
-- ⚠️ Marca d'água (customizável)
-- 🔒 Acesso privado com token
-- 💳 Suporte a 2 modelos: Premium (X fotos por Y) ou Por Foto
-- **Status:** Em desenvolvimento
-
----
-
-## 🔧 Dependências Principais
-
-- **express** - Framework web
-- **multer** - Upload de arquivos
-- **cors** - CORS habilitado
-- **sharp** - Processamento de imagens (marca d'água)
-- **jsonwebtoken** - Autenticação JWT
-- **dotenv** - Variáveis de ambiente
-
----
-
-## 📝 API Endpoints
-
-### Site Público
-```
-GET  /              Renderiza site público
-GET  /api/portfolio Retorna dados de portfólio
-GET  /api/style-guide Retorna guia de estilos
+# 4. Inicie servidor local
+npm start
 ```
 
-### Painel Admin
-```
-POST /api/admin/portfolio  Atualiza dados de portfólio
-POST /api/admin/upload     Upload de imagens
+## 🌐 Deploy
+
+### Vercel (Produção)
+
+```bash
+# 1. Instale Vercel CLI
+npm install -g vercel
+
+# 2. Configure variáveis de ambiente no Vercel
+vercel env add MONGODB_URI production
+vercel env add CLOUDINARY_CLOUD_NAME production
+vercel env add CLOUDINARY_API_KEY production
+vercel env add CLOUDINARY_API_SECRET production
+vercel env add ADMIN_PASSWORD production
+
+# 3. Deploy
+vercel --prod
 ```
 
-### Galeria Cliente
-```
-GET  /galeria/:galleryId                Acessa galeria privada
-GET  /api/galeria/:galleryId            Retorna dados da galeria
-POST /api/galeria/:galleryId/download   Faz download de fotos
-```
+## 📡 API Endpoints
 
----
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/site-data` | Retorna todos dados do site |
+| `PUT` | `/api/site-data` | Salva dados no MongoDB |
+| `POST` | `/api/admin/upload` | Upload de imagem (Cloudinary) |
+| `POST` | `/api/admin/site-config` | Atualiza configurações |
 
-## ⚙️ Variáveis de Ambiente
-
-Crie um arquivo `.env` baseado em `.env.example`:
+## 🔐 Variáveis de Ambiente
 
 ```env
+# MongoDB
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/db
+
+# Cloudinary (obrigatório em produção)
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Admin
+ADMIN_PASSWORD=sua-senha-segura
+
+# Ambiente
+NODE_ENV=production
 PORT=3050
-NODE_ENV=development
-ADMIN_PASSWORD=senha_temporaria
-JWT_SECRET=sua_chave_secreta
 ```
 
----
+## 📝 Uso
 
-## 🛠️ Desenvolvimento
+### Painel Admin
+1. Acesse: `https://cliquezoom.com.br/admin`
+2. Faça login com a senha configurada
+3. Edite conteúdo: Hero, Sobre, Portfolio, Estúdio
+4. Clique em "Salvar Dados"
 
-### Adicionar uma nova feature
+### Site Público
+- Acesse: `https://cliquezoom.com.br`
+- Dados carregados automaticamente do MongoDB
 
-1. **Cria branch**
-   ```bash
-   git checkout -b feature/nome-feature
-   ```
+## 🎯 Features
 
-2. **Desenvolve e testa**
-   ```bash
-   npm start
-   # Edita arquivos em public/, admin/, cliente/
-   ```
-
-3. **Commit e push**
-   ```bash
-   git add .
-   git commit -m "Add: descrição da feature"
-   git push origin feature/nome-feature
-   ```
-
----
-
-## 📊 Roadmap
-
-### ✅ Concluído
-- [x] Estrutura do projeto organizada
-- [x] Server.js com 3 camadas
-- [x] Editor profissional de fotos (drag, zoom, grid)
-- [x] Aspect ratios dinâmicos (16:9, 3:4, 1:1)
-- [x] Sincronização automática admin → site público
-
-### 🔄 Em Progresso
-- [ ] Aplicar editor ao Estúdio (studio photos)
-- [ ] Salvamento em backend (database)
-- [ ] Autenticação JWT completa
-
-### 📅 Próximos
-- [ ] Marca d'água com Sharp
-- [ ] Banco de dados (SQLite/PostgreSQL)
-- [ ] Email (Nodemailer)
-- [ ] Pagamento (Stripe/PagSeguro)
-- [ ] Deploy
-
-Ver [PLANO_DESENVOLVIMENTO.md](PLANO_DESENVOLVIMENTO.md) para detalhes.
-
----
-
-## 🔐 Segurança
-
-- ⚠️ **IMPORTANTE**: Ainda não implementada autenticação
-- 🚨 **TODO**: Adicionar JWT/autenticação no painel admin
-- 🔒 **TODO**: Validar acesso a galerias privadas
-- 🛡️ **TODO**: HTTPS em produção
-
----
-
-## 📚 Documentação
-
-- [REQUISITOS_PLATAFORMA.md](REQUISITOS_PLATAFORMA.md) - Especificação funcional completa
-- [PLANO_DESENVOLVIMENTO.md](PLANO_DESENVOLVIMENTO.md) - Roadmap de desenvolvimento
-- [ESTRUTURA_ORGANIZADA.md](ESTRUTURA_ORGANIZADA.md) - Explicação da reorganização
-
----
-
-## 🤝 Contribuir
-
-Ao adicionar novas features:
-
-1. Mantenha a estrutura de pastas
-2. Evite código redundante
-3. Use componentes reutilizáveis
-4. Documente sua feature
-5. Teste antes de commit
-
----
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-
-1. Verifique a [documentação](.)
-2. Veja o [plano de desenvolvimento](PLANO_DESENVOLVIMENTO.md)
-3. Teste localmente: `npm start`
-
----
+✅ CMS completo sem banco de dados local  
+✅ Upload de imagens para Cloudinary  
+✅ Preview ao vivo no admin  
+✅ Modo manutenção (cortina)  
+✅ Fallback em memória se MongoDB offline  
+✅ Responsivo (mobile-first)  
 
 ## 📄 Licença
 
-MIT - Sinta-se livre para usar e modificar.
-
----
-
-**Última atualização:** 02/02/2026  
-**Versão:** 2.0.1  
-**Status:** Em desenvolvimento
+© 2026 CLIQUE·ZOOM - Todos os direitos reservados
