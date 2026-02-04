@@ -99,6 +99,7 @@
             <div class="hidden md:flex items-center space-x-8">
                 <a href="#hero" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">HOME</a>
                 <a href="#portfolio" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">GALERIA</a>
+                <a href="#albums" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">ÁLBUNS</a>
                 <a href="#estudio" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">ESTÚDIO</a>
                 <a href="#sobre" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">SOBRE</a>
             </div>
@@ -148,6 +149,24 @@
         <!-- Grid de Portfólio - Estilo Mosaico sem espaços -->
         <div id="dom-portfolio-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <!-- Fotos serão carregadas via JS -->
+        </div>
+    </section>
+
+    <!-- SEÇÃO ÁLBUNS RECENTES -->
+    <section id="albums" class="py-24 bg-neutral-950 text-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+                <div>
+                    <h2 class="font-serif text-4xl md:text-5xl font-bold mb-4">Álbuns Recentes</h2>
+                    <p class="text-gray-400 font-light">Confira os últimos ensaios disponíveis.</p>
+                </div>
+                <a href="#albums-gallery" class="inline-flex items-center gap-2 text-sm font-medium border-b border-white/30 pb-1 hover:border-white transition-all">
+                    Ver todos os álbuns <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+            <div id="dom-recent-albums" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Álbuns recentes via JS -->
+            </div>
         </div>
     </section>
 
@@ -208,6 +227,19 @@
         </div>
     </section>
 
+    <!-- GALERIA COMPLETA DE ÁLBUNS -->
+    <section id="albums-gallery" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="mb-10">
+                <h2 class="font-serif text-4xl md:text-5xl font-bold text-neutral-900 mb-4">Galeria de Álbuns</h2>
+                <p class="text-gray-600 font-light">Explore todos os ensaios disponíveis.</p>
+            </div>
+            <div id="dom-albums-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Todos os álbuns via JS -->
+            </div>
+        </div>
+    </section>
+
     <!-- BOTÃO FLUTUANTE WHATSAPP -->
     <div id="whatsapp-widget" class="fixed bottom-6 right-6 z-50 flex items-end gap-3">
         <!-- Bolha de saudação -->
@@ -225,6 +257,22 @@
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
         </button>
+    </div>
+
+    <!-- MODAL DE ÁLBUM -->
+    <div id="album-modal" class="fixed inset-0 z-[100] hidden bg-black/95">
+        <div class="absolute top-0 left-0 right-0 h-20 flex items-center justify-between px-6 z-10 bg-gradient-to-b from-black to-transparent">
+            <div>
+                <h3 id="album-modal-title" class="text-white font-serif text-xl"></h3>
+                <p id="album-modal-subtitle" class="text-gray-400 text-xs uppercase"></p>
+            </div>
+            <button onclick="closeAlbum()" class="text-white bg-white/10 p-2 rounded-full hover:bg-white/20">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div id="album-modal-content" class="h-full overflow-y-auto pt-24 pb-12 px-6">
+            <div id="album-modal-photos" class="columns-1 sm:columns-2 lg:columns-4 gap-4 space-y-4"></div>
+        </div>
     </div>
 
     <!-- FOOTER -->
@@ -295,6 +343,7 @@
     <script>
         // ========== STATE ==========
         let store = null;
+        let albumsCache = [];
 
         function resolveImagePath(url) {
             if (!url) return '';
@@ -346,6 +395,13 @@
                             scale: p.scale ?? 1
                         })) : []
                     },
+                    albums: Array.isArray(remote.albums) ? remote.albums.map(a => ({
+                        title: a.title ?? '',
+                        subtitle: a.subtitle ?? '',
+                        cover: a.cover ?? '',
+                        photos: Array.isArray(a.photos) ? a.photos : [],
+                        createdAt: a.createdAt ?? null
+                    })) : [],
                     footer: {
                         socialMedia: remote.footer?.socialMedia ?? {},
                         quickLinks: remote.footer?.quickLinks ?? [],
@@ -447,6 +503,48 @@
                         onmouseleave="this.style.transform='scale(${scale})'" />
                 </div>
             `}).join('');
+
+            // ===== ÁLBUNS =====
+            const albumsSorted = [...(store.albums || [])].sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return dateB - dateA;
+            });
+            albumsCache = albumsSorted;
+
+            const albumCard = (album, idx, dark = false) => {
+                const cover = album.cover || album.photos?.[0] || '';
+                const title = album.title || 'Álbum';
+                const subtitle = album.subtitle || '';
+                const textClass = dark ? 'text-white' : 'text-neutral-900';
+                const subClass = dark ? 'text-neutral-400' : 'text-neutral-500';
+                return `
+                    <div onclick="openAlbum(${idx})" class="group cursor-pointer">
+                        <div class="aspect-[4/5] rounded-xl overflow-hidden mb-4 relative shadow-2xl bg-black">
+                            <img src="${resolveImagePath(cover)}" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                                <span class="text-white text-xs border border-white/30 px-3 py-1 rounded-full">VER ÁLBUM</span>
+                            </div>
+                        </div>
+                        ${subtitle ? `<p class="${subClass} text-[10px] uppercase tracking-widest mb-1">${subtitle}</p>` : ''}
+                        <h4 class="font-serif text-lg ${textClass} group-hover:text-gray-300">${title}</h4>
+                    </div>
+                `;
+            };
+
+            const recentContainer = document.getElementById('dom-recent-albums');
+            if (recentContainer) {
+                recentContainer.innerHTML = albumsSorted.length
+                    ? albumsSorted.slice(0, 4).map((album, idx) => albumCard(album, idx, true)).join('')
+                    : '<p class="text-gray-400 text-sm">Nenhum álbum disponível ainda.</p>';
+            }
+
+            const galleryContainer = document.getElementById('dom-albums-gallery');
+            if (galleryContainer) {
+                galleryContainer.innerHTML = albumsSorted.length
+                    ? albumsSorted.map((album, idx) => albumCard(album, idx, false)).join('')
+                    : '<p class="text-gray-500 text-sm">Nenhum álbum disponível ainda.</p>';
+            }
 
             // ===== ESTÚDIO =====
             const studioPhotosGrid = document.getElementById('dom-studio-photos');
@@ -590,6 +688,34 @@
                     footerCopyright.textContent = store.footer.copyright;
                 }
             }
+        }
+
+        function openAlbum(index) {
+            const album = albumsCache[index];
+            if (!album) return;
+
+            const modal = document.getElementById('album-modal');
+            const title = document.getElementById('album-modal-title');
+            const subtitle = document.getElementById('album-modal-subtitle');
+            const photosGrid = document.getElementById('album-modal-photos');
+
+            title.textContent = album.title || 'Álbum';
+            subtitle.textContent = album.subtitle || '';
+            photosGrid.innerHTML = (album.photos || []).map(url => `
+                <div class="break-inside-avoid">
+                    <img src="${resolveImagePath(url)}" class="w-full h-auto rounded-lg" />
+                </div>
+            `).join('');
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeAlbum() {
+            const modal = document.getElementById('album-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
         }
 
         // ========== WHATSAPP WIDGET ==========

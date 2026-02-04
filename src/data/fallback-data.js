@@ -29,6 +29,7 @@ const fallbackData = {
     image: ''
   },
   portfolio: [],
+  albums: [],
   studio: {
     title: '',
     description: '',

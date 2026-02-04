@@ -210,6 +210,9 @@
                 <button onclick="switchTab('portfolio')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="portfolio">
                     <i data-lucide="grid-3x3" class="w-4 h-4"></i> Portfólio
                 </button>
+                <button onclick="switchTab('albuns')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="albuns">
+                    <i data-lucide="folder" class="w-4 h-4"></i> Álbuns
+                </button>
                 <button onclick="switchTab('estudio')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="estudio">
                     <i data-lucide="building" class="w-4 h-4"></i> Estúdio
                 </button>
@@ -292,6 +295,7 @@
                 image: ""
             },
             portfolio: [],
+            albums: [],
             studio: {
                 title: "",
                 description: "",
@@ -359,6 +363,7 @@
                 hero: 'Hero / Capa',
                 sobre: 'Seção Sobre',
                 portfolio: 'Portfólio',
+                albuns: 'Álbuns',
                 estudio: 'Estúdio',
                 manutencao: 'Manutenção',
                 footer: 'Rodapé',
@@ -370,6 +375,7 @@
                 case 'hero': renderHero(); break;
                 case 'sobre': renderSobre(); break;
                 case 'portfolio': renderPortfolio(); break;
+                case 'albuns': renderAlbuns(); break;
                 case 'estudio': renderEstudio(); break;
                 case 'manutencao': renderMaintenance(); break;
                 case 'footer': renderFooter(); break;
@@ -1900,6 +1906,142 @@
             }
         }
 
+        function renderAlbuns() {
+            if (!Array.isArray(appData.albums)) {
+                appData.albums = [];
+            }
+
+            const albumsHtml = appData.albums.map((album, idx) => {
+                const coverUrl = album.cover || album.photos?.[0] || '';
+                const photos = Array.isArray(album.photos) ? album.photos : [];
+                return `
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1 space-y-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Título do Álbum</label>
+                                    <input type="text" value="${album.title || ''}" oninput="appData.albums[${idx}].title = this.value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: Casamento Ana & João">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Subtítulo</label>
+                                    <input type="text" value="${album.subtitle || ''}" oninput="appData.albums[${idx}].subtitle = this.value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: Ensaio completo">
+                                </div>
+                            </div>
+                            <div class="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
+                                ${coverUrl ? `<img src="${resolveImagePath(coverUrl)}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-xs text-gray-400">Sem capa</div>`}
+                            </div>
+                            <button onclick="removeAlbum(${idx})" class="text-red-500 hover:text-red-700 p-2" title="Remover álbum">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-800">Fotos do Álbum (${photos.length})</h3>
+                            <label class="bg-neutral-900 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-gray-800 flex items-center gap-2 cursor-pointer">
+                                <i data-lucide="upload" class="w-4 h-4"></i> Upload de Fotos
+                                <input type="file" accept=".jpg,.jpeg,.png" multiple class="hidden" onchange="handleAlbumPhotosUpload(event, ${idx})">
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            ${photos.map((photoUrl, photoIdx) => `
+                                <div class="relative group aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                    <img src="${resolveImagePath(photoUrl)}" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <button onclick="event.stopPropagation(); setAlbumCover(${idx}, '${photoUrl.replace(/'/g, "\\'")}')" class="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600" title="Definir como capa">
+                                            <i data-lucide="image" class="w-4 h-4"></i>
+                                        </button>
+                                        <button onclick="event.stopPropagation(); removeAlbumPhoto(${idx}, ${photoIdx})" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600" title="Remover">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const html = `
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">Álbuns</h2>
+                            <p class="text-sm text-gray-500">Crie e gerencie os álbuns da galeria. O botão na Home mostra os 4 mais recentes.</p>
+                        </div>
+                        <button onclick="addAlbum()" class="bg-neutral-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Criar Álbum
+                        </button>
+                    </div>
+
+                    ${albumsHtml || '<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-10 text-center text-sm text-gray-500">Nenhum álbum criado ainda.</div>'}
+                </div>
+            `;
+
+            document.getElementById('content-area').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function addAlbum() {
+            if (!Array.isArray(appData.albums)) appData.albums = [];
+            appData.albums.unshift({
+                title: '',
+                subtitle: '',
+                cover: '',
+                photos: [],
+                createdAt: new Date().toISOString()
+            });
+            renderAlbuns();
+            lucide.createIcons();
+        }
+
+        function removeAlbum(index) {
+            if (confirm('Remover este álbum e todas as fotos?')) {
+                appData.albums.splice(index, 1);
+                renderAlbuns();
+                lucide.createIcons();
+            }
+        }
+
+        function setAlbumCover(albumIndex, photoUrl) {
+            appData.albums[albumIndex].cover = photoUrl;
+            renderAlbuns();
+            lucide.createIcons();
+        }
+
+        function removeAlbumPhoto(albumIndex, photoIndex) {
+            const album = appData.albums[albumIndex];
+            const removed = album.photos[photoIndex];
+            album.photos.splice(photoIndex, 1);
+            if (album.cover && album.cover === removed) {
+                album.cover = album.photos[0] || '';
+            }
+            renderAlbuns();
+            lucide.createIcons();
+        }
+
+        async function handleAlbumPhotosUpload(event, albumIndex) {
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
+
+            const album = appData.albums[albumIndex];
+            for (const file of files) {
+                const result = await uploadImage(file);
+                if (!result.ok) {
+                    alert(result.error);
+                    continue;
+                }
+                album.photos = album.photos || [];
+                album.photos.push(result.data.url);
+                if (!album.cover) {
+                    album.cover = result.data.url;
+                }
+            }
+
+            renderAlbuns();
+            lucide.createIcons();
+        }
+
         let studioEditingIndex = null;
         let studioDraggedIndex = null;
         let studioEditorState = { posX: 50, posY: 50, scale: 1, isDragging: false, startX: 0, startY: 0 };
@@ -2481,6 +2623,7 @@
                 },
                 about: appData.about,
                 portfolio: appData.portfolio,
+                albums: appData.albums,
                 studio: appData.studio,
                 footer: appData.footer
             };
@@ -2566,6 +2709,10 @@
 
                     if (loaded.portfolio) {
                         appData.portfolio = loaded.portfolio;
+                    }
+
+                    if (loaded.albums) {
+                        appData.albums = loaded.albums;
                     }
 
                     if (loaded.studio) {

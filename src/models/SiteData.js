@@ -90,11 +90,20 @@ const footerSchema = new mongoose.Schema({
   copyright: { type: String, default: '© 2026 CLIQUE·ZOOM. Todos os direitos reservados.' }
 }, { _id: false });
 
+const albumSchema = new mongoose.Schema({
+  title: { type: String, default: '' },
+  subtitle: { type: String, default: '' },
+  cover: { type: String, default: '' },
+  photos: { type: [String], default: [] },
+  createdAt: { type: Date, default: () => new Date() }
+}, { _id: false });
+
 const siteDataSchema = new mongoose.Schema({
   hero: { type: heroSchema, default: () => ({}) },
   portfolio: { type: [portfolioItemSchema], default: [] },
   about: { type: aboutSchema, default: () => ({}) },
   studio: { type: studioSchema, default: () => ({}) },
+  albums: { type: [albumSchema], default: [] },
   footer: { type: footerSchema, default: () => ({}) },
   maintenance: { type: maintenanceSchema, default: () => ({}) }
 }, {
@@ -141,6 +150,7 @@ siteDataSchema.statics.getSiteData = async function() {
       portfolio: [],
       about: {},
       studio: {},
+      albums: [],
       maintenance: { enabled: false }
     });
   }
@@ -181,6 +191,10 @@ siteDataSchema.statics.updateSiteData = async function(updates) {
     if (merged.portfolio) {
       data.portfolio = merged.portfolio;
       data.markModified('portfolio');
+    }
+    if (merged.albums) {
+      data.albums = merged.albums;
+      data.markModified('albums');
     }
     if (merged.footer) {
       data.footer = merged.footer;
