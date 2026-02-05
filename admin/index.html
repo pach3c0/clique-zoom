@@ -1313,6 +1313,11 @@
         }
 
         function updatePreview() {
+            // Ler valores dos controles
+            const scale = parseFloat(document.getElementById('hero-scale')?.value || 1);
+            const imgX = parseInt(document.getElementById('hero-img-x')?.value || 50);
+            const imgY = parseInt(document.getElementById('hero-img-y')?.value || 50);
+            const titleX = parseInt(document.getElementById('hero-title-x')?.value || 50);
             const titleY = parseInt(document.getElementById('hero-title-y')?.value || 40);
             const titleSize = parseInt(document.getElementById('hero-title-size')?.value || 48);
             const subX = parseInt(document.getElementById('hero-sub-x')?.value || 50);
@@ -1321,6 +1326,11 @@
             const topBar = parseInt(document.getElementById('hero-top-bar')?.value || 0);
             const botBar = parseInt(document.getElementById('hero-bot-bar')?.value || 0);
             const overlay = parseInt(document.getElementById('hero-overlay')?.value || 30);
+            
+            // Ler textos e imagem
+            const title = document.getElementById('hero-title')?.value || '';
+            const subtitle = document.getElementById('hero-subtitle')?.value || '';
+            const image = document.getElementById('hero-image')?.value || '';
 
             // Atualizar labels
             document.getElementById('val-scale').textContent = scale;
