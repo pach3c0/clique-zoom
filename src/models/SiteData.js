@@ -8,7 +8,14 @@ const SiteDataSchema = new mongoose.Schema({
     transform: { 
       type: mongoose.Schema.Types.Mixed,
       default: {}
-    }
+    },
+    titleTransform: { type: mongoose.Schema.Types.Mixed, default: {} },
+    subtitleTransform: { type: mongoose.Schema.Types.Mixed, default: {} },
+    titleFontSize: { type: Number, default: 48 },
+    subtitleFontSize: { type: Number, default: 18 },
+    topBarHeight: { type: Number, default: 0 },
+    bottomBarHeight: { type: Number, default: 0 },
+    overlayOpacity: { type: Number, default: 30 }
   },
   about: {
     title: { type: String, default: '' },
