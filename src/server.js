@@ -238,6 +238,7 @@ app.post('/api/admin/upload', (req, res) => {
         });
 
         return res.json({
+          ok: true,
           success: true,
           filename: result.original_filename,
           url: result.secure_url
@@ -267,6 +268,7 @@ app.post('/api/admin/upload', (req, res) => {
       return res.status(400).json({ error: 'Nenhum arquivo enviado' });
     }
     res.json({
+      ok: true,
       success: true,
       filename: req.file.filename,
       url: `/uploads/${req.file.filename}`

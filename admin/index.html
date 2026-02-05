@@ -254,11 +254,7 @@
                 return window.__switchTabReal(...args);
             }
         }
-        function handleLogout(...args) {
-            if (typeof window.__handleLogoutReal === 'function') {
-                return window.__handleLogoutReal(...args);
-            }
-        }
+        // Logout será definido depois
         function resetToDefaults(...args) {
             if (typeof window.__resetToDefaultsReal === 'function') {
                 return window.__resetToDefaultsReal(...args);
@@ -3023,15 +3019,6 @@
             checkToken(); // Verificar se há sessão salva
         });
 
-        // Reforçar exposição das funções após carregar
-        window.__switchTabReal = switchTab;
-        window.__handleLogoutReal = handleLogout;
-        window.__resetToDefaultsReal = resetToDefaults;
-        window.__saveDadosReal = saveDados;
-        window.switchTab = switchTab;
-        window.handleLogout = handleLogout;
-        window.resetToDefaults = resetToDefaults;
-        window.saveDados = saveDados;
     </script>
 </body>
 </html>
