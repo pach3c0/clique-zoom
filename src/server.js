@@ -231,14 +231,24 @@ app.post('/api/admin/upload', authenticateToken, (req, res) => {
           folder: 'cliquezoom'
         });
 
+        console.log('✓ Upload Cloudinary sucesso:', {
+          filename: result.original_filename,
+          url: result.secure_url,
+          public_id: result.public_id
+        });
+
         return res.json({
           success: true,
           filename: result.original_filename,
           url: result.secure_url
         });
       } catch (uploadError) {
-        console.error('Erro Cloudinary:', uploadError);
-        return res.status(500).json({ error: 'Erro ao enviar imagem para Cloudinary' });
+        console.error('✗ Erro Cloudinary:', {
+          message: uploadError.message,
+          code: uploadError.http_code,
+          full: uploadError
+        });
+        return res.status(500).json({ error: 'Erro ao enviar imagem para Cloudinary: ' + uploadError.message });
       }
     });
   }
