@@ -2931,74 +2931,75 @@
         async function loadDados() {
             try {
                 const loaded = await api.getSiteData();
-                if (loaded) {
+                const payload = loaded?.data && typeof loaded.data === 'object' ? loaded.data : loaded;
+                if (payload) {
 
                     // Converter do formato do site para o formato do admin
-                    if (loaded.hero) {
+                    if (payload.hero) {
                         appData.hero = {
-                            title: loaded.hero.title ?? '',
-                            subtitle: loaded.hero.subtitle ?? '',
-                            image: loaded.hero.image ?? '',
-                            imageScale: loaded.hero.transform?.scale ?? 1,
-                            imagePosX: loaded.hero.transform?.posX ?? 50,
-                            imagePosY: loaded.hero.transform?.posY ?? 50,
-                            titlePosX: loaded.hero.titleTransform?.posX ?? 50,
-                            titlePosY: loaded.hero.titleTransform?.posY ?? 40,
-                            subtitlePosX: loaded.hero.subtitleTransform?.posX ?? 50,
-                            subtitlePosY: loaded.hero.subtitleTransform?.posY ?? 55,
-                            titleSize: loaded.hero.titleFontSize ?? 48,
-                            subtitleSize: loaded.hero.subtitleFontSize ?? 18,
-                            topBarHeight: loaded.hero.topBarHeight ?? 0,
-                            bottomBarHeight: loaded.hero.bottomBarHeight ?? 0,
-                            overlayOpacity: loaded.hero.overlayOpacity ?? 30
+                            title: payload.hero.title ?? '',
+                            subtitle: payload.hero.subtitle ?? '',
+                            image: payload.hero.image ?? '',
+                            imageScale: payload.hero.transform?.scale ?? 1,
+                            imagePosX: payload.hero.transform?.posX ?? 50,
+                            imagePosY: payload.hero.transform?.posY ?? 50,
+                            titlePosX: payload.hero.titleTransform?.posX ?? 50,
+                            titlePosY: payload.hero.titleTransform?.posY ?? 40,
+                            subtitlePosX: payload.hero.subtitleTransform?.posX ?? 50,
+                            subtitlePosY: payload.hero.subtitleTransform?.posY ?? 55,
+                            titleSize: payload.hero.titleFontSize ?? 48,
+                            subtitleSize: payload.hero.subtitleFontSize ?? 18,
+                            topBarHeight: payload.hero.topBarHeight ?? 0,
+                            bottomBarHeight: payload.hero.bottomBarHeight ?? 0,
+                            overlayOpacity: payload.hero.overlayOpacity ?? 30
                         };
                     }
 
-                    if (loaded.about) {
+                    if (payload.about) {
                         appData.about = {
-                            title: loaded.about.title ?? '',
-                            text: loaded.about.text ?? '',
-                            image: loaded.about.image ?? ''
+                            title: payload.about.title ?? '',
+                            text: payload.about.text ?? '',
+                            image: payload.about.image ?? ''
                         };
                     }
 
-                    if (loaded.portfolio) {
-                        appData.portfolio = loaded.portfolio;
+                    if (payload.portfolio) {
+                        appData.portfolio = payload.portfolio;
                     }
 
-                    if (loaded.albums) {
-                        appData.albums = loaded.albums;
+                    if (payload.albums) {
+                        appData.albums = payload.albums;
                     }
 
-                    if (loaded.studio) {
+                    if (payload.studio) {
                         appData.studio = {
-                            title: loaded.studio.title ?? '',
-                            description: loaded.studio.description ?? '',
-                            address: loaded.studio.address ?? '',
-                            hours: loaded.studio.hours ?? '',
-                            whatsapp: loaded.studio.whatsapp ?? '',
-                            whatsappMessages: loaded.studio.whatsappMessages ?? [],
-                            photos: loaded.studio.photos ?? []
+                            title: payload.studio.title ?? '',
+                            description: payload.studio.description ?? '',
+                            address: payload.studio.address ?? '',
+                            hours: payload.studio.hours ?? '',
+                            whatsapp: payload.studio.whatsapp ?? '',
+                            whatsappMessages: payload.studio.whatsappMessages ?? [],
+                            photos: payload.studio.photos ?? []
                         };
                         // Migrar formato antigo (whatsappGreeting) para novo (whatsappMessages)
-                        if (!loaded.studio.whatsappMessages && loaded.studio.whatsappGreeting) {
-                            appData.studio.whatsappMessages = [{ text: loaded.studio.whatsappGreeting, delay: 5 }];
+                        if (!payload.studio.whatsappMessages && payload.studio.whatsappGreeting) {
+                            appData.studio.whatsappMessages = [{ text: payload.studio.whatsappGreeting, delay: 5 }];
                         }
                         // Migrar formato antigo (img1, img2) para novo (photos)
-                        if (!loaded.studio.photos && (loaded.studio.img1 || loaded.studio.img2)) {
+                        if (!payload.studio.photos && (payload.studio.img1 || payload.studio.img2)) {
                             appData.studio.photos = [
-                                { image: loaded.studio.img1 || '', posX: 50, posY: 50, scale: 1 },
-                                { image: loaded.studio.img2 || '', posX: 50, posY: 50, scale: 1 }
+                                { image: payload.studio.img1 || '', posX: 50, posY: 50, scale: 1 },
+                                { image: payload.studio.img2 || '', posX: 50, posY: 50, scale: 1 }
                             ];
                         }
                     }
 
-                    if (loaded.footer) {
+                    if (payload.footer) {
                         appData.footer = {
-                            socialMedia: loaded.footer.socialMedia || { instagram: '', facebook: '', linkedin: '', tiktok: '', youtube: '', email: '' },
-                            quickLinks: loaded.footer.quickLinks || [],
-                            newsletter: loaded.footer.newsletter || { enabled: true, title: '', description: '' },
-                            copyright: loaded.footer.copyright || ''
+                            socialMedia: payload.footer.socialMedia || { instagram: '', facebook: '', linkedin: '', tiktok: '', youtube: '', email: '' },
+                            quickLinks: payload.footer.quickLinks || [],
+                            newsletter: payload.footer.newsletter || { enabled: true, title: '', description: '' },
+                            copyright: payload.footer.copyright || ''
                         };
                     }
                 }
