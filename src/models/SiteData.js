@@ -31,7 +31,8 @@ const SiteDataSchema = new mongoose.Schema({
   footer: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { 
   timestamps: true,
-  strict: false
+  strict: false,
+  collection: 'sitedata'
 });
 
 module.exports = mongoose.model('SiteData', SiteDataSchema);
