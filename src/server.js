@@ -102,6 +102,25 @@ const handleLogin = (req, res) => {
 app.post('/api/login', handleLogin);
 app.post('/api/auth/login', handleLogin);
 
+// Verificar token (para validar sessão no frontend)
+app.post('/api/auth/verify', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ valid: false });
+  }
+
+  const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
+
+  try {
+    jwt.verify(token, jwtSecret);
+    return res.json({ valid: true });
+  } catch (error) {
+    return res.status(401).json({ valid: false });
+  }
+});
+
 // Rota de Upload (Implementação do Padrão Especificado)
 app.post('/api/admin/upload', authenticateToken, (req, res) => {
   if (process.env.NODE_ENV === 'production') {
