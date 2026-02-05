@@ -8,8 +8,10 @@ function verifyToken(req, res, next) {
         return res.status(401).json({ error: 'Token não fornecido' });
     }
 
+    const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
+
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'clique-zoom-secret-key');
+        const decoded = jwt.verify(token, jwtSecret);
         req.admin = decoded;
         next();
     } catch (error) {

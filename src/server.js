@@ -60,16 +60,19 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
-  if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+  if (!token) {
+    console.warn('⚠️  Token não fornecido em:', req.method, req.path);
+    return res.status(401).json({ error: 'Token não fornecido' });
+  }
 
-  // Fallback para desenvolvimento se não houver variáveis de ambiente
-  const isDev = process.env.NODE_ENV !== 'production';
-  const jwtSecret = process.env.JWT_SECRET || (isDev ? 'dev-secret-123' : null);
-
-  if (!jwtSecret) return res.status(500).json({ error: 'Erro de configuração do servidor' });
+  const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
 
   jwt.verify(token, jwtSecret, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Token inválido' });
+    if (err) {
+      console.warn('⚠️  Token inválido:', err.message);
+      return res.status(403).json({ error: 'Token inválido' });
+    }
+    console.log('✅ Token válido para:', req.method, req.path);
     req.user = user;
     next();
   });
@@ -80,19 +83,13 @@ const handleLogin = (req, res) => {
   try {
     const { password } = req.body;
     
-    // Configurações com fallback para desenvolvimento
-    const isDev = process.env.NODE_ENV !== 'production';
-    const jwtSecret = process.env.JWT_SECRET || (isDev ? 'dev-secret-123' : null);
-    const adminPass = process.env.ADMIN_PASSWORD || (isDev ? 'admin123' : null);
-
-    if (!jwtSecret) {
-      console.error('ERRO: JWT_SECRET não definido nas variáveis de ambiente');
-      return res.status(500).json({ success: false, error: 'Erro de configuração do servidor' });
-    }
+    const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
+    const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
 
     // Verifica a senha contra a variável de ambiente
     if (password === adminPass) {
       const token = jwt.sign({ role: 'admin' }, jwtSecret, { expiresIn: '7d' });
+      console.log('✅ Token gerado com sucesso');
       return res.json({ success: true, token });
     }
     res.status(401).json({ success: false, error: 'Senha incorreta' });
@@ -204,6 +201,7 @@ app.get('/api/site-config', async (req, res) => {
 // Rota de Auto-Save (Recebe o appData completo ou parcial)
 app.put('/api/site-data', authenticateToken, async (req, res) => {
   try {
+    console.log('\ud83d\udcd4 PUT /api/site-data recebido com:', Object.keys(req.body).join(', '));
     const appData = req.body;
     
     // Atualiza o único documento existente ou cria um novo (upsert: true)
@@ -213,9 +211,10 @@ app.put('/api/site-data', authenticateToken, async (req, res) => {
       { new: true, upsert: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
     );
     
+    console.log('\u2705 Dados salvos com sucesso em Mongo');
     res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData });
   } catch (error) {
-    console.error('Erro ao salvar dados:', error);
+    console.error('\u274c Erro ao salvar dados:', error.message);
     res.status(500).json({ ok: false, error: 'Erro ao salvar' });
   }
 });
