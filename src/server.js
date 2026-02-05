@@ -76,7 +76,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Rota de Login (Gera o Token JWT)
-app.post('/api/login', (req, res) => {
+const handleLogin = (req, res) => {
   try {
     const { password } = req.body;
     
@@ -100,7 +100,10 @@ app.post('/api/login', (req, res) => {
     console.error('Erro no login:', error);
     res.status(500).json({ success: false, error: 'Erro interno no servidor' });
   }
-});
+};
+
+app.post('/api/login', handleLogin);
+app.post('/api/auth/login', handleLogin);
 
 // Rota de Upload (Implementação do Padrão Especificado)
 app.post('/api/admin/upload', authenticateToken, (req, res) => {
