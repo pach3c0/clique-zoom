@@ -200,7 +200,7 @@ app.post('/api/admin/site-config', async (req, res) => {
 });
 
 // Admin API: Upload image (Hero, Portfolio, etc)
-app.post('/api/admin/upload', authenticateToken, (req, res) => {
+app.post('/api/admin/upload', (req, res) => {
   // Em produção (Vercel), filesystem é read-only
   if (process.env.NODE_ENV === 'production') {
     if (!isCloudinaryConfigured) {
