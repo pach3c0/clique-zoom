@@ -1525,6 +1525,7 @@
                     });
                     
                     xhr.open('POST', '/api/admin/upload');
+                    xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
                     xhr.send(formData);
                 });
             } catch (err) {
