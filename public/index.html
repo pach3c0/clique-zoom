@@ -33,6 +33,7 @@
         /* Hero height */
         .hero-section {
             min-height: 100vh;
+            min-height: 100svh;
         }
 
         /* Smooth transitions */
@@ -88,6 +89,19 @@
             animation: none;
             background: none;
         }
+
+        @media (max-width: 640px) {
+            #whatsapp-widget {
+                bottom: 1rem;
+                right: 1rem;
+            }
+            #whatsapp-btn {
+                padding: 0.75rem;
+            }
+            #whatsapp-bubble {
+                max-width: 14rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-white text-gray-900">
@@ -117,11 +131,24 @@
                 <a href="#estudio" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">ESTÚDIO</a>
                 <a href="#sobre" class="text-sm text-gray-600 hover:text-neutral-900 transition-colors">SOBRE</a>
             </div>
-            <button id="mobile-menu-btn" class="md:hidden p-2">
+            <button id="mobile-menu-btn" class="md:hidden p-2" aria-expanded="false" aria-controls="mobile-menu">
                 <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
         </div>
     </nav>
+
+    <!-- MOBILE MENU -->
+    <div id="mobile-menu" class="md:hidden fixed inset-0 z-40 bg-black/40 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div id="mobile-menu-panel" class="absolute top-16 left-0 right-0 bg-white border-b border-gray-100 shadow-lg transform translate-y-2 opacity-0 transition-all duration-200">
+            <div class="px-6 py-6 flex flex-col gap-4">
+                <a href="#hero" class="text-sm text-gray-700 hover:text-neutral-900 transition-colors" data-close-mobile>HOME</a>
+                <a href="#portfolio" class="text-sm text-gray-700 hover:text-neutral-900 transition-colors" data-close-mobile>GALERIA</a>
+                <a href="#albums" class="text-sm text-gray-700 hover:text-neutral-900 transition-colors" data-close-mobile>ÁLBUNS</a>
+                <a href="#estudio" class="text-sm text-gray-700 hover:text-neutral-900 transition-colors" data-close-mobile>ESTÚDIO</a>
+                <a href="#sobre" class="text-sm text-gray-700 hover:text-neutral-900 transition-colors" data-close-mobile>SOBRE</a>
+            </div>
+        </div>
+    </div>
 
     <!-- HERO SECTION -->
     <section id="hero" class="hero-section relative flex items-center overflow-hidden bg-black">
@@ -141,12 +168,12 @@
         <!-- Conteúdo - posicionamento absoluto em relação ao hero -->
         <div class="absolute inset-0 z-10">
             <h1 id="dom-hero-title"
-                class="font-serif font-bold text-white fade-in absolute"
+                class="font-serif font-bold text-white fade-in absolute text-center px-6 w-[90%] max-w-3xl leading-tight"
                 style="position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%);">
             </h1>
             <p id="dom-hero-subtitle"
-                class="text-gray-200 font-light fade-in fade-in-delay absolute"
-                style="position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%); max-width: 600px;">
+                class="text-gray-200 font-light fade-in fade-in-delay absolute text-center px-6 w-[90%] max-w-2xl"
+                style="position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%);">
             </p>
         </div>
 
@@ -463,7 +490,9 @@
             heroTitle.style.left = titlePosX + '%';
             heroTitle.style.top = titlePosY + '%';
             heroTitle.style.transform = 'translate(-50%, -50%)';
-            heroTitle.style.fontSize = titleFS + 'px';
+            heroTitle.style.fontSize = `clamp(28px, 6vw, ${titleFS}px)`;
+            heroTitle.style.lineHeight = '1.15';
+            heroTitle.style.maxWidth = 'min(90vw, 800px)';
 
             // Subtítulo
             const subPosX = store.hero.subtitleTransform?.posX ?? 50;
@@ -474,7 +503,9 @@
             heroSubtitle.style.left = subPosX + '%';
             heroSubtitle.style.top = subPosY + '%';
             heroSubtitle.style.transform = 'translate(-50%, -50%)';
-            heroSubtitle.style.fontSize = subtitleFS + 'px';
+            heroSubtitle.style.fontSize = `clamp(14px, 3.5vw, ${subtitleFS}px)`;
+            heroSubtitle.style.lineHeight = '1.6';
+            heroSubtitle.style.maxWidth = 'min(90vw, 600px)';
 
             // ===== SOBRE =====
             document.getElementById('dom-about-title').textContent = store.about.title;
@@ -877,9 +908,44 @@
         }
 
         // ========== MOBILE MENU ==========
-        document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
-            // Simple toggle - you can expand this
-            alert('Menu mobile em desenvolvimento');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuPanel = document.getElementById('mobile-menu-panel');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+
+        function openMobileMenu() {
+            if (!mobileMenu || !mobileMenuPanel) return;
+            mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+            mobileMenuPanel.classList.remove('translate-y-2', 'opacity-0');
+            document.body.classList.add('overflow-hidden');
+            mobileMenuBtn?.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeMobileMenu() {
+            if (!mobileMenu || !mobileMenuPanel) return;
+            mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+            mobileMenuPanel.classList.add('translate-y-2', 'opacity-0');
+            document.body.classList.remove('overflow-hidden');
+            mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleMobileMenu() {
+            if (!mobileMenu) return;
+            const isOpen = !mobileMenu.classList.contains('pointer-events-none');
+            if (isOpen) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        }
+
+        mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
+        mobileMenu?.addEventListener('click', (event) => {
+            if (event.target === mobileMenu) {
+                closeMobileMenu();
+            }
+        });
+        document.querySelectorAll('[data-close-mobile]')?.forEach((link) => {
+            link.addEventListener('click', () => closeMobileMenu());
         });
 
         // ========== INIT ==========
