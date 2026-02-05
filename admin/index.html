@@ -752,7 +752,7 @@
                                     <!-- Imagem de fundo -->
                                     <img id="preview-img" src="${imgSrc}" alt="Preview"
                                         class="absolute inset-0 w-full h-full object-cover transition-all duration-200"
-                                        style="transform: scale(${h.imageScale}); object-position: ${h.imagePosX}% ${h.imagePosY}%;">
+                                        style="transform: scale(${h.imageScale}); transform-origin: ${h.imagePosX}% ${h.imagePosY}%;">
 
                                     <!-- Overlay escuro -->
                                     <div id="preview-overlay" class="absolute inset-0 transition-all duration-200"
@@ -1357,7 +1357,7 @@
             if (previewImg) {
                 previewImg.src = resolveImagePath(image);
                 previewImg.style.transform = `scale(${scale})`;
-                previewImg.style.objectPosition = `${imgX}% ${imgY}%`;
+                previewImg.style.transformOrigin = `${imgX}% ${imgY}%`;
             }
 
             if (previewTitle) {
