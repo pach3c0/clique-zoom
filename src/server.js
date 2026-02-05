@@ -200,10 +200,15 @@ app.post('/api/admin/site-config', async (req, res) => {
 });
 
 // Admin API: Upload image (Hero, Portfolio, etc)
-app.post('/api/admin/upload', (req, res) => {
+app.post('/api/admin/upload', authenticateToken, (req, res) => {
   // Em produção (Vercel), filesystem é read-only
   if (process.env.NODE_ENV === 'production') {
     if (!isCloudinaryConfigured) {
+      console.error('Cloudinary não configurado:', {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'MISSING',
+        api_key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING',
+        api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
+      });
       return res.status(503).json({
         error: 'Upload desabilitado em produção. Configure Cloudinary ou use URLs externas.'
       });
