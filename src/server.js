@@ -144,12 +144,42 @@ app.post('/api/admin/upload', authenticateToken, (req, res) => {
   }
 });
 
+const siteDataCollectionsFallback = ['siteData', 'sitedata', 'site_data'];
+
+const findSiteDataAny = async () => {
+  const primary = await SiteData.findOne().lean();
+  if (primary) return { data: primary, source: 'model' };
+
+  const db = mongoose.connection?.db;
+  if (!db) return { data: null, source: null };
+
+  for (const name of siteDataCollectionsFallback) {
+    try {
+      const doc = await db.collection(name).findOne({});
+      if (doc) return { data: doc, source: name };
+    } catch (error) {
+      // Ignorar coleções inexistentes
+    }
+  }
+
+  return { data: null, source: null };
+};
+
 // Rota Pública para Carregar Dados do Site (Frontend usa isso ao iniciar)
 app.get('/api/site-data', async (req, res) => {
   try {
-    // Busca o primeiro documento ou retorna vazio
-    const data = await SiteData.findOne() || {};
-    res.json(data);
+    const result = await findSiteDataAny();
+    if (result.data) {
+      if (result.source !== 'model') {
+        await SiteData.findOneAndUpdate(
+          {},
+          { $set: result.data },
+          { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+      }
+      return res.json(result.data);
+    }
+    return res.json({});
   } catch (error) {
     console.error('Erro ao carregar dados:', error);
     res.status(500).json({ error: 'Erro ao carregar dados' });
