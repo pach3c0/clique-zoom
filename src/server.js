@@ -1,361 +1,262 @@
-require('dotenv').config();
-
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
 const multer = require('multer');
-const fs = require('fs');
-const connectDB = require('./config/database');
-const dataHelper = require('./helpers/data-helper');
-const apiRoutes = require('./routes/api');
 const cloudinary = require('cloudinary').v2;
+const jwt = require('jsonwebtoken');
+const path = require('path');
+require('dotenv').config();
+const SiteData = require('./models/SiteData');
+const Newsletter = require('./models/Newsletter');
 
 const app = express();
-const PORT = process.env.PORT || 3050;
 
-// Configurar Cloudinary
-const isCloudinaryConfigured = Boolean(
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET
-);
+// Configurações Básicas
+app.use(cors());
+app.use(express.json({ limit: '50mb' })); // Limite aumentado para dados grandes
+app.use(express.urlencoded({ extended: true }));
 
-if (isCloudinaryConfigured) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  });
-}
+// Servir arquivos estáticos (uploads locais em desenvolvimento)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-const defaultSiteConfig = {
-  maintenance: {
-    enabled: false,
-    title: 'Estamos em manutenção',
-    message: 'Estamos ajustando alguns detalhes. Volte em breve.'
+app.use('/assets', express.static(path.join(__dirname, '../assets')));
+// Servir Frontend (Public, Admin, Cliente)
+app.use(express.static(path.join(__dirname, '../public')));
+app.use('/admin', express.static(path.join(__dirname, '../admin')));
+app.use('/cliente', express.static(path.join(__dirname, '../cliente')));
+
+// Rota para Galeria do Cliente (SPA)
+app.get('/galeria/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, '../cliente/index.html'));
+});
+
+// Conexão MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom')
+  .then(() => console.log('MongoDB conectado'))
+  .catch(err => console.error('Erro MongoDB:', err));
+
+// Configuração Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configuração Multer - Estratégias Diferentes para Dev/Prod
+const storageMemory = multer.memoryStorage();
+const uploadMemory = multer({ storage: storageMemory });
+
+const storageDisk = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   }
+});
+const uploadDisk = multer({ storage: storageDisk });
+
+// Middleware de Autenticação
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+
+  // Fallback para desenvolvimento se não houver variáveis de ambiente
+  const isDev = process.env.NODE_ENV !== 'production';
+  const jwtSecret = process.env.JWT_SECRET || (isDev ? 'dev-secret-123' : null);
+
+  if (!jwtSecret) return res.status(500).json({ error: 'Erro de configuração do servidor' });
+
+  jwt.verify(token, jwtSecret, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Token inválido' });
+    req.user = user;
+    next();
+  });
 };
 
-function renderMaintenancePage(config) {
-  const title = config?.maintenance?.title || defaultSiteConfig.maintenance.title;
-  const message = config?.maintenance?.message || defaultSiteConfig.maintenance.message;
-  return `<!DOCTYPE html>
-  <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>${title}</title>
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
-      <style>
-        :root { color-scheme: dark; }
-        * { box-sizing: border-box; }
-        body { margin:0; font-family: 'Inter', sans-serif; background:#070707; color:#fff; }
-        .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px; position:relative; overflow:hidden; }
-        .glow { position:absolute; inset:auto -20% -30% -20%; height:60vh; background:radial-gradient(ellipse at center, rgba(255,255,255,0.08), rgba(255,255,255,0)); filter: blur(10px); }
-        .veil { position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0.9)); }
-        .card { position:relative; max-width:720px; width:100%; text-align:center; background:rgba(12,12,12,0.72); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:56px 40px; box-shadow:0 20px 60px rgba(0,0,0,0.55); backdrop-filter: blur(12px); }
-        .badge { display:inline-flex; align-items:center; gap:8px; padding:6px 14px; border-radius:999px; font-size:12px; letter-spacing:1px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.16); color:#d9d9d9; margin-bottom:18px; }
-        h1 { font-family:'Playfair Display', serif; font-size:38px; margin:0 0 12px; }
-        p { font-size:16px; line-height:1.7; color:#c7c7c7; margin:0; }
-        .divider { margin:28px auto 0; width:64px; height:2px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent); }
-        .brand { margin-top:22px; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#8c8c8c; }
-        @media (max-width: 640px) {
-          .card { padding:44px 28px; }
-          h1 { font-size:30px; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="wrap">
-        <div class="glow"></div>
-        <div class="veil"></div>
-        <div class="card">
-          <div class="badge">Cortina ativa</div>
-          <h1>${title}</h1>
-          <p>${message}</p>
-          <div class="divider"></div>
-          <div class="brand">CLIQUE·ZOOM</div>
-        </div>
-      </div>
-    </body>
-  </html>`;
-}
-
-// ========================================
-// MIDDLEWARE
-// ========================================
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// Serve static assets
-app.use('/assets', express.static(path.join(__dirname, '../assets')));
-
-// API Routes
-app.use('/api', apiRoutes);
-
-// ========================================
-// FILE UPLOAD CONFIGURATION
-// ========================================
-const allowedImageTypes = new Set(['image/jpeg', 'image/png']);
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const safeName = path.basename(file.originalname).replace(/\s+/g, '-');
-    const targetPath = path.join(__dirname, '../uploads', safeName);
-    if (fs.existsSync(targetPath)) {
-      return cb(new Error('FILE_EXISTS'));
-    }
-    cb(null, safeName);
-  }
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (!allowedImageTypes.has(file.mimetype)) {
-      return cb(new Error('INVALID_FILE_TYPE'));
-    }
-    cb(null, true);
-  }
-});
-
-const uploadMemory = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (!allowedImageTypes.has(file.mimetype)) {
-      return cb(new Error('INVALID_FILE_TYPE'));
-    }
-    cb(null, true);
-  }
-});
-
-// ========================================
-// CAMADA 1: SITE PÚBLICO (Portfolio)
-// ========================================
-app.get('/preview', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
-app.get('/', async (req, res) => {
+// Rota de Login (Gera o Token JWT)
+app.post('/api/login', (req, res) => {
   try {
-    const data = await dataHelper.getSiteData();
-    const maintenanceEnabled = data?.maintenance?.enabled === true;
-    if (maintenanceEnabled) {
-      return res.status(503).send(renderMaintenancePage({ maintenance: data.maintenance }));
+    const { password } = req.body;
+    
+    // Configurações com fallback para desenvolvimento
+    const isDev = process.env.NODE_ENV !== 'production';
+    const jwtSecret = process.env.JWT_SECRET || (isDev ? 'dev-secret-123' : null);
+    const adminPass = process.env.ADMIN_PASSWORD || (isDev ? 'admin123' : null);
+
+    if (!jwtSecret) {
+      console.error('ERRO: JWT_SECRET não definido nas variáveis de ambiente');
+      return res.status(500).json({ success: false, error: 'Erro de configuração do servidor' });
     }
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+
+    // Verifica a senha contra a variável de ambiente
+    if (password === adminPass) {
+      const token = jwt.sign({ role: 'admin' }, jwtSecret, { expiresIn: '7d' });
+      return res.json({ success: true, token });
+    }
+    res.status(401).json({ success: false, error: 'Senha incorreta' });
   } catch (error) {
-    console.error('Erro ao carregar dados do site:', error);
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+    console.error('Erro no login:', error);
+    res.status(500).json({ success: false, error: 'Erro interno no servidor' });
   }
 });
 
-// ========================================
-// CAMADA 2: PAINEL ADMINISTRATIVO (Admin)
-// ========================================
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../admin/index.html'));
-});
-
-// Site Config API (public)
-app.get('/api/site-config', async (req, res) => {
-  try {
-    const data = await dataHelper.getSiteData();
-    res.json({ maintenance: data?.maintenance || defaultSiteConfig.maintenance });
-  } catch (error) {
-    console.error('Erro ao buscar config do site:', error);
-    res.status(500).json({ error: 'Erro ao buscar config do site' });
-  }
-});
-
-// Site Config API (admin)
-app.post('/api/admin/site-config', async (req, res) => {
-  try {
-    const maintenance = req.body?.maintenance || {};
-    const current = await dataHelper.getSiteData();
-    const next = {
-      ...current,
-      maintenance: {
-        enabled: maintenance.enabled === true,
-        title: maintenance.title || defaultSiteConfig.maintenance.title,
-        message: maintenance.message || defaultSiteConfig.maintenance.message
-      }
-    };
-    const data = await dataHelper.updateSiteData(next);
-    res.json({ success: true, maintenance: data.maintenance });
-  } catch (error) {
-    console.error('Erro ao salvar config do site:', error);
-    res.status(500).json({ error: 'Erro ao salvar config do site' });
-  }
-});
-
-// Admin API: Upload image (Hero, Portfolio, etc)
-app.post('/api/admin/upload', (req, res) => {
-  // Em produção (Vercel), filesystem é read-only
+// Rota de Upload (Implementação do Padrão Especificado)
+app.post('/api/admin/upload', authenticateToken, (req, res) => {
   if (process.env.NODE_ENV === 'production') {
-    if (!isCloudinaryConfigured) {
-      console.error('Cloudinary não configurado:', {
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'MISSING',
-        api_key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING',
-        api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
-      });
-      return res.status(503).json({
-        error: 'Upload desabilitado em produção. Configure Cloudinary ou use URLs externas.'
-      });
-    }
-
-    return uploadMemory.single('image')(req, res, async (err) => {
-      if (err) {
-        if (err.message === 'INVALID_FILE_TYPE') {
-          return res.status(400).json({ error: 'Apenas imagens JPG ou PNG são permitidas' });
-        }
-        return res.status(500).json({ error: 'Erro ao fazer upload' });
-      }
-      if (!req.file) {
-        return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-      }
+    // Produção: Cloudinary (via Memory Storage)
+    uploadMemory.single('image')(req, res, async (err) => {
+      if (err) return res.status(400).json({ ok: false, error: err.message });
+      if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
 
       try {
-        const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-        const result = await cloudinary.uploader.upload(dataUri, {
-          folder: 'cliquezoom'
-        });
-
-        console.log('✓ Upload Cloudinary sucesso:', {
-          filename: result.original_filename,
-          url: result.secure_url,
-          public_id: result.public_id
-        });
-
+        // Converter buffer para Data URI para o Cloudinary
+        const b64 = Buffer.from(req.file.buffer).toString('base64');
+        const dataUri = 'data:' + req.file.mimetype + ';base64,' + b64;
+        
+        const result = await cloudinary.uploader.upload(dataUri, { folder: 'cliquezoom' });
+        
         return res.json({
           ok: true,
           success: true,
           filename: result.original_filename,
-          url: result.secure_url
+          url: result.secure_url // OBRIGATÓRIO
         });
-      } catch (uploadError) {
-        console.error('✗ Erro Cloudinary:', {
-          message: uploadError.message,
-          code: uploadError.http_code,
-          full: uploadError
-        });
-        return res.status(500).json({ error: 'Erro ao enviar imagem para Cloudinary: ' + uploadError.message });
+      } catch (error) {
+        console.error('Erro Cloudinary:', error);
+        return res.status(500).json({ ok: false, error: 'Falha no upload para Cloudinary' });
       }
+    });
+  } else {
+    // Desenvolvimento: Filesystem Local
+    uploadDisk.single('image')(req, res, (err) => {
+      if (err) return res.status(400).json({ ok: false, error: err.message });
+      if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
+
+      res.json({
+        ok: true,
+        success: true,
+        filename: req.file.filename,
+        url: `/uploads/${req.file.filename}`
+      });
     });
   }
+});
 
-  upload.single('image')(req, res, (err) => {
-    if (err) {
-      if (err.message === 'INVALID_FILE_TYPE') {
-        return res.status(400).json({ error: 'Apenas imagens JPG ou PNG são permitidas' });
-      }
-      if (err.message === 'FILE_EXISTS') {
-        return res.status(409).json({ error: 'Já existe uma imagem com esse nome' });
-      }
-      return res.status(500).json({ error: 'Erro ao fazer upload' });
+// Rota Pública para Carregar Dados do Site (Frontend usa isso ao iniciar)
+app.get('/api/site-data', async (req, res) => {
+  try {
+    // Busca o primeiro documento ou retorna vazio
+    const data = await SiteData.findOne() || {};
+    res.json(data);
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error);
+    res.status(500).json({ error: 'Erro ao carregar dados' });
+  }
+});
+
+// Rota para Configurações do Site (Manutenção, etc)
+app.get('/api/site-config', async (req, res) => {
+  try {
+    const data = await SiteData.findOne() || {};
+    // Retorna apenas campos de configuração se existirem, ou defaults
+    res.json({ maintenance: data.maintenance || { enabled: false } });
+  } catch (error) {
+    console.error('Erro ao carregar config:', error);
+    res.status(500).json({ error: 'Erro ao carregar configurações' });
+  }
+});
+
+// Rota de Auto-Save (Recebe o appData completo ou parcial)
+app.put('/api/site-data', authenticateToken, async (req, res) => {
+  try {
+    const appData = req.body;
+    
+    // Atualiza o único documento existente ou cria um novo (upsert: true)
+    const updatedData = await SiteData.findOneAndUpdate(
+      {}, // Filtro vazio para pegar sempre o mesmo documento "global"
+      { $set: appData },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    
+    res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData });
+  } catch (error) {
+    console.error('Erro ao salvar dados:', error);
+    res.status(500).json({ ok: false, error: 'Erro ao salvar' });
+  }
+});
+
+// Rota para Salvar Configurações (Manutenção)
+app.post('/api/admin/site-config', authenticateToken, async (req, res) => {
+  try {
+    const configData = req.body; // Espera { maintenance: { ... } }
+    
+    await SiteData.findOneAndUpdate(
+      {},
+      { $set: configData },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    
+    res.json({ ok: true, success: true });
+  } catch (error) {
+    console.error('Erro ao salvar config:', error);
+    res.status(500).json({ ok: false, error: 'Erro ao salvar configurações' });
+  }
+});
+
+// --- ROTAS DE NEWSLETTER ---
+
+// Inscrever (Público)
+app.post('/api/newsletter/subscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email obrigatório' });
+
+    // Verifica se já existe
+    const existing = await Newsletter.findOne({ email });
+    if (existing) {
+        if (!existing.active) {
+            existing.active = true;
+            await existing.save();
+            return res.json({ success: true, message: 'Reativado com sucesso' });
+        }
+        return res.json({ success: true, alreadySubscribed: true, message: 'Já inscrito' });
     }
-    if (!req.file) {
-      return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+
+    await Newsletter.create({ email });
+    res.json({ success: true, message: 'Inscrito com sucesso' });
+  } catch (error) {
+    console.error('Erro newsletter:', error);
+    res.status(500).json({ error: 'Erro ao inscrever' });
+  }
+});
+
+// Listar Inscritos (Admin)
+app.get('/api/newsletter', authenticateToken, async (req, res) => {
+    try {
+        const subscribers = await Newsletter.find().sort({ createdAt: -1 });
+        res.json({ 
+            subscribers, 
+            pagination: { total: subscribers.length } 
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar inscritos' });
     }
-    res.json({
-      ok: true,
-      success: true,
-      filename: req.file.filename,
-      url: `/uploads/${req.file.filename}`
-    });
-  });
 });
 
-// ========================================
-// CAMADA 3: GALERIA PRIVADA DO CLIENTE
-// ========================================
-app.get('/galeria/:galleryId', (req, res) => {
-  res.sendFile(path.join(__dirname, '../cliente/index.html'));
-});
-
-// Client Gallery API: Get gallery data (private, with token)
-app.get('/api/galeria/:galleryId', (req, res) => {
-  // TODO: Verificar token/password do cliente
-  res.json({ 
-    success: true, 
-    galleryId: req.params.galleryId,
-    fotos: [],
-    configuracao: {
-      podem_compartilhar: false,
-      limite_downloads: null,
-      marca_dagua: true,
-      preco: 0,
-      status: 'bloqueado'
+// Remover Inscrito (Admin)
+app.delete('/api/newsletter/:email', authenticateToken, async (req, res) => {
+    try {
+        await Newsletter.findOneAndDelete({ email: req.params.email });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao remover' });
     }
-  });
 });
 
-// Client Gallery API: Download photo(s)
-app.post('/api/galeria/:galleryId/download', (req, res) => {
-  // TODO: Gerar marca d'água, comprimir, enviar
-  res.json({ success: true, message: 'Download iniciado' });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Modo: ${process.env.NODE_ENV || 'development'}`);
 });
-
-// ========================================
-// ROTAS PÚBLICAS (Assets)
-// ========================================
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
-// ========================================
-// ERROR HANDLER
-// ========================================
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Erro interno do servidor' });
-});
-
-// ========================================
-// INITIALIZE DATABASE
-// ========================================
-// Inicializar MongoDB quando o app iniciar (não esperar)
-connectDB().catch(err => {
-  console.warn('⚠️  MongoDB offline no startup:', err.message);
-});
-
-// Verificar MongoDB disponibilidade
-dataHelper.checkMongoDB().catch(err => {
-  console.warn('⚠️  MongoDB check falhou:', err.message);
-});
-
-// ========================================
-// START SERVER
-// ========================================
-if (process.env.NODE_ENV !== 'production') {
-  // Modo desenvolvimento: usar app.listen
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    const env = process.env.NODE_ENV || 'development';
-    const host = `localhost:${PORT}`;
-    console.log(`\n✅ Servidor rodando (${env}) em http://${host}`);
-    console.log(`📸 Site Público: http://${host}`);
-    console.log(`🔧 Painel Admin: http://${host}/admin`);
-    console.log(`👁️  Galeria Cliente: http://${host}/galeria/[id]`);
-    console.log(`🧪 Teste MongoDB: http://${host}/api/test-connection\n`);
-  });
-
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM recebido, fechando servidor...');
-    server.close(() => {
-      console.log('Servidor fechado');
-      process.exit(0);
-    });
-  });
-} else {
-  // Modo produção (Vercel): exportar como handler
-  module.exports = app;
-}

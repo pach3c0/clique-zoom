@@ -1,9 +1,76 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 const dataHelper = require('../helpers/data-helper');
 const authHelper = require('../helpers/auth-helper');
 const { verifyToken } = require('../middleware/auth');
 const Newsletter = require('../models/Newsletter');
+
+const rootDir = path.join(__dirname, '..', '..');
+
+// Configurar Cloudinary
+const isCloudinaryConfigured = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
+
+// Configuração do Multer
+const allowedImageTypes = new Set(['image/jpeg', 'image/png']);
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(rootDir, 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const safeName = path.basename(file.originalname).replace(/\s+/g, '-');
+    const targetPath = path.join(rootDir, 'uploads', safeName);
+    if (fs.existsSync(targetPath)) {
+      // Em vez de erro, vamos gerar um nome de arquivo único
+      const timestamp = Date.now();
+      const newName = `${timestamp}-${safeName}`;
+      return cb(null, newName);
+    }
+    cb(null, safeName);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!allowedImageTypes.has(file.mimetype)) {
+      return cb(new Error('INVALID_FILE_TYPE'));
+    }
+    cb(null, true);
+  }
+});
+
+const uploadMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!allowedImageTypes.has(file.mimetype)) {
+      return cb(new Error('INVALID_FILE_TYPE'));
+    }
+    cb(null, true);
+  }
+});
+
 
 // ========== AUTENTICAÇÃO ==========
 
@@ -252,16 +319,51 @@ router.delete('/newsletter/:email', verifyToken, async (req, res) => {
 
 // ========== UPLOAD (PROTEGIDO) ==========
 
-router.post('/admin/upload', verifyToken, async (req, res) => {
-  // Este endpoint é protegido - só admin pode fazer upload
-  // O middleware verifyToken vai validar o token antes de chegar aqui
-  try {
-    // Lógica de upload aqui
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro no upload' });
-  }
+// O middleware `verifyToken` já protege esta rota
+router.post('/admin/upload', verifyToken, (req, res) => {
+  const useCloudinary = process.env.NODE_ENV === 'production' && isCloudinaryConfigured;
+  const uploader = useCloudinary ? uploadMemory.single('image') : upload.single('image');
+
+  uploader(req, res, async (err) => {
+    if (err) {
+      if (err.message === 'INVALID_FILE_TYPE') {
+        return res.status(400).json({ error: 'Apenas imagens JPG ou PNG são permitidas' });
+      }
+      if (err.message === 'FILE_EXISTS') {
+        return res.status(409).json({ error: 'Já existe uma imagem com esse nome' });
+      }
+      return res.status(500).json({ error: 'Erro durante o upload' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+    }
+
+    if (useCloudinary) {
+      try {
+        const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+        const result = await cloudinary.uploader.upload(dataUri, {
+          folder: 'cliquezoom',
+          transformation: [{ quality: "auto:good" }],
+        });
+        return res.json({
+          success: true,
+          filename: result.original_filename,
+          url: result.secure_url
+        });
+      } catch (uploadError) {
+        console.error('Erro Cloudinary:', uploadError);
+        return res.status(500).json({ error: 'Erro ao enviar imagem para Cloudinary' });
+      }
+    } else {
+      res.json({
+        success: true,
+        filename: req.file.filename,
+        url: `/uploads/${req.file.filename}`
+      });
+    }
+  });
 });
+
 
 module.exports = router;
 
