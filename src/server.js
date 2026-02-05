@@ -31,37 +31,45 @@ app.get('/galeria/:id', (req, res) => {
 });
 
 // Conexão MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom', {
-  serverSelectionTimeoutMS: 30000,      // 30 segundos para seleção de servidor
-  connectTimeoutMS: 30000,              // 30 segundos para conectar
-  socketTimeoutMS: 45000,               // 45 segundos para socket
-  keepAlive: true,                      // Manter conexão aberta
-  keepAliveInitialDelay: 300000,        // 5 minutos antes de enviar keepAlive
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom';
+console.log('🔄 Iniciando conexão MongoDB...');
+console.log('URI configurada:', !!process.env.MONGODB_URI);
+
+mongoose.connect(mongoUri, {
+  serverSelectionTimeoutMS: 30000,
+  connectTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  keepAlive: true,
   retryWrites: true,
   w: 'majority',
-  maxPoolSize: 20,                      // Aumentar pool de conexões
-  minPoolSize: 5,                       // Manter conexões mínimas
-  family: 4                             // Usar IPv4
+  maxPoolSize: 20,
+  minPoolSize: 5
 })
-  .then(() => console.log('✅ MongoDB conectado'))
-  .catch(err => console.error('❌ Erro MongoDB:', err));
+  .then(() => {
+    console.log('✅ MongoDB conectado com sucesso');
+    console.log('📦 Status:', mongoose.connection.readyState);
+  })
+  .catch(err => {
+    console.error('❌ Erro ao conectar MongoDB:');
+    console.error('  Mensagem:', err.message);
+    console.error('  Código:', err.code);
+    console.error('  Stack:', err.stack);
+  });
 
 // Evento de desconexão - Tentar reconectar
 mongoose.connection.on('disconnected', () => {
   console.warn('⚠️  MongoDB desconectado. Tentando reconectar em 5s...');
   setTimeout(() => {
-    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom', {
+    mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 30000,
       connectTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       keepAlive: true,
-      keepAliveInitialDelay: 300000,
       retryWrites: true,
       w: 'majority',
       maxPoolSize: 20,
-      minPoolSize: 5,
-      family: 4
-    }).catch(err => console.error('❌ Erro ao reconectar:', err));
+      minPoolSize: 5
+    }).catch(err => console.error('❌ Erro ao reconectar:', err.message));
   }, 5000);
 });
 

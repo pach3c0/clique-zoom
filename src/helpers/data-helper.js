@@ -6,16 +6,26 @@ let mongoAvailable = false;
 let inMemoryData = JSON.parse(JSON.stringify(fallbackData));
 
 const fetchFromMongo = async () => {
-  const data = await SiteData.findOne().lean();
-  return data || null;
+  try {
+    const data = await SiteData.findOne().lean();
+    return data || null;
+  } catch (error) {
+    console.error('❌ Erro ao buscar dados do MongoDB:', error.message);
+    throw error;
+  }
 };
 
 // Tentar conectar ao MongoDB
 const checkMongoDB = async () => {
+  const readyState = mongoose.connection.readyState;
+  const readyStateText = ['desconectado', 'conectado', 'conectando', 'desconectando'][readyState] || 'desconhecido';
+  
+  console.log(`📊 Estado do Mongoose: ${readyState} (${readyStateText})`);
+  
   try {
     // Verificar se mongoose está conectado
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('⚠️  Mongoose não está conectado (state:', mongoose.connection.readyState + ')');
+    if (readyState !== 1) {
+      console.warn(`⚠️  Mongoose não está conectado (state: ${readyState})`);
       mongoAvailable = false;
       return inMemoryData;
     }
