@@ -32,7 +32,7 @@ const SiteDataSchema = new mongoose.Schema({
 }, { 
   timestamps: true,
   strict: false,
-  collection: 'sitedata'
+  collection: 'sitedatas'
 });
 
 module.exports = mongoose.model('SiteData', SiteDataSchema);

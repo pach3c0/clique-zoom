@@ -163,7 +163,7 @@ app.post('/api/admin/upload', authenticateToken, (req, res) => {
   }
 });
 
-const siteDataCollectionsFallback = ['sitedata', 'site_data'];
+const siteDataCollectionsFallback = ['site_data'];
 
 const findSiteDataAny = async () => {
   const primary = await SiteData.findOne().sort({ updatedAt: -1 }).lean();
