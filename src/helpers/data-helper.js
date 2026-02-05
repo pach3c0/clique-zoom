@@ -5,6 +5,11 @@ const mongoose = require('mongoose');
 let mongoAvailable = false;
 let inMemoryData = JSON.parse(JSON.stringify(fallbackData));
 
+const fetchFromMongo = async () => {
+  const data = await SiteData.findOne().lean();
+  return data || null;
+};
+
 // Tentar conectar ao MongoDB
 const checkMongoDB = async () => {
   try {
@@ -16,10 +21,10 @@ const checkMongoDB = async () => {
     }
 
     console.log('🔄 Verificando disponibilidade do MongoDB...');
-    const data = await SiteData.getSiteData();
+    const data = await fetchFromMongo();
     mongoAvailable = true;
     console.log('✅ MongoDB disponível e funcionando');
-    return data;
+    return data || inMemoryData;
   } catch (error) {
     mongoAvailable = false;
     console.warn('⚠️  MongoDB indisponível, usando fallback em memória:', error.message);
@@ -30,8 +35,8 @@ const checkMongoDB = async () => {
 const getSiteData = async () => {
   try {
     if (mongoAvailable && mongoose.connection.readyState === 1) {
-      const data = await SiteData.getSiteData();
-      return data;
+      const data = await fetchFromMongo();
+      return data || inMemoryData;
     }
   } catch (error) {
     mongoAvailable = false;
@@ -64,7 +69,11 @@ const updateSiteData = async (newData) => {
     if (mongoose.connection.readyState === 1 && mongoAvailable) {
       console.log('💾 Salvando dados no MongoDB...');
       console.log('   studio.whatsapp:', newData.studio?.whatsapp);
-      const result = await SiteData.updateSiteData(newData);
+      const result = await SiteData.findOneAndUpdate(
+        {},
+        { $set: newData },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      ).lean();
       console.log('✅ Dados salvos no MongoDB com sucesso');
       console.log('   result.studio.whatsapp:', result.studio?.whatsapp);
       return result;
