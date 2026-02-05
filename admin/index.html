@@ -867,7 +867,7 @@
                                 <p class="text-sm text-gray-500 mt-1">Quando ativa, o público verá a página de manutenção no endereço principal.</p>
                             </div>
                             <label class="inline-flex items-center gap-3 text-sm font-medium text-gray-700">
-                                <input id="maintenance-enabled" type="checkbox" class="w-4 h-4" ${m.enabled ? 'checked' : ''}>
+                                <input id="maintenance-enabled" type="checkbox" class="w-4 h-4" ${m.enabled ? 'checked' : ''} onchange="maintenanceConfig.enabled = this.checked; saveSiteConfig();">
                                 Ativar manutenção
                             </label>
                         </div>
@@ -876,11 +876,11 @@
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Título</label>
-                            <input id="maintenance-title" type="text" value="${m.title}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">
+                            <input id="maintenance-title" type="text" value="${m.title}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900" oninput="maintenanceConfig.title = this.value; saveSiteConfig();">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Mensagem</label>
-                            <textarea id="maintenance-message" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900">${m.message}</textarea>
+                            <textarea id="maintenance-message" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900" oninput="maintenanceConfig.message = this.value; saveSiteConfig();">${m.message}</textarea>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
                             <button onclick="saveSiteConfig()" class="bg-neutral-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800">
@@ -2065,6 +2065,7 @@
             appData.portfolio.splice(targetIdx, 0, item);
 
             renderPortfolio();
+            saveDados();
         }
 
         function handleDragEnd(e) {
@@ -2092,6 +2093,7 @@
             renderPortfolio();
             if (addedCount > 0) {
                 alert(`${addedCount} foto(s) adicionada(s)!`);
+                saveDados();
             }
         }
 
@@ -2125,6 +2127,7 @@
             if (confirm('Remover esta foto da galeria?')) {
                 appData.portfolio.splice(idx, 1);
                 renderPortfolio();
+                saveDados();
             }
         }
 
@@ -2142,11 +2145,11 @@
                             <div class="flex-1 space-y-3">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Título do Álbum</label>
-                                    <input type="text" value="${album.title || ''}" oninput="appData.albums[${idx}].title = this.value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: Casamento Ana & João">
+                                    <input type="text" value="${album.title || ''}" oninput="appData.albums[${idx}].title = this.value; saveDados();" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: Casamento Ana & João">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Subtítulo</label>
-                                    <input type="text" value="${album.subtitle || ''}" oninput="appData.albums[${idx}].subtitle = this.value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: Ensaio completo">
+                                    <input type="text" value="${album.subtitle || ''}" oninput="appData.albums[${idx}].subtitle = this.value; saveDados();" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: Ensaio completo">
                                 </div>
                             </div>
                             <div class="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
@@ -2214,6 +2217,7 @@
                 createdAt: new Date().toISOString()
             });
             renderAlbuns();
+            saveDados();
             lucide.createIcons();
         }
 
@@ -2221,6 +2225,7 @@
             if (confirm('Remover este álbum e todas as fotos?')) {
                 appData.albums.splice(index, 1);
                 renderAlbuns();
+                saveDados();
                 lucide.createIcons();
             }
         }
@@ -2228,6 +2233,7 @@
         function setAlbumCover(albumIndex, photoUrl) {
             appData.albums[albumIndex].cover = photoUrl;
             renderAlbuns();
+            saveDados();
             lucide.createIcons();
         }
 
@@ -2239,6 +2245,7 @@
                 album.cover = album.photos[0] || '';
             }
             renderAlbuns();
+            saveDados();
             lucide.createIcons();
         }
 
@@ -2261,6 +2268,7 @@
             }
 
             renderAlbuns();
+            saveDados();
             lucide.createIcons();
         }
 
@@ -2289,12 +2297,14 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
                                 <input type="text" id="studio-title" value="${s.title || ''}" placeholder="Ex: Situado no Coração do Morumbi"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                                    oninput="appData.studio.title = this.value; saveDados();">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
                                 <textarea id="studio-description" rows="3" placeholder="Descreva seu estúdio..."
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">${s.description || ''}</textarea>
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                                    oninput="appData.studio.description = this.value; saveDados();">${s.description || ''}</textarea>
                             </div>
                         </div>
                     </div>
@@ -2308,18 +2318,17 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
                                 <input type="text" id="studio-address" value="${s.address}"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Horários</label>
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                                    oninput="appData.studio.address = this.value; saveDados();">
                                 <textarea id="studio-hours" rows="2"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">${s.hours}</textarea>
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                                    oninput="appData.studio.hours = this.value; saveDados();">${s.hours}</textarea>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">WhatsApp (com DDD)</label>
                                 <input type="text" id="studio-whatsapp" value="${s.whatsapp || ''}" placeholder="5511999999999"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">
-                                <p class="text-xs text-gray-500 mt-1">Formato: 55 + DDD + número (sem espaços)</p>
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                                    oninput="appData.studio.whatsapp = this.value; saveDados();">
                             </div>
                         </div>
                     </div>
