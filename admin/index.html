@@ -1405,7 +1405,18 @@
                 bottomBarHeight: botBar,
                 overlayOpacity: overlay
             };
+
+            // Auto-save a cada mudança (com debounce)
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                if (authToken) {
+                    saveDados().catch(err => console.warn('Auto-save falhou:', err));
+                }
+            }, 1500);
         }
+
+        // Variável para debounce do auto-save
+        let autoSaveTimeout;
 
         // Comprime a imagem no navegador antes de enviar (max 4MB, qualidade 0.8)
         async function compressImage(file, maxSizeMB = 4, maxWidth = 2400, quality = 0.85) {
