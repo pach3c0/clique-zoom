@@ -150,7 +150,7 @@ app.post('/api/admin/upload', authenticateToken, (req, res) => {
 const siteDataCollectionsFallback = ['siteData', 'sitedata', 'site_data'];
 
 const findSiteDataAny = async () => {
-  const primary = await SiteData.findOne().lean();
+  const primary = await SiteData.findOne().sort({ updatedAt: -1 }).lean();
   if (primary) return { data: primary, source: 'model' };
 
   const db = mongoose.connection?.db;
@@ -158,7 +158,7 @@ const findSiteDataAny = async () => {
 
   for (const name of siteDataCollectionsFallback) {
     try {
-      const doc = await db.collection(name).findOne({});
+      const doc = await db.collection(name).find({}).sort({ updatedAt: -1 }).limit(1).next();
       if (doc) return { data: doc, source: name };
     } catch (error) {
       // Ignorar coleções inexistentes
@@ -177,7 +177,7 @@ app.get('/api/site-data', async (req, res) => {
         await SiteData.findOneAndUpdate(
           {},
           { $set: result.data },
-          { new: true, upsert: true, setDefaultsOnInsert: true }
+          { new: true, upsert: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
         );
       }
       return res.json(result.data);
@@ -192,7 +192,7 @@ app.get('/api/site-data', async (req, res) => {
 // Rota para Configurações do Site (Manutenção, etc)
 app.get('/api/site-config', async (req, res) => {
   try {
-    const data = await SiteData.findOne() || {};
+    const data = await SiteData.findOne().sort({ updatedAt: -1 }) || {};
     // Retorna apenas campos de configuração se existirem, ou defaults
     res.json({ maintenance: data.maintenance || { enabled: false } });
   } catch (error) {
@@ -210,7 +210,7 @@ app.put('/api/site-data', authenticateToken, async (req, res) => {
     const updatedData = await SiteData.findOneAndUpdate(
       {}, // Filtro vazio para pegar sempre o mesmo documento "global"
       { $set: appData },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
+      { new: true, upsert: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
     );
     
     res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData });
@@ -228,7 +228,7 @@ app.post('/api/admin/site-config', authenticateToken, async (req, res) => {
     await SiteData.findOneAndUpdate(
       {},
       { $set: configData },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
+      { new: true, upsert: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
     );
     
     res.json({ ok: true, success: true });
