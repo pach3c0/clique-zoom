@@ -31,9 +31,43 @@ app.get('/galeria/:id', (req, res) => {
 });
 
 // Conexão MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom')
-  .then(() => console.log('MongoDB conectado'))
-  .catch(err => console.error('Erro MongoDB:', err));
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom', {
+  serverSelectionTimeoutMS: 30000,      // 30 segundos para seleção de servidor
+  connectTimeoutMS: 30000,              // 30 segundos para conectar
+  socketTimeoutMS: 45000,               // 45 segundos para socket
+  keepAlive: true,                      // Manter conexão aberta
+  keepAliveInitialDelay: 300000,        // 5 minutos antes de enviar keepAlive
+  retryWrites: true,
+  w: 'majority',
+  maxPoolSize: 20,                      // Aumentar pool de conexões
+  minPoolSize: 5,                       // Manter conexões mínimas
+  family: 4                             // Usar IPv4
+})
+  .then(() => console.log('✅ MongoDB conectado'))
+  .catch(err => console.error('❌ Erro MongoDB:', err));
+
+// Evento de desconexão - Tentar reconectar
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️  MongoDB desconectado. Tentando reconectar em 5s...');
+  setTimeout(() => {
+    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom', {
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      keepAlive: true,
+      keepAliveInitialDelay: 300000,
+      retryWrites: true,
+      w: 'majority',
+      maxPoolSize: 20,
+      minPoolSize: 5,
+      family: 4
+    }).catch(err => console.error('❌ Erro ao reconectar:', err));
+  }, 5000);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('❌ Erro de conexão MongoDB:', err);
+});
 
 // Configuração Cloudinary
 cloudinary.config({
@@ -166,8 +200,18 @@ app.post('/api/admin/upload', authenticateToken, (req, res) => {
 const siteDataCollectionsFallback = ['site_data'];
 
 const findSiteDataAny = async () => {
-  const primary = await SiteData.findOne().sort({ updatedAt: -1 }).lean();
-  if (primary) return { data: primary, source: 'model' };
+  // Verificar se conexão está ativa
+  if (mongoose.connection.readyState !== 1) {
+    console.warn('⚠️  MongoDB não conectado. Estado:', mongoose.connection.readyState);
+    return { data: null, source: null };
+  }
+
+  try {
+    const primary = await SiteData.findOne().sort({ updatedAt: -1 }).lean();
+    if (primary) return { data: primary, source: 'model' };
+  } catch (error) {
+    console.error('❌ Erro ao buscar em sitedatas:', error.message);
+  }
 
   const db = mongoose.connection?.db;
   if (!db) return { data: null, source: null };
@@ -229,10 +273,11 @@ app.put('/api/site-data', authenticateToken, async (req, res) => {
       { $set: appData },
       { upsert: true }
     );
-    const updatedData = appData;
+    // Recuperar o documento atualizado
+    const updatedData = await SiteData.findOne().sort({ updatedAt: -1 });
     
-    console.log('\u2705 Dados salvos com sucesso em Mongo');
-    res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData });
+    console.log('✅ Dados salvos com sucesso em Mongo');
+    res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData || appData });
   } catch (error) {
     console.error('\u274c Erro ao salvar dados:', error.message);
     res.status(500).json({ ok: false, error: 'Erro ao salvar' });

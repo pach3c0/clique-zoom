@@ -34,13 +34,20 @@ const checkMongoDB = async () => {
 
 const getSiteData = async () => {
   try {
-    if (mongoAvailable && mongoose.connection.readyState === 1) {
+    if (mongoose.connection.readyState === 1) {
+      console.log('✅ Buscando dados do MongoDB...');
       const data = await fetchFromMongo();
-      return data || inMemoryData;
+      if (data) {
+        // Atualizar fallback em memória com dados do banco
+        inMemoryData = JSON.parse(JSON.stringify(data));
+        mongoAvailable = true;
+        return data;
+      }
     }
   } catch (error) {
     mongoAvailable = false;
     console.warn('⚠️  Erro ao buscar dados do MongoDB:', error.message);
+    console.log('📦 Usando dados em memória como fallback');
   }
   
   return inMemoryData;

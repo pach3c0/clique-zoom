@@ -16,12 +16,15 @@ const connectDB = async () => {
     console.log('URI preview:', MONGODB_URI.substring(0, 20) + '...' + MONGODB_URI.substring(MONGODB_URI.length - 10));
     
     const connection = await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,  // Reduzido de 10s para 5s
-      connectTimeoutMS: 5000,           // Reduzido de 10s para 5s
+      serverSelectionTimeoutMS: 30000,  // Aumentado para 30s (padrão robusto)
+      connectTimeoutMS: 30000,          // Aumentado para 30s
+      socketTimeoutMS: 45000,           // Timeout de socket para evitar quedas
+      keepAlive: true,                  // Manter conexão viva
+      family: 4,                        // Forçar IPv4 para evitar erros de DNS
       retryWrites: true,
       w: 'majority',
-      maxPoolSize: 10,                  // Pool de conexões
-      minPoolSize: 2
+      maxPoolSize: 10,                  // Máximo conservador para Serverless
+      minPoolSize: 1                    // Mínimo reduzido para não estourar conexões na Vercel
     });
 
     isConnected = true;
