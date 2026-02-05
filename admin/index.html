@@ -1213,10 +1213,10 @@
                 quickLinksHTML = footer.quickLinks.map((link, idx) => `
                     <div class="border border-gray-200 rounded-lg p-4 flex justify-between items-start gap-4">
                         <div class="flex-1 space-y-2">
-                            <input type="text" value="${link.label || ''}" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Rótulo do link" onchange="appData.footer.quickLinks[${idx}].label = this.value">
-                            <input type="text" value="${link.url || ''}" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="URL" onchange="appData.footer.quickLinks[${idx}].url = this.value">
+                            <input type="text" value="${link.label || ''}" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Rótulo do link" onchange="appData.footer.quickLinks[${idx}].label = this.value; saveDados();">
+                            <input type="text" value="${link.url || ''}" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="URL" onchange="appData.footer.quickLinks[${idx}].url = this.value; saveDados();">
                         </div>
-                        <button onclick="appData.footer.quickLinks.splice(${idx}, 1); renderFooter();" class="text-red-500 hover:text-red-700 p-1">
+                        <button onclick="appData.footer.quickLinks.splice(${idx}, 1); renderFooter(); saveDados();" class="text-red-500 hover:text-red-700 p-1">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -1231,27 +1231,27 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Instagram</label>
-                                <input type="text" value="${footer.socialMedia?.instagram || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://instagram.com/..." onchange="appData.footer.socialMedia.instagram = this.value">
+                                <input type="text" value="${footer.socialMedia?.instagram || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://instagram.com/..." onchange="appData.footer.socialMedia.instagram = this.value; saveDados();">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Facebook</label>
-                                <input type="text" value="${footer.socialMedia?.facebook || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://facebook.com/..." onchange="appData.footer.socialMedia.facebook = this.value">
+                                <input type="text" value="${footer.socialMedia?.facebook || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://facebook.com/..." onchange="appData.footer.socialMedia.facebook = this.value; saveDados();">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">LinkedIn</label>
-                                <input type="text" value="${footer.socialMedia?.linkedin || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://linkedin.com/in/..." onchange="appData.footer.socialMedia.linkedin = this.value">
+                                <input type="text" value="${footer.socialMedia?.linkedin || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://linkedin.com/in/..." onchange="appData.footer.socialMedia.linkedin = this.value; saveDados();">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">TikTok</label>
-                                <input type="text" value="${footer.socialMedia?.tiktok || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://tiktok.com/@..." onchange="appData.footer.socialMedia.tiktok = this.value">
+                                <input type="text" value="${footer.socialMedia?.tiktok || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://tiktok.com/@..." onchange="appData.footer.socialMedia.tiktok = this.value; saveDados();">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">YouTube</label>
-                                <input type="text" value="${footer.socialMedia?.youtube || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://youtube.com/@..." onchange="appData.footer.socialMedia.youtube = this.value">
+                                <input type="text" value="${footer.socialMedia?.youtube || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://youtube.com/@..." onchange="appData.footer.socialMedia.youtube = this.value; saveDados();">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Email de Contato</label>
-                                <input type="email" value="${footer.socialMedia?.email || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="contato@estudio.com" onchange="appData.footer.socialMedia.email = this.value">
+                                <input type="email" value="${footer.socialMedia?.email || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="contato@estudio.com" onchange="appData.footer.socialMedia.email = this.value; saveDados();">
                             </div>
                         </div>
                     </div>
@@ -1260,7 +1260,7 @@
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-lg font-semibold text-gray-900">🔗 Links Úteis</h2>
-                            <button onclick="appData.footer.quickLinks = appData.footer.quickLinks || []; appData.footer.quickLinks.push({label: '', url: ''}); renderFooter();" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                            <button onclick="appData.footer.quickLinks = appData.footer.quickLinks || []; appData.footer.quickLinks.push({label: '', url: ''}); renderFooter(); saveDados();" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                                 + Adicionar Link
                             </button>
                         </div>
@@ -1275,17 +1275,17 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="flex items-center gap-3 text-sm font-medium text-gray-700">
-                                    <input type="checkbox" class="w-4 h-4" ${footer.newsletter?.enabled ? 'checked' : ''} onchange="appData.footer.newsletter.enabled = this.checked">
+                                    <input type="checkbox" class="w-4 h-4" ${footer.newsletter?.enabled ? 'checked' : ''} onchange="appData.footer.newsletter.enabled = this.checked; saveDados();">
                                     Ativar newsletter
                                 </label>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Título</label>
-                                <input type="text" value="${footer.newsletter?.title || 'Receba Novidades'}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="appData.footer.newsletter.title = this.value" placeholder="Ex: Receba Novidades">
+                                <input type="text" value="${footer.newsletter?.title || 'Receba Novidades'}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="appData.footer.newsletter.title = this.value; saveDados();" placeholder="Ex: Receba Novidades">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Descrição</label>
-                                <textarea rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="appData.footer.newsletter.description = this.value" placeholder="Descrição da newsletter">${footer.newsletter?.description || 'Inscreva-se para atualizações e promoções exclusivas.'}</textarea>
+                                <textarea rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="appData.footer.newsletter.description = this.value; saveDados();" placeholder="Descrição da newsletter">${footer.newsletter?.description || 'Inscreva-se para atualizações e promoções exclusivas.'}</textarea>
                             </div>
                         </div>
                     </div>
@@ -1293,7 +1293,7 @@
                     <!-- COPYRIGHT -->
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-4">© Copyright</h2>
-                        <textarea rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="appData.footer.copyright = this.value" placeholder="© 2026 Seu Estúdio. Todos os direitos reservados.">${footer.copyright || ''}</textarea>
+                        <textarea rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" onchange="appData.footer.copyright = this.value; saveDados();" placeholder="© 2026 Seu Estúdio. Todos os direitos reservados.">${footer.copyright || ''}</textarea>
                     </div>
 
                     <!-- BOTÃO SALVAR -->
@@ -1570,12 +1570,14 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Título da Seção</label>
                                     <input type="text" id="about-title" value="${a.title}"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                                        oninput="appData.about.title = this.value; saveDados();">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Texto (separe parágrafos com linha em branco)</label>
                                     <textarea id="about-text" rows="8"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900">${a.text}</textarea>
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900"
+                                        oninput="appData.about.text = this.value; saveDados();">${a.text}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -1587,7 +1589,8 @@
                             <div class="flex gap-4 items-start">
                                 <div class="flex-1">
                                     <input type="text" id="about-image" value="${a.image}"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900 mb-2">
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-neutral-900 mb-2"
+                                        oninput="appData.about.image = this.value; document.getElementById('about-preview').src = resolveImagePath(this.value); saveDados();">
                                     <label class="inline-block px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-800">
                                         Fazer Upload
                                         <input type="file" accept=".jpg,.jpeg,.png" class="hidden" onchange="handleAboutUpload(event)">
@@ -1618,6 +1621,7 @@
             document.getElementById('about-image').value = result.data.url;
             document.getElementById('about-preview').src = resolveImagePath(result.data.url);
             appData.about.image = result.data.url;
+            saveDados();
             alert('Upload concluído!');
         }
 
