@@ -190,10 +190,10 @@ app.get('/api/site-data', async (req, res) => {
     const result = await findSiteDataAny();
     if (result.data) {
       if (result.source !== 'model') {
-        await SiteData.findOneAndUpdate(
+        await SiteData.collection.updateOne(
           {},
           { $set: result.data },
-          { new: true, upsert: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
+          { upsert: true }
         );
       }
       return res.json(result.data);
@@ -224,11 +224,12 @@ app.put('/api/site-data', authenticateToken, async (req, res) => {
     const appData = req.body;
     
     // Atualiza o único documento existente ou cria um novo (upsert: true)
-    const updatedData = await SiteData.findOneAndUpdate(
+    await SiteData.collection.updateOne(
       {}, // Filtro vazio para pegar sempre o mesmo documento "global"
       { $set: appData },
-      { new: true, upsert: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
+      { upsert: true }
     );
+    const updatedData = appData;
     
     console.log('\u2705 Dados salvos com sucesso em Mongo');
     res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData });
@@ -243,10 +244,10 @@ app.post('/api/admin/site-config', authenticateToken, async (req, res) => {
   try {
     const configData = req.body; // Espera { maintenance: { ... } }
     
-    await SiteData.findOneAndUpdate(
+    await SiteData.collection.updateOne(
       {},
       { $set: configData },
-      { new: true, upsert: true, setDefaultsOnInsert: true, sort: { updatedAt: -1 } }
+      { upsert: true }
     );
     
     res.json({ ok: true, success: true });

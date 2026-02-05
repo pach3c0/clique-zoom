@@ -69,11 +69,12 @@ const updateSiteData = async (newData) => {
     if (mongoose.connection.readyState === 1 && mongoAvailable) {
       console.log('💾 Salvando dados no MongoDB...');
       console.log('   studio.whatsapp:', newData.studio?.whatsapp);
-      const result = await SiteData.findOneAndUpdate(
+      await SiteData.collection.updateOne(
         {},
         { $set: newData },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      ).lean();
+        { upsert: true }
+      );
+      const result = newData;
       console.log('✅ Dados salvos no MongoDB com sucesso');
       console.log('   result.studio.whatsapp:', result.studio?.whatsapp);
       return result;
