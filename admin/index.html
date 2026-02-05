@@ -417,6 +417,8 @@
         // Variáveis adicionais do admin
         let currentTab = 'hero';
         let autoSaveTimeout; // Declarar no topo para usar em updatePreview()
+        let isSaving = false;
+        let savePending = false;
 
         let maintenanceConfig = {
             enabled: false,
@@ -2913,6 +2915,13 @@
                 return;
             }
 
+            if (isSaving) {
+                savePending = true;
+                return;
+            }
+
+            isSaving = true;
+
             console.log('💾 saveDados() chamado');
             const saveData = buildSaveData();
             
@@ -2953,6 +2962,12 @@
                 console.error('❌ Erro ao salvar:', err);
                 alert('Não foi possível salvar os dados: ' + err.message);
                 return;
+            } finally {
+                isSaving = false;
+                if (savePending) {
+                    savePending = false;
+                    setTimeout(() => saveDados(), 0);
+                }
             }
 
                 console.log('✅ Dados salvos com sucesso!');
