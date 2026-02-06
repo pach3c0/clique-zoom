@@ -295,20 +295,25 @@ app.get('/api/site-data', async (req, res) => {
     return res.json({});
   } catch (error) {
     console.error('❌ Erro ao carregar dados:', error.message);
-    console.error('   Stack:', error.stack);
-    res.status(500).json({ error: 'Erro ao carregar dados' });
+    console.error('   Mongoose state:', mongoose.connection.readyState);
+    // Retornar vazio em vez de 500 para não quebrar o frontend
+    return res.json({});
   }
 });
 
 // Rota para Configurações do Site (Manutenção, etc)
 app.get('/api/site-config', async (req, res) => {
   try {
-    const data = await SiteData.findOne().sort({ updatedAt: -1 }) || {};
-    // Retorna apenas campos de configuração se existirem, ou defaults
-    res.json({ maintenance: data.maintenance || { enabled: false } });
+    if (mongoose.connection.readyState === 1) {
+      const data = await SiteData.findOne().sort({ updatedAt: -1 });
+      return res.json({ maintenance: data?.maintenance || { enabled: false } });
+    }
+    // Se não conectado, retornar config padrão
+    return res.json({ maintenance: { enabled: false } });
   } catch (error) {
-    console.error('Erro ao carregar config:', error);
-    res.status(500).json({ error: 'Erro ao carregar configurações' });
+    console.error('❌ Erro ao carregar config:', error.message);
+    // Retornar config padrão em vez de 500
+    return res.json({ maintenance: { enabled: false } });
   }
 });
 
