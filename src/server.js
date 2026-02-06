@@ -488,9 +488,24 @@ const sessionsPath = path.join(__dirname, 'data', 'sessions-data.json');
 
 function readSessionsData() {
   try {
+    if (!fs.existsSync(sessionsPath)) {
+      console.log('Arquivo sessions-data.json não existe, criando...');
+      fs.writeFileSync(sessionsPath, '[]', 'utf8');
+      return [];
+    }
+    
     const data = fs.readFileSync(sessionsPath, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    
+    if (!Array.isArray(parsed)) {
+      console.error('sessions-data.json não é um array válido, resetando...');
+      fs.writeFileSync(sessionsPath, '[]', 'utf8');
+      return [];
+    }
+    
+    return parsed;
   } catch (error) {
+    console.error('Erro ao ler sessions-data.json:', error);
     return [];
   }
 }
