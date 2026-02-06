@@ -3,26 +3,13 @@ const mongoose = require('mongoose');
 const SiteData = require('../models/SiteData');
 const { authenticateToken } = require('../middleware/auth');
 
-const findSiteDataAny = async () => {
-  if (mongoose.connection.readyState !== 1) return { data: null, source: null };
-
-  try {
-    const primary = await SiteData.findOne().sort({ updatedAt: -1 }).lean();
-    if (primary) return { data: primary, source: 'model' };
-  } catch (error) {
-    console.error('Erro ao buscar dados:', error.message);
-  }
-  return { data: null, source: null };
-};
-
 router.get('/site-data', async (req, res) => {
   try {
-    const result = await findSiteDataAny();
-
-    if (result.data) {
-      return res.json(result.data);
+    if (mongoose.connection.readyState !== 1) {
+      return res.json({});
     }
-    return res.json({});
+    const data = await SiteData.findOne().lean();
+    return res.json(data || {});
   } catch (error) {
     console.error('Erro ao carregar dados:', error.message);
     return res.json({});
