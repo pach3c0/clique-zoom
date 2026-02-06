@@ -2,66 +2,60 @@
  * Tab: Hero / Capa
  */
 
-import { appState, saveAppData } from '../app.js';
+import { appState, saveAppData } from '../state.js';
 import { uploadImage, showUploadProgress } from '../utils/upload.js';
 
 export async function renderHero(container) {
   const hero = appState.appData.hero || {};
   
   container.innerHTML = `
-    <div class="space-y-6">
-      <h2 class="text-2xl font-bold">Hero / Capa</h2>
-      
-      <div class="grid grid-cols-2 gap-4">
+    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+      <h2 style="font-size:1.5rem; font-weight:bold; color:#f3f4f6;">Hero / Capa</h2>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
         <div>
-          <label class="block text-sm font-medium mb-2">Título Principal</label>
-          <input type="text" id="heroTitle" class="w-full border rounded px-3 py-2" 
+          <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Titulo Principal</label>
+          <input type="text" id="heroTitle" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
             value="${hero.title || ''}" placeholder="Ex: CLIQUE·ZOOM">
         </div>
-        
         <div>
-          <label class="block text-sm font-medium mb-2">Subtítulo</label>
-          <input type="text" id="heroSubtitle" class="w-full border rounded px-3 py-2" 
+          <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Subtitulo</label>
+          <input type="text" id="heroSubtitle" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
             value="${hero.subtitle || ''}" placeholder="Ex: Fotografia Profissional">
         </div>
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium mb-2">Imagem de Fundo</label>
-        <input type="file" id="heroImage" accept="image/*" class="w-full">
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Imagem de Fundo</label>
+        <input type="file" id="heroImage" accept="image/*" style="width:100%; color:#d1d5db;">
         <div id="heroUploadProgress"></div>
-        ${hero.image ? `<div class="mt-2 text-sm text-green-600">✅ Imagem configurada</div>` : ''}
+        ${hero.image ? '<div style="margin-top:0.5rem; font-size:0.875rem; color:#34d399;">Imagem configurada</div>' : ''}
       </div>
-      
-      <div class="grid grid-cols-3 gap-4">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
         <div>
-          <label class="block text-sm font-medium mb-2">Escala (Zoom)</label>
-          <input type="range" id="heroScale" class="w-full" min="0.5" max="2" step="0.1" 
-            value="${hero.imageScale || 1}">
-          <span id="scaleValue" class="text-xs">1x</span>
+          <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Escala (Zoom)</label>
+          <input type="range" id="heroScale" style="width:100%;" min="0.5" max="2" step="0.1" value="${hero.imageScale || 1}">
+          <span id="scaleValue" style="font-size:0.75rem; color:#9ca3af;">${hero.imageScale || 1}x</span>
         </div>
-        
         <div>
-          <label class="block text-sm font-medium mb-2">Posição X</label>
-          <input type="range" id="heroPosX" class="w-full" min="0" max="100" step="5" 
-            value="${hero.imagePosX || 50}">
-          <span id="posXValue" class="text-xs">50%</span>
+          <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Posicao X</label>
+          <input type="range" id="heroPosX" style="width:100%;" min="0" max="100" step="5" value="${hero.imagePosX || 50}">
+          <span id="posXValue" style="font-size:0.75rem; color:#9ca3af;">${hero.imagePosX || 50}%</span>
         </div>
-        
         <div>
-          <label class="block text-sm font-medium mb-2">Posição Y</label>
-          <input type="range" id="heroPosY" class="w-full" min="0" max="100" step="5" 
-            value="${hero.imagePosY || 50}">
-          <span id="posYValue" class="text-xs">50%</span>
+          <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Posicao Y</label>
+          <input type="range" id="heroPosY" style="width:100%;" min="0" max="100" step="5" value="${hero.imagePosY || 50}">
+          <span id="posYValue" style="font-size:0.75rem; color:#9ca3af;">${hero.imagePosY || 50}%</span>
         </div>
       </div>
-      
-      <button id="saveHeroBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+
+      <button id="saveHeroBtn" style="background:#2563eb; color:white; padding:0.5rem 1.5rem; border-radius:0.375rem; border:none; font-weight:600; cursor:pointer;">
         Salvar
       </button>
-      
-      <div id="preview" class="border rounded h-64 bg-gray-100 overflow-hidden">
-        <p class="text-center text-gray-500 py-32">Preview</p>
+
+      <div id="preview" style="border:1px solid #374151; border-radius:0.375rem; height:16rem; background:#1f2937; overflow:hidden;">
+        <p style="text-align:center; color:#9ca3af; padding-top:8rem;">Preview</p>
       </div>
     </div>
   `;
@@ -134,7 +128,7 @@ export async function renderHero(container) {
       preview.style.backgroundPosition = `${posXInput.value}% ${posYInput.value}%`;
       preview.style.backgroundSize = `${scaleInput.value * 100}%`;
       preview.style.backgroundRepeat = 'no-repeat';
-      preview.innerHTML = `<div class="h-full flex items-center justify-center text-white text-3xl font-bold text-center" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${titleInput.value}</div>`;
+      preview.innerHTML = `<div style="height:100%; display:flex; align-items:center; justify-content:center; color:white; font-size:1.875rem; font-weight:bold; text-align:center; text-shadow:2px 2px 4px rgba(0,0,0,0.7);">${titleInput.value}</div>`;
     }
   }
   

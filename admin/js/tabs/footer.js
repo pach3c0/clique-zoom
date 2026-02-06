@@ -2,7 +2,7 @@
  * Tab: Rodapé
  */
 
-import { appState, saveAppData } from '../app.js';
+import { appState, saveAppData } from '../state.js';
 
 export async function renderFooter(container) {
   const footer = appState.appData.footer || {
@@ -12,54 +12,54 @@ export async function renderFooter(container) {
     phone: '',
     email: ''
   };
-  
+
   container.innerHTML = `
-    <div class="space-y-6">
-      <h2 class="text-2xl font-bold">Rodapé</h2>
-      
+    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+      <h2 style="font-size:1.5rem; font-weight:bold; color:#f3f4f6;">Rodapé</h2>
+
       <div>
-        <label class="block text-sm font-medium mb-2">Empresa / Copyright</label>
-        <input type="text" id="footerCompany" class="w-full border rounded px-3 py-2" 
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Empresa / Copyright</label>
+        <input type="text" id="footerCompany" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
           value="${footer.company || 'CLIQUE·ZOOM © 2025'}">
       </div>
-      
-      <fieldset class="border rounded p-4">
-        <legend class="font-bold">Redes Sociais</legend>
-        <div class="space-y-2">
-          <input type="text" id="instagram" class="w-full border rounded px-3 py-2" 
+
+      <fieldset style="border:1px solid #374151; border-radius:0.375rem; padding:1rem;">
+        <legend style="font-weight:bold; color:#f3f4f6; padding:0 0.5rem;">Redes Sociais</legend>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <input type="text" id="instagram" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
             value="${footer.socialLinks?.instagram || ''}" placeholder="Instagram URL">
-          <input type="text" id="facebook" class="w-full border rounded px-3 py-2" 
+          <input type="text" id="facebook" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
             value="${footer.socialLinks?.facebook || ''}" placeholder="Facebook URL">
-          <input type="text" id="whatsapp" class="w-full border rounded px-3 py-2" 
+          <input type="text" id="whatsapp" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
             value="${footer.socialLinks?.whatsapp || ''}" placeholder="WhatsApp">
         </div>
       </fieldset>
-      
+
       <div>
-        <label class="block text-sm font-medium mb-2">Endereço</label>
-        <input type="text" id="footerAddress" class="w-full border rounded px-3 py-2" 
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Endereço</label>
+        <input type="text" id="footerAddress" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
           value="${footer.address || ''}">
       </div>
-      
-      <div class="grid grid-cols-2 gap-4">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
         <div>
-          <label class="block text-sm font-medium mb-2">Telefone</label>
-          <input type="text" id="footerPhone" class="w-full border rounded px-3 py-2" 
+          <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Telefone</label>
+          <input type="text" id="footerPhone" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
             value="${footer.phone || ''}">
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">Email</label>
-          <input type="email" id="footerEmail" class="w-full border rounded px-3 py-2" 
+          <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Email</label>
+          <input type="email" id="footerEmail" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
             value="${footer.email || ''}">
         </div>
       </div>
-      
-      <button id="saveFooterBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+
+      <button id="saveFooterBtn" style="background:#2563eb; color:white; padding:0.5rem 1.5rem; border-radius:0.375rem; border:none; font-weight:600; cursor:pointer;">
         Salvar
       </button>
     </div>
   `;
-  
+
   const saveBtn = container.querySelector('#saveFooterBtn');
   saveBtn.onclick = async () => {
     const newFooter = {

@@ -10,10 +10,10 @@ async function readFAQData() {
 }
 
 async function writeFAQData(faqs) {
-  await SiteData.collection.updateOne(
+  await SiteData.findOneAndUpdate(
     {},
     { $set: { 'faq.faqs': faqs } },
-    { upsert: true }
+    { upsert: true, runValidators: true }
   );
 }
 

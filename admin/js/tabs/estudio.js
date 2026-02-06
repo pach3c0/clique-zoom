@@ -2,51 +2,51 @@
  * Tab: Estúdio
  */
 
-import { appState, saveAppData } from '../app.js';
+import { appState, saveAppData } from '../state.js';
 
 export async function renderEstudio(container) {
   const studio = appState.appData.studio || {};
-  
+
   container.innerHTML = `
-    <div class="space-y-6">
-      <h2 class="text-2xl font-bold">Estúdio</h2>
-      
+    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+      <h2 style="font-size:1.5rem; font-weight:bold; color:#f3f4f6;">Estúdio</h2>
+
       <div>
-        <label class="block text-sm font-medium mb-2">Título</label>
-        <input type="text" id="studioTitle" class="w-full border rounded px-3 py-2" 
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Título</label>
+        <input type="text" id="studioTitle" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
           value="${studio.title || ''}">
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium mb-2">Descrição</label>
-        <textarea id="studioDesc" class="w-full border rounded px-3 py-2" rows="4"
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Descrição</label>
+        <textarea id="studioDesc" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6; resize:vertical;" rows="4"
           >${studio.description || ''}</textarea>
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium mb-2">Endereço</label>
-        <input type="text" id="studioAddress" class="w-full border rounded px-3 py-2" 
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Endereço</label>
+        <input type="text" id="studioAddress" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
           value="${studio.address || ''}">
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium mb-2">Horário de Atendimento</label>
-        <input type="text" id="studioHours" class="w-full border rounded px-3 py-2" 
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">Horário de Atendimento</label>
+        <input type="text" id="studioHours" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
           value="${studio.hours || 'Segunda a Sexta: 9h - 18h'}">
       </div>
-      
+
       <div>
-        <label class="block text-sm font-medium mb-2">WhatsApp (Número com DDD)</label>
-        <input type="text" id="studioWhatsapp" class="w-full border rounded px-3 py-2" 
+        <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.5rem; color:#d1d5db;">WhatsApp (Número com DDD)</label>
+        <input type="text" id="studioWhatsapp" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#1f2937; color:#f3f4f6;"
           value="${studio.whatsapp || ''}" placeholder="(11) 99999-9999">
       </div>
-      
-      <button id="saveStudioBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+
+      <button id="saveStudioBtn" style="background:#2563eb; color:white; padding:0.5rem 1.5rem; border-radius:0.375rem; border:none; font-weight:600; cursor:pointer;">
         Salvar
       </button>
     </div>
   `;
-  
+
   const saveBtn = container.querySelector('#saveStudioBtn');
   saveBtn.onclick = async () => {
     const newStudio = {

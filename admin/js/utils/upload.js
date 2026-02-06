@@ -105,11 +105,11 @@ export function showUploadProgress(containerId, percent) {
   
   if (percent === 0) {
     container.innerHTML = `
-      <div class="flex items-center gap-2 mt-2">
-        <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div id="progress-bar" class="h-full bg-blue-500 transition-all" style="width: 0%"></div>
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
+        <div style="flex:1; height:0.5rem; background:#374151; border-radius:9999px; overflow:hidden;">
+          <div id="progress-bar" style="height:100%; background:#3b82f6; transition:width 0.3s; width:0%"></div>
         </div>
-        <span id="progress-text" class="text-sm text-gray-600">0%</span>
+        <span id="progress-text" style="font-size:0.875rem; color:#9ca3af;">0%</span>
       </div>
     `;
   } else if (percent === 100) {

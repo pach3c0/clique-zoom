@@ -13,8 +13,9 @@
     <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 
     <style>
-        .nav-item.active { @apply bg-gray-800 text-white; }
-        .nav-item { @apply text-gray-400 hover:bg-gray-800 hover:text-white px-4 py-2 rounded cursor-pointer transition; }
+        .nav-item { color: #9ca3af; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; transition: all 0.15s; }
+        .nav-item:hover { background: #1f2937; color: #fff; }
+        .nav-item.active { background: #1f2937; color: #fff; }
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -80,10 +81,10 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-auto">
-        <div class="max-w-6xl mx-auto p-8">
-            <div id="tabContent" class="fade-in">
-                <p class="text-gray-500">Carregando...</p>
+    <div class="flex-1 overflow-auto" style="background:#111827;">
+        <div style="max-width:72rem; margin:0 auto; padding:2rem;">
+            <div id="tabContent" style="color:#f3f4f6; min-height:200px;">
+                <p style="color:#9ca3af;">Carregando...</p>
             </div>
         </div>
     </div>
@@ -91,15 +92,6 @@
 
 <!-- App Script -->
 <script type="module" src="/admin/js/app.js"></script>
-
-<script>
-    // Expõe funções globais para onclick inline (compatibilidade retroativa)
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('[data-tab]').forEach(tab => {
-            tab.onclick = () => window.switchTab(tab.dataset.tab);
-        });
-    });
-</script>
 
 </body>
 </html>

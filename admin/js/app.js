@@ -1,201 +1,135 @@
 /**
  * Aplicação Admin CLIQUE·ZOOM
- * State global e orquestração de abas
  */
 
+import { appState, loadAppData, saveAppData } from './state.js';
 import { resolveImagePath, copyToClipboard } from './utils/helpers.js';
 import { uploadImage, showUploadProgress } from './utils/upload.js';
 
-// Estado global da aplicação
-export let appState = {
-  authToken: localStorage.getItem('authToken') || '',
-  appData: {},
-  currentTab: 'hero'
-};
-
-// Referências aos módulos de tabs (importados dinamicamente)
 const tabModules = {};
 
-/**
- * Inicializa a aplicação
- */
+function setupNavigation() {
+  document.querySelectorAll('[data-tab]').forEach(tab => {
+    tab.onclick = () => switchTab(tab.dataset.tab);
+  });
+}
+
 async function initApp() {
-  console.log('🚀 Inicializando CLIQUE·ZOOM Admin...');
-  
-  // Verifica autenticação
+  setupNavigation();
+
   if (!appState.authToken) {
     showLoginForm();
     return;
   }
-  
-  try {
-    // Carrega dados do servidor
-    await loadAppData();
-    
-    // Mostra painel
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'flex';
-    
-    // Carrega módulo da primeira aba
-    await switchTab('hero');
-  } catch (error) {
-    console.error('Erro ao inicializar:', error);
-    alert('Erro ao carregar aplicação');
-  }
+
+  await loadAppData();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'flex';
+  await switchTab('hero');
 }
 
-/**
- * Mostra formulário de login
- */
 function showLoginForm() {
   const loginForm = document.getElementById('loginForm');
   if (!loginForm) return;
-  
+
   loginForm.style.display = 'flex';
-  
+
   const loginBtn = loginForm.querySelector('button');
-  if (loginBtn) {
-    loginBtn.onclick = async () => {
-      const password = loginForm.querySelector('input[type="password"]')?.value;
-      if (!password) {
-        alert('Digite a senha');
-        return;
-      }
-      
-      try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
-        });
-        
-        if (!response.ok) throw new Error('Senha incorreta');
-        
-        const data = await response.json();
-        appState.authToken = data.token;
-        localStorage.setItem('authToken', data.token);
-        
-        loginForm.style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'flex';
-        
-        await loadAppData();
-        await switchTab('hero');
-      } catch (error) {
-        alert('❌ ' + error.message);
-      }
-    };
-  }
-}
+  const passwordInput = loginForm.querySelector('input[type="password"]');
 
-/**
- * Carrega dados do aplicativo do servidor
- */
-export async function loadAppData() {
-  try {
-    const response = await fetch('/api/site-data', {
-      headers: { 'Authorization': `Bearer ${appState.authToken}` }
-    });
-    
-    if (!response.ok) throw new Error('Erro ao carregar dados');
-    
-    appState.appData = await response.json();
-    console.log('✅ Dados carregados:', appState.appData);
-  } catch (error) {
-    console.error('❌ Erro:', error.message);
-    appState.appData = {};
-  }
-}
+  const doLogin = async () => {
+    const password = passwordInput?.value;
+    if (!password) { alert('Digite a senha'); return; }
 
-/**
- * Salva dados no servidor
- */
-export async function saveAppData(section, data) {
-  try {
-    const payload = { ...appState.appData };
-    payload[section] = data;
-    
-    const response = await fetch('/api/site-data', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${appState.authToken}`
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) throw new Error('Erro ao salvar dados');
-    
-    appState.appData = payload;
-    alert('✅ Salvo com sucesso!');
-    return true;
-  } catch (error) {
-    alert('❌ Erro: ' + error.message);
-    return false;
-  }
-}
-
-/**
- * Troca de aba
- */
-export async function switchTab(tabName) {
-  appState.currentTab = tabName;
-  
-  // Carrega módulo da aba se ainda não foi carregado
-  if (!tabModules[tabName]) {
     try {
-      const module = await import(`./tabs/${tabName}.js`);
-      tabModules[tabName] = module;
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (!response.ok) throw new Error('Senha incorreta');
+
+      const data = await response.json();
+      appState.authToken = data.token;
+      localStorage.setItem('authToken', data.token);
+
+      loginForm.style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'flex';
+
+      await loadAppData();
+      await switchTab('hero');
     } catch (error) {
-      console.error(`❌ Erro ao carregar tab ${tabName}:`, error);
-      return;
+      alert(error.message);
     }
+  };
+
+  if (loginBtn) loginBtn.onclick = doLogin;
+  if (passwordInput) {
+    passwordInput.onkeydown = (e) => { if (e.key === 'Enter') doLogin(); };
   }
-  
-  // Chama função render do módulo
-  const module = tabModules[tabName];
-  const renderFunc = module[`render${capitalizeFirst(tabName)}`];
-  
-  if (renderFunc) {
-    const container = document.getElementById('tabContent');
-    if (container) {
-      container.innerHTML = '';
-      await renderFunc(container);
-    }
-  }
-  
-  // Atualiza classe ativa dos botões de navegação
+}
+
+async function switchTab(tabName) {
+  appState.currentTab = tabName;
+  const container = document.getElementById('tabContent');
+  if (!container) return;
+
   document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
+
+  container.innerHTML = '<p style="color:#9ca3af;">Carregando...</p>';
+
+  if (!tabModules[tabName]) {
+    try {
+      tabModules[tabName] = await import(`./tabs/${tabName}.js`);
+    } catch (error) {
+      console.error(`Erro ao carregar tab ${tabName}:`, error);
+      container.innerHTML = `<p style="color:#f87171;">Erro ao carregar aba: ${error.message}</p>`;
+      return;
+    }
+  }
+
+  if (appState.currentTab !== tabName) return;
+
+  const mod = tabModules[tabName];
+  const funcName = 'render' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+  const renderFunc = mod[funcName];
+
+  if (!renderFunc) {
+    container.innerHTML = `<p style="color:#f87171;">Funcao ${funcName} nao encontrada</p>`;
+    return;
+  }
+
+  try {
+    await renderFunc(container);
+  } catch (error) {
+    console.error(`Erro ao renderizar ${tabName}:`, error);
+    container.innerHTML = `<p style="color:#f87171;">Erro: ${error.message}</p>`;
+  }
 }
 
-/**
- * Capitaliza primeira letra (hero -> Hero)
- */
-function capitalizeFirst(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-/**
- * Faz logout
- */
-export function logout() {
+function logout() {
   appState.authToken = '';
   appState.appData = {};
   localStorage.removeItem('authToken');
-  
   document.getElementById('adminPanel').style.display = 'none';
   showLoginForm();
 }
 
-// Expõe funções globais para onclick inline (compatibilidade)
 window.appState = appState;
 window.switchTab = switchTab;
 window.logout = logout;
+window.saveAppData = saveAppData;
+window.loadAppData = loadAppData;
 window.resolveImagePath = resolveImagePath;
 window.copyToClipboard = copyToClipboard;
 window.uploadImage = uploadImage;
 window.showUploadProgress = showUploadProgress;
 
-// Inicia ao carregar
-document.addEventListener('DOMContentLoaded', () => initApp().catch(console.error));
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initApp());
+} else {
+  initApp();
+}

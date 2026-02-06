@@ -33,10 +33,10 @@ router.get('/hero', async (req, res) => {
 
 router.put('/hero', authenticateToken, async (req, res) => {
   try {
-    await SiteData.collection.updateOne(
+    await SiteData.findOneAndUpdate(
       {},
       { $set: { hero: req.body } },
-      { upsert: true }
+      { upsert: true, runValidators: true }
     );
     res.json({ success: true, message: 'Hero atualizado com sucesso', data: req.body });
   } catch (error) {
