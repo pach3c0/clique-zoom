@@ -151,24 +151,21 @@ app.get('/api/admin/cloudinary/config', authenticateToken, (req, res) => {
 app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
   try {
     console.log('🔄 Listando imagens do Cloudinary...');
-    console.log('Cloudinary configurado:', !!process.env.CLOUDINARY_CLOUD_NAME);
     
     if (!process.env.CLOUDINARY_CLOUD_NAME) {
       return res.status(400).json({ error: 'Cloudinary não configurado' });
     }
     
-    const limit = parseInt(req.query.limit) || 100;
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
     
-    console.log('Chamando cloudinary.api.resources com limit:', limit);
-    
-    const resources = await cloudinary.api.resources({
+    const response = await cloudinary.api.resources({
       type: 'upload',
-      max_results: Math.min(limit, 500)
+      max_results: limit
     });
     
-    console.log('✅ Imagens listadas:', resources.resources.length);
+    console.log('✅ Imagens listadas:', response.resources.length);
     
-    const images = resources.resources.map(r => ({
+    const images = response.resources.map(r => ({
       public_id: r.public_id,
       url: r.secure_url,
       width: r.width,
@@ -177,14 +174,12 @@ app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
     }));
     
     res.json({
-      total: resources.total_count,
+      total: response.resources.length,
       returned: images.length,
       images: images
     });
   } catch (error) {
-    console.error('❌ Erro ao listar Cloudinary:');
-    console.error('   Mensagem:', error.message);
-    console.error('   Status:', error.http_code);
+    console.error('❌ Erro ao listar Cloudinary:', error.message);
     res.status(500).json({ 
       error: error.message,
       http_code: error.http_code
