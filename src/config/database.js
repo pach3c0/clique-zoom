@@ -1,11 +1,15 @@
 const mongoose = require('mongoose');
 
-let isConnected = false;
-
 const connectDB = async () => {
-  if (isConnected) {
-    console.log('✅ MongoDB já estava conectado');
-    return;
+  // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+  if (mongoose.connection.readyState === 1) {
+    // console.log('✅ MongoDB já estava conectado (cache)');
+    return mongoose.connection;
+  }
+  
+  if (mongoose.connection.readyState === 2) {
+    console.log('⏳ Aguardando conexão existente...');
+    return mongoose.connection.asPromise();
   }
 
   try {
@@ -22,12 +26,12 @@ const connectDB = async () => {
       keepAlive: true,                  // Manter conexão viva
       family: 4,                        // Forçar IPv4 para evitar erros de DNS
       retryWrites: true,
+      bufferCommands: false,            // Falhar rápido se não houver conexão
       w: 'majority',
       maxPoolSize: 10,                  // Máximo conservador para Serverless
       minPoolSize: 1                    // Mínimo reduzido para não estourar conexões na Vercel
     });
 
-    isConnected = true;
     console.log('✅ MongoDB conectado com sucesso');
     console.log('📦 Banco de dados:', connection.connection.db?.databaseName || connection.connection.name);
     
@@ -35,14 +39,14 @@ const connectDB = async () => {
   } catch (error) {
     console.error('❌ Erro ao conectar MongoDB:', error.message);
     console.error('Stack:', error.stack);
-    isConnected = false;
+    // Não lançar erro fatal aqui, permitir retentativa na próxima requisição
     throw error;
   }
 };
 
 const getConnectionStatus = () => {
   return {
-    isConnected,
+    isConnected: mongoose.connection.readyState === 1,
     readyState: mongoose.connection.readyState,
     readyStateText: getReadyStateText(mongoose.connection.readyState)
   };

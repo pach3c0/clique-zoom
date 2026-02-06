@@ -19,15 +19,6 @@ const defaultSiteConfig = {
   }
 };
 
-// Garantir conexão MongoDB antes de cada requisição
-let dbReady = false;
-const dbPromise = connectDB()
-  .then(() => dataHelper.checkMongoDB())
-  .then(() => { dbReady = true; })
-  .catch(err => {
-    console.warn('⚠️  MongoDB offline:', err.message);
-  });
-
 // ========================================
 // MIDDLEWARE
 // ========================================
@@ -37,12 +28,12 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Aguardar MongoDB estar pronto antes de processar requisições
 app.use(async (req, res, next) => {
-  if (!dbReady) {
-    try {
-      await dbPromise;
-    } catch (e) {
-      // continua sem MongoDB
-    }
+  try {
+    // Tenta conectar (idempotente graças à verificação de estado no connectDB)
+    await connectDB();
+    await dataHelper.checkMongoDB();
+  } catch (e) {
+    console.warn('⚠️  Continuando sem MongoDB:', e.message);
   }
   next();
 });
