@@ -133,6 +133,87 @@ app.get('/api/debug/mongo', (req, res) => {
   });
 });
 
+// ========================================
+// CLOUDINARY ENDPOINTS
+// ========================================
+
+// Listar últimas imagens do Cloudinary
+app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    
+    const resources = await cloudinary.api.resources({
+      type: 'upload',
+      max_results: limit,
+      resource_type: 'image',
+      tags: false
+    });
+    
+    const images = resources.resources.map(r => ({
+      public_id: r.public_id,
+      url: r.secure_url,
+      width: r.width,
+      height: r.height,
+      created_at: r.created_at,
+      size: r.bytes,
+      format: r.format
+    }));
+    
+    res.json({
+      total: resources.total_count,
+      returned: images.length,
+      images: images
+    });
+  } catch (error) {
+    console.error('❌ Erro ao listar Cloudinary:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Salvar álbuns com imagens no MongoDB
+app.post('/api/admin/albums/save', authenticateToken, async (req, res) => {
+  try {
+    const { beatriz, bianca } = req.body;
+    
+    if (!beatriz || !bianca) {
+      return res.status(400).json({ error: 'Envie beatriz e bianca com as imagens' });
+    }
+    
+    // Atualizar documento com os álbuns
+    const updated = await SiteData.collection.updateOne(
+      {},
+      {
+        $set: {
+          albums: [
+            {
+              name: 'Beatriz',
+              images: beatriz,
+              createdAt: new Date()
+            },
+            {
+              name: 'Bianca',
+              images: bianca,
+              createdAt: new Date()
+            }
+          ]
+        }
+      },
+      { upsert: true }
+    );
+    
+    res.json({
+      ok: true,
+      message: 'Álbuns salvos com sucesso',
+      beatrizCount: beatriz.length,
+      biancaCount: bianca.length,
+      updated: updated.modifiedCount > 0
+    });
+  } catch (error) {
+    console.error('❌ Erro ao salvar álbuns:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Configuração Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
