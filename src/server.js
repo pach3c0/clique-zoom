@@ -36,9 +36,9 @@ console.log('🔄 Iniciando conexão MongoDB...');
 console.log('URI configurada:', !!process.env.MONGODB_URI);
 
 mongoose.connect(mongoUri, {
-  serverSelectionTimeoutMS: 30000,
-  connectTimeoutMS: 30000,
-  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 60000,      // 60 segundos
+  connectTimeoutMS: 60000,              // 60 segundos
+  socketTimeoutMS: 60000,               // 60 segundos
   keepAlive: true,
   retryWrites: true,
   w: 'majority',
