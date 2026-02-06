@@ -94,8 +94,10 @@
 
 <script>
     // Expõe funções globais para onclick inline (compatibilidade retroativa)
-    document.querySelectorAll('[data-tab]').forEach(tab => {
-        tab.onclick = () => window.switchTab(tab.dataset.tab);
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[data-tab]').forEach(tab => {
+            tab.onclick = () => window.switchTab(tab.dataset.tab);
+        });
     });
 </script>
 
