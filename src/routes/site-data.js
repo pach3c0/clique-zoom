@@ -44,8 +44,7 @@ router.get('/site-config', async (req, res) => {
 
 router.put('/site-data', authenticateToken, async (req, res) => {
   try {
-    await SiteData.collection.updateOne({}, { $set: req.body }, { upsert: true });
-    const updatedData = await SiteData.findOne().sort({ updatedAt: -1 });
+    const updatedData = await SiteData.findOneAndUpdate({}, req.body, { upsert: true, new: true, runValidators: true });
     res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData || req.body });
   } catch (error) {
     console.error('Erro ao salvar dados:', error.message);
@@ -55,7 +54,7 @@ router.put('/site-data', authenticateToken, async (req, res) => {
 
 router.post('/admin/site-config', authenticateToken, async (req, res) => {
   try {
-    await SiteData.collection.updateOne({}, { $set: req.body }, { upsert: true });
+    await SiteData.findOneAndUpdate({}, req.body, { upsert: true, runValidators: true });
     res.json({ ok: true, success: true });
   } catch (error) {
     console.error('Erro ao salvar config:', error);

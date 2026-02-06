@@ -13,9 +13,7 @@ const sessionSchema = new mongoose.Schema({
     }],
     watermark: { type: Boolean, default: true },
     canShare: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+    isActive: { type: Boolean, default: true }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Session', sessionSchema);
