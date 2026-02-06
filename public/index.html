@@ -428,8 +428,10 @@
                         text: remote.about?.text ?? "",
                         image: remote.about?.image ?? ""
                     },
-                    portfolio: Array.isArray(remote.portfolio) ? remote.portfolio.map(p => ({
-                        image: p.image || p,
+                    portfolio: Array.isArray(remote.portfolio) ? remote.portfolio
+                        .filter(p => typeof p === 'string' ? p : p.image)
+                        .map(p => ({
+                        image: typeof p === 'string' ? p : p.image,
                         posX: p.posX ?? 50,
                         posY: p.posY ?? 50,
                         scale: p.scale ?? 1,
@@ -549,10 +551,8 @@
                 const posY = item.posY ?? 50;
                 const scale = item.scale ?? 1;
                 const ratio = item.ratio ?? '3/4';
-                const aspectMap = { '16/9': 'aspect-video', '3/4': 'aspect-[3/4]', '1/1': 'aspect-square' };
-                const aspectClass = aspectMap[ratio] || 'aspect-[3/4]';
                 return `
-                <div class="${aspectClass} overflow-hidden cursor-pointer group">
+                <div class="overflow-hidden cursor-pointer group" style="aspect-ratio:${ratio};">
                     <img src="${resolveImagePath(item.image)}" alt="Portfolio ${idx + 1}"
                         loading="lazy" class="w-full h-full object-cover transition-transform duration-700"
                         style="object-position: ${posX}% ${posY}%; transform: scale(${scale});"
