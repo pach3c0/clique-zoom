@@ -34,21 +34,31 @@ app.get('/galeria/:id', (req, res) => {
 
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom';
 
+let isConnected = false;
+
 const connectWithRetry = async () => {
+  if (isConnected) {
+    return;
+  }
+  
   try {
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 60000,
-      connectTimeoutMS: 60000,
-      socketTimeoutMS: 60000,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 30000,
       retryWrites: true,
       w: 'majority',
-      maxPoolSize: 20,
-      minPoolSize: 5
+      maxPoolSize: 10,
+      minPoolSize: 2
     });
+    isConnected = true;
     console.log('✅ MongoDB conectado com sucesso');
   } catch (err) {
     console.error('❌ Erro na conexão MongoDB:', err.message);
-    setTimeout(connectWithRetry, 5000);
+    isConnected = false;
+    if (process.env.NODE_ENV !== 'production') {
+      setTimeout(connectWithRetry, 5000);
+    }
   }
 };
 
