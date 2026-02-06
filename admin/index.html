@@ -3327,15 +3327,39 @@
 
         async function createNewSession() {
             const name = prompt('Nome do cliente/sessão:');
-            if (!name) return;
+            if (!name || name.trim() === '') {
+                alert('Nome é obrigatório');
+                return;
+            }
             
             const type = prompt('Tipo de sessão (ex: Família, Casamento, Evento):');
-            if (!type) return;
+            if (!type || type.trim() === '') {
+                alert('Tipo é obrigatório');
+                return;
+            }
             
-            const dateStr = prompt('Data (YYYY-MM-DD):');
-            if (!dateStr) return;
+            const dateStr = prompt('Data (DD-MM-AAAA):');
+            if (!dateStr || dateStr.trim() === '') {
+                alert('Data é obrigatória');
+                return;
+            }
 
             try {
+                // Converter DD-MM-AAAA para YYYY-MM-DD
+                const [day, month, year] = dateStr.split('-');
+                if (!day || !month || !year || day.length !== 2 || month.length !== 2 || year.length !== 4) {
+                    alert('Formato de data inválido. Use DD-MM-AAAA');
+                    return;
+                }
+                
+                const isoDate = `${year}-${month}-${day}`;
+                const dateObj = new Date(isoDate);
+                
+                if (isNaN(dateObj.getTime())) {
+                    alert('Data inválida');
+                    return;
+                }
+
                 const response = await fetch('/api/sessions', {
                     method: 'POST',
                     headers: {
@@ -3343,19 +3367,22 @@
                         'Authorization': 'Bearer ' + authToken
                     },
                     body: JSON.stringify({
-                        name,
-                        type,
-                        date: new Date(dateStr).toISOString()
+                        name: name.trim(),
+                        type: type.trim(),
+                        date: isoDate
                     })
                 });
 
-                if (!response.ok) throw new Error('Erro ao criar sessão');
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erro ao criar sessão');
+                }
 
                 const result = await response.json();
-                alert('Sessão criada! Código: ' + result.session.accessCode);
+                alert('✅ Sessão criada!\n\nNome: ' + result.session.name + '\nCódigo: ' + result.session.accessCode);
                 renderSessoes();
             } catch (error) {
-                alert('Erro: ' + error.message);
+                alert('❌ Erro: ' + error.message);
             }
         }
 
