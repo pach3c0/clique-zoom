@@ -36,44 +36,36 @@ console.log('URI configurada:', !!process.env.MONGODB_URI);
 console.log('URI length:', mongoUri.length);
 console.log('URI host:', mongoUri.includes('@') ? mongoUri.split('@')[1].split('/')[0] : 'local');
 
-mongoose.connect(mongoUri, {
-  serverSelectionTimeoutMS: 60000,      // 60 segundos
-  connectTimeoutMS: 60000,              // 60 segundos
-  socketTimeoutMS: 60000,               // 60 segundos
-  keepAlive: true,
-  retryWrites: true,
-  w: 'majority',
-  maxPoolSize: 20,
-  minPoolSize: 5
-})
-  .then(() => {
-    console.log('✅ MongoDB conectado com sucesso');
-    console.log('📦 Status:', mongoose.connection.readyState);
-  })
-  .catch(err => {
-    console.error('❌ Erro ao conectar MongoDB:');
-    console.error('  Mensagem:', err.message);
-    console.error('  Código:', err.code);
-    console.error('  Name:', err.name);
-    if (err.reason) console.error('  Reason:', err.reason);
-    console.error('  Stack:', err.stack);
-  });
-
-// Evento de desconexão - Tentar reconectar
-mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️  MongoDB desconectado. Tentando reconectar em 5s...');
-  setTimeout(() => {
-    mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 30000,
+const connectWithRetry = async () => {
+  try {
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 30000, // Ajustado para 30s (padrão robusto)
       connectTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       keepAlive: true,
+      family: 4, // ✅ Forçar IPv4 (Essencial para evitar erro EHOSTUNREACH)
       retryWrites: true,
       w: 'majority',
       maxPoolSize: 20,
       minPoolSize: 5
-    }).catch(err => console.error('❌ Erro ao reconectar:', err.message));
-  }, 5000);
+    });
+    console.log('✅ MongoDB conectado com sucesso');
+    console.log('📦 Status:', mongoose.connection.readyState);
+  } catch (err) {
+    console.error('❌ Falha na conexão inicial:', err.message);
+    console.log('⏳ Tentando novamente em 5s...');
+    setTimeout(connectWithRetry, 5000); // Tenta novamente em 5 segundos
+  }
+};
+
+connectWithRetry();
+
+// Evento de desconexão - Tentar reconectar
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️  MongoDB desconectado.');
+  // O driver do Mongoose gerencia reconexões automáticas de rede.
+  // Se a conexão cair permanentemente, o processo pode precisar ser reiniciado,
+  // mas evitamos chamar connect() aqui para não criar loops de conexão concorrentes.
 });
 
 // Health Check
