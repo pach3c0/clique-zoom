@@ -3430,16 +3430,31 @@
                             const formData = new FormData();
                             batch.forEach(file => formData.append('photos', file));
                             
+                            console.log('Enviando lote:', i/batchSize + 1, 'com', batch.length, 'fotos');
+                            
                             const response = await fetch(`/api/sessions/${sessionId}/photos`, {
                                 method: 'POST',
                                 headers: { 'Authorization': 'Bearer ' + authToken },
                                 body: formData
                             });
                             
+                            console.log('Status da resposta:', response.status);
+                            
                             if (!response.ok) {
-                                const errorData = await response.json();
-                                console.error('Erro no upload:', errorData);
-                                throw new Error(errorData.details || errorData.error || `Erro no lote ${Math.floor(i/batchSize) + 1}`);
+                                const contentType = response.headers.get('content-type');
+                                let errorMessage;
+                                
+                                if (contentType && contentType.includes('application/json')) {
+                                    const errorData = await response.json();
+                                    console.error('Erro JSON:', errorData);
+                                    errorMessage = errorData.details || errorData.error;
+                                } else {
+                                    const textError = await response.text();
+                                    console.error('Erro texto:', textError);
+                                    errorMessage = textError.substring(0, 200);
+                                }
+                                
+                                throw new Error(errorMessage || `Erro no lote ${Math.floor(i/batchSize) + 1}`);
                             }
                             
                             const result = await response.json();
