@@ -41,6 +41,9 @@ const connectWithRetry = async () => {
     return;
   }
   
+  console.log('🔄 Tentando conectar ao MongoDB...');
+  console.log('🔄 URI configurada:', mongoUri ? 'Sim (oculta por segurança)' : 'Não encontrada');
+  
   try {
     await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 30000,
@@ -55,6 +58,7 @@ const connectWithRetry = async () => {
     console.log('✅ MongoDB conectado com sucesso');
   } catch (err) {
     console.error('❌ Erro na conexão MongoDB:', err.message);
+    console.error('❌ Detalhes do erro:', err.name);
     isConnected = false;
     if (process.env.NODE_ENV !== 'production') {
       setTimeout(connectWithRetry, 5000);
