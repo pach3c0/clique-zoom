@@ -30,10 +30,11 @@ app.get('/galeria/:id', (req, res) => {
   res.sendFile(path.join(__dirname, '../cliente/index.html'));
 });
 
-// Conexão MongoDB
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom';
 console.log('🔄 Iniciando conexão MongoDB...');
 console.log('URI configurada:', !!process.env.MONGODB_URI);
+console.log('URI length:', mongoUri.length);
+console.log('URI host:', mongoUri.includes('@') ? mongoUri.split('@')[1].split('/')[0] : 'local');
 
 mongoose.connect(mongoUri, {
   serverSelectionTimeoutMS: 60000,      // 60 segundos
@@ -53,6 +54,8 @@ mongoose.connect(mongoUri, {
     console.error('❌ Erro ao conectar MongoDB:');
     console.error('  Mensagem:', err.message);
     console.error('  Código:', err.code);
+    console.error('  Name:', err.name);
+    if (err.reason) console.error('  Reason:', err.reason);
     console.error('  Stack:', err.stack);
   });
 
