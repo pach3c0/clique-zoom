@@ -13,7 +13,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 const SiteData = require('./models/SiteData');
 const Newsletter = require('./models/Newsletter');
-const Session = require('./models/Session');
 
 const app = express();
 
