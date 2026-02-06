@@ -7,7 +7,7 @@ import { resolveImagePath, copyToClipboard } from './utils/helpers.js';
 import { uploadImage, showUploadProgress } from './utils/upload.js';
 
 // Estado global da aplicação
-export const appState = {
+export let appState = {
   authToken: localStorage.getItem('authToken') || '',
   appData: {},
   currentTab: 'hero'
