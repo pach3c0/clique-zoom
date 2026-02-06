@@ -565,11 +565,24 @@ app.get('/api/client/photos/:sessionId', (req, res) => {
 app.post('/api/sessions', authenticateToken, (req, res) => {
   try {
     const { name, type, date } = req.body;
+    
+    console.log('Recebido:', { name, type, date });
+    
     if (!name || !type || !date) {
       return res.status(400).json({ error: 'Nome, tipo e data são obrigatórios' });
     }
 
-    const sessions = readSessionsData();
+    let sessions;
+    try {
+      sessions = readSessionsData();
+      if (!Array.isArray(sessions)) {
+        sessions = [];
+      }
+    } catch (readError) {
+      console.error('Erro ao ler sessões:', readError);
+      sessions = [];
+    }
+    
     const accessCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     const newSession = {
@@ -590,9 +603,12 @@ app.post('/api/sessions', authenticateToken, (req, res) => {
     if (writeSessionsData(sessions)) {
       res.json({ success: true, session: newSession });
     } else {
-      res.status(500).json({ error: 'Erro ao criar sessão' });
+      res.status(500).json({ error: 'Erro ao salvar sessão' });
     }
   } catch (error) {
+    console.error('Erro ao criar sessão:', error);
+    res.status(500).json({ error: 'Erro ao criar sessão: ' + error.message });
+  }
     console.error('Erro ao criar sessão:', error);
     res.status(500).json({ error: 'Erro ao criar sessão' });
   }
