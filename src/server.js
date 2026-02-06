@@ -599,25 +599,34 @@ app.delete('/api/sessions/:sessionId', authenticateToken, async (req, res) => {
 // ADMIN: Upload de fotos para sessão
 app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadMemory.array('photos', 50), async (req, res) => {
   try {
+    console.log('📸 Iniciando upload de fotos para sessão:', req.params.sessionId);
     const { sessionId } = req.params;
     const session = await Session.findById(sessionId);
 
     if (!session) {
+      console.log('❌ Sessão não encontrada:', sessionId);
       return res.status(404).json({ error: 'Sessão não encontrada' });
     }
 
     if (!req.files || req.files.length === 0) {
+      console.log('❌ Nenhuma foto fornecida');
       return res.status(400).json({ error: 'Nenhuma foto fornecida' });
     }
 
+    console.log(`📦 Recebidas ${req.files.length} foto(s)`);
     const uploadedPhotos = [];
+    const errors = [];
 
-    for (const file of req.files) {
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
       try {
+        console.log(`📤 Upload ${i+1}/${req.files.length}: ${file.originalname} (${(file.size/1024).toFixed(2)}KB)`);
+        
         // Converter buffer para data URI (mesmo padrão do /api/admin/upload)
         const b64 = Buffer.from(file.buffer).toString('base64');
         const dataUri = 'data:' + file.mimetype + ';base64,' + b64;
         
+        console.log(`☁️  Enviando para Cloudinary...`);
         const result = await cloudinary.uploader.upload(dataUri, {
           folder: 'cliquezoom/sessions',
           resource_type: 'auto'
@@ -632,16 +641,32 @@ app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadMemory.arra
 
         session.photos.push(photo);
         uploadedPhotos.push(photo);
+        console.log(`✅ Upload concluído: ${photo.id}`);
       } catch (uploadError) {
-        console.error('Erro ao fazer upload de foto:', uploadError);
+        console.error(`❌ Erro ao fazer upload de ${file.originalname}:`, uploadError.message || uploadError);
+        errors.push({ filename: file.originalname, error: uploadError.message || 'Erro desconhecido' });
       }
     }
 
+    if (uploadedPhotos.length === 0) {
+      console.log('❌ Nenhuma foto foi enviada com sucesso');
+      return res.status(500).json({ 
+        error: 'Nenhuma foto foi enviada com sucesso', 
+        details: errors 
+      });
+    }
+
     await session.save();
-    res.json({ success: true, photos: uploadedPhotos });
+    console.log(`✅ ${uploadedPhotos.length} foto(s) salva(s) na sessão`);
+    
+    res.json({ 
+      success: true, 
+      photos: uploadedPhotos,
+      errors: errors.length > 0 ? errors : undefined
+    });
   } catch (error) {
-    console.error('Erro ao fazer upload:', error);
-    res.status(500).json({ error: 'Erro ao fazer upload' });
+    console.error('❌ Erro geral ao fazer upload:', error);
+    res.status(500).json({ error: 'Erro ao fazer upload', details: error.message });
   }
 });
 

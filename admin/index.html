@@ -3437,16 +3437,23 @@
                             });
                             
                             if (!response.ok) {
-                                throw new Error(`Erro no lote ${Math.floor(i/batchSize) + 1}`);
+                                const errorData = await response.json();
+                                console.error('Erro no upload:', errorData);
+                                throw new Error(errorData.details || errorData.error || `Erro no lote ${Math.floor(i/batchSize) + 1}`);
                             }
                             
                             const result = await response.json();
                             totalUploaded += result.photos.length;
+                            
+                            if (result.errors && result.errors.length > 0) {
+                                console.warn('Avisos no upload:', result.errors);
+                            }
                         }
                         
                         alert(`✅ ${totalUploaded} foto(s) adicionada(s)!`);
                         renderSessoes();
                     } catch (error) {
+                        console.error('Erro completo:', error);
                         alert('❌ Erro ao fazer upload: ' + error.message);
                     }
                 };
