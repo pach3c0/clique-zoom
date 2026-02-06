@@ -5,25 +5,23 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const jwt = require('jsonwebtoken');
 const path = require('path');
-// Apenas em desenvolvimento
+const fs = require('fs');
+
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
+
 const SiteData = require('./models/SiteData');
 const Newsletter = require('./models/Newsletter');
 
 const app = express();
 
-// Configurações Básicas
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Limite aumentado para dados grandes
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Servir arquivos estáticos (uploads locais em desenvolvimento)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
-// Servir Frontend (Public, Admin, Cliente)
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 app.use('/cliente', express.static(path.join(__dirname, '../cliente')));
@@ -34,10 +32,6 @@ app.get('/galeria/:id', (req, res) => {
 });
 
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom';
-console.log('🔄 Iniciando conexão MongoDB...');
-console.log('URI configurada:', !!process.env.MONGODB_URI);
-console.log('URI length:', mongoUri.length);
-console.log('URI host:', mongoUri.includes('@') ? mongoUri.split('@')[1].split('/')[0] : 'local');
 
 const connectWithRetry = async () => {
   try {
@@ -51,41 +45,30 @@ const connectWithRetry = async () => {
       minPoolSize: 5
     });
     console.log('✅ MongoDB conectado com sucesso');
-    console.log('📦 Status:', mongoose.connection.readyState);
   } catch (err) {
-    console.error('❌ Falha na conexão inicial:', err.message);
-    console.log('⏳ Tentando novamente em 5s...');
-    setTimeout(connectWithRetry, 5000); // Tenta novamente em 5 segundos
+    console.error('❌ Erro na conexão MongoDB:', err.message);
+    setTimeout(connectWithRetry, 5000);
   }
 };
 
 connectWithRetry();
 
-// Evento de desconexão - Tentar reconectar
-mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️  MongoDB desconectado.');
-  // O driver do Mongoose gerencia reconexões automáticas de rede.
-  // Se a conexão cair permanentemente, o processo pode precisar ser reiniciado,
-  // mas evitamos chamar connect() aqui para não criar loops de conexão concorrentes.
+mongoose.connection.on('error', (err) => {
+  console.error('❌ Erro de conexão MongoDB:', err.message);
 });
 
-// Health Check
 app.get('/api/health', async (req, res) => {
   const readyState = mongoose.connection.readyState;
-  const readyStateText = ['desconectado', 'conectado', 'conectando', 'desconectando'][readyState] || 'desconhecido';
+  const states = ['desconectado', 'conectado', 'conectando', 'desconectando'];
   
   try {
-    let mongoTest = null;
-    if (readyState === 1) {
-      mongoTest = await SiteData.findOne().lean();
-    }
-    
+    const mongoTest = readyState === 1 ? await SiteData.findOne().lean() : null;
     res.json({
       ok: true,
       timestamp: new Date().toISOString(),
       mongodb: {
         state: readyState,
-        stateText: readyStateText,
+        stateText: states[readyState] || 'desconhecido',
         hasData: !!mongoTest
       }
     });
@@ -95,127 +78,70 @@ app.get('/api/health', async (req, res) => {
       error: error.message,
       mongodb: {
         state: readyState,
-        stateText: readyStateText
+        stateText: states[readyState] || 'desconhecido'
       }
     });
   }
 });
 
-mongoose.connection.on('error', (err) => {
-  console.error('❌ Erro de conexão MongoDB:', err);
-});
-
-// Debug Endpoint - Mostra erro exato da conexão
-let lastConnectionError = null;
-mongoose.connection.on('error', (err) => {
-  lastConnectionError = {
-    message: err.message,
-    code: err.code,
-    name: err.name,
-    timestamp: new Date().toISOString()
-  };
-});
-
-app.get('/api/debug/mongo', (req, res) => {
-  const readyState = mongoose.connection.readyState;
-  const readyStateText = ['desconectado', 'conectado', 'conectando', 'desconectando'][readyState];
-  
-  res.json({
-    mongodb: {
-      state: readyState,
-      stateText: readyStateText,
-      connected: readyState === 1,
-      uri: process.env.MONGODB_URI ? 'configurada' : 'NÃO CONFIGURADA',
-      uriLength: process.env.MONGODB_URI?.length || 0,
-      lastError: lastConnectionError,
-      timestamp: new Date().toISOString()
-    }
-  });
-});
-
-// ========================================
-// CLOUDINARY ENDPOINTS - DESATIVADO TEMPORARIAMENTE
-// ========================================
-// TODO: Reativar após diagnosticar crash
-
-// Configuração Cloudinary
+// ========== CLOUDINARY & MULTER ==========
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Configuração Multer - Estratégias Diferentes para Dev/Prod
-const storageMemory = multer.memoryStorage();
-const uploadMemory = multer({ storage: storageMemory });
-
-const storageDisk = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+const uploadMemory = multer({ storage: multer.memoryStorage() });
+const uploadDisk = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => {
+      const suffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, suffix + path.extname(file.originalname));
+    }
+  })
 });
-const uploadDisk = multer({ storage: storageDisk });
 
-// Middleware de Autenticação
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
-  if (!token) {
-    console.warn('⚠️  Token não fornecido em:', req.method, req.path);
-    return res.status(401).json({ error: 'Token não fornecido' });
-  }
+  if (!token) return res.status(401).json({ error: 'Token não fornecido' });
 
   const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
-
   jwt.verify(token, jwtSecret, (err, user) => {
-    if (err) {
-      console.warn('⚠️  Token inválido:', err.message);
-      return res.status(403).json({ error: 'Token inválido' });
-    }
-    console.log('✅ Token válido para:', req.method, req.path);
+    if (err) return res.status(403).json({ error: 'Token inválido' });
     req.user = user;
     next();
   });
 };
 
-// Rota de Login (Gera o Token JWT)
+// ========== AUTENTICAÇÃO ==========
 const handleLogin = (req, res) => {
   try {
     const { password } = req.body;
-    
     const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
     const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
 
-    // Verifica a senha contra a variável de ambiente
     if (password === adminPass) {
       const token = jwt.sign({ role: 'admin' }, jwtSecret, { expiresIn: '7d' });
-      console.log('✅ Token gerado com sucesso');
       return res.json({ success: true, token });
     }
     res.status(401).json({ success: false, error: 'Senha incorreta' });
   } catch (error) {
-    console.error('Erro no login:', error);
-    res.status(500).json({ success: false, error: 'Erro interno no servidor' });
+    res.status(500).json({ success: false, error: 'Erro interno' });
   }
 };
 
 app.post('/api/login', handleLogin);
 app.post('/api/auth/login', handleLogin);
 
-// Verificar token (para validar sessão no frontend)
 app.post('/api/auth/verify', (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ valid: false });
-  }
+  if (!token) return res.status(401).json({ valid: false });
 
   const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
-
   try {
     jwt.verify(token, jwtSecret);
     return res.json({ valid: true });
@@ -224,34 +150,30 @@ app.post('/api/auth/verify', (req, res) => {
   }
 });
 
-// Rota de Upload (Implementação do Padrão Especificado)
+// ========== UPLOAD ==========
 app.post('/api/admin/upload', authenticateToken, (req, res) => {
   if (process.env.NODE_ENV === 'production') {
-    // Produção: Cloudinary (via Memory Storage)
     uploadMemory.single('image')(req, res, async (err) => {
       if (err) return res.status(400).json({ ok: false, error: err.message });
       if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
 
       try {
-        // Converter buffer para Data URI para o Cloudinary
         const b64 = Buffer.from(req.file.buffer).toString('base64');
         const dataUri = 'data:' + req.file.mimetype + ';base64,' + b64;
-        
         const result = await cloudinary.uploader.upload(dataUri, { folder: 'cliquezoom' });
         
         return res.json({
           ok: true,
           success: true,
           filename: result.original_filename,
-          url: result.secure_url // OBRIGATÓRIO
+          url: result.secure_url
         });
       } catch (error) {
         console.error('Erro Cloudinary:', error);
-        return res.status(500).json({ ok: false, error: 'Falha no upload para Cloudinary' });
+        return res.status(500).json({ ok: false, error: 'Falha no upload' });
       }
     });
   } else {
-    // Desenvolvimento: Filesystem Local
     uploadDisk.single('image')(req, res, (err) => {
       if (err) return res.status(400).json({ ok: false, error: err.message });
       if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
@@ -266,123 +188,63 @@ app.post('/api/admin/upload', authenticateToken, (req, res) => {
   }
 });
 
-const siteDataCollectionsFallback = ['site_data'];
-
+// ========== SITE DATA ==========
 const findSiteDataAny = async () => {
-  // Verificar se conexão está ativa
-  if (mongoose.connection.readyState !== 1) {
-    console.warn('⚠️  MongoDB não conectado. Estado:', mongoose.connection.readyState);
-    return { data: null, source: null };
-  }
+  if (mongoose.connection.readyState !== 1) return { data: null, source: null };
 
   try {
     const primary = await SiteData.findOne().sort({ updatedAt: -1 }).lean();
     if (primary) return { data: primary, source: 'model' };
   } catch (error) {
-    console.error('❌ Erro ao buscar em sitedatas:', error.message);
+    console.error('Erro ao buscar dados:', error.message);
   }
-
-  const db = mongoose.connection?.db;
-  if (!db) return { data: null, source: null };
-
-  for (const name of siteDataCollectionsFallback) {
-    try {
-      const doc = await db.collection(name).find({}).sort({ updatedAt: -1 }).limit(1).next();
-      if (doc) return { data: doc, source: name };
-    } catch (error) {
-      // Ignorar coleções inexistentes
-    }
-  }
-
   return { data: null, source: null };
 };
 
-// Rota Pública para Carregar Dados do Site (Frontend usa isso ao iniciar)
 app.get('/api/site-data', async (req, res) => {
   try {
-    console.log('\n📥 GET /api/site-data');
-    console.log('   Mongoose state:', mongoose.connection.readyState);
-    
     const result = await findSiteDataAny();
-    
-    console.log('   Resultado:', {
-      hasData: !!result.data,
-      source: result.source,
-      keys: result.data ? Object.keys(result.data).slice(0, 5) : []
-    });
     
     if (result.data) {
       if (result.source !== 'model') {
-        console.log('   🔄 Migrando dados para sitedatas...');
-        await SiteData.collection.updateOne(
-          {},
-          { $set: result.data },
-          { upsert: true }
-        );
+        await SiteData.collection.updateOne({}, { $set: result.data }, { upsert: true });
       }
       return res.json(result.data);
     }
-    
-    console.warn('   ⚠️  Nenhum dado encontrado, retornando vazio');
     return res.json({});
   } catch (error) {
-    console.error('❌ Erro ao carregar dados:', error.message);
-    console.error('   Mongoose state:', mongoose.connection.readyState);
-    // Retornar vazio em vez de 500 para não quebrar o frontend
+    console.error('Erro ao carregar dados:', error.message);
     return res.json({});
   }
 });
 
-// Rota para Configurações do Site (Manutenção, etc)
 app.get('/api/site-config', async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
       const data = await SiteData.findOne().sort({ updatedAt: -1 });
       return res.json({ maintenance: data?.maintenance || { enabled: false } });
     }
-    // Se não conectado, retornar config padrão
     return res.json({ maintenance: { enabled: false } });
   } catch (error) {
-    console.error('❌ Erro ao carregar config:', error.message);
-    // Retornar config padrão em vez de 500
+    console.error('Erro ao carregar config:', error.message);
     return res.json({ maintenance: { enabled: false } });
   }
 });
 
-// Rota de Auto-Save (Recebe o appData completo ou parcial)
 app.put('/api/site-data', authenticateToken, async (req, res) => {
   try {
-    console.log('\ud83d\udcd4 PUT /api/site-data recebido com:', Object.keys(req.body).join(', '));
-    const appData = req.body;
-    
-    // Atualiza o único documento existente ou cria um novo (upsert: true)
-    await SiteData.collection.updateOne(
-      {}, // Filtro vazio para pegar sempre o mesmo documento "global"
-      { $set: appData },
-      { upsert: true }
-    );
-    // Recuperar o documento atualizado
+    await SiteData.collection.updateOne({}, { $set: req.body }, { upsert: true });
     const updatedData = await SiteData.findOne().sort({ updatedAt: -1 });
-    
-    console.log('✅ Dados salvos com sucesso em Mongo');
-    res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData || appData });
+    res.json({ ok: true, message: 'Salvo com sucesso', data: updatedData || req.body });
   } catch (error) {
-    console.error('\u274c Erro ao salvar dados:', error.message);
+    console.error('Erro ao salvar dados:', error.message);
     res.status(500).json({ ok: false, error: 'Erro ao salvar' });
   }
 });
 
-// Rota para Salvar Configurações (Manutenção)
 app.post('/api/admin/site-config', authenticateToken, async (req, res) => {
   try {
-    const configData = req.body; // Espera { maintenance: { ... } }
-    
-    await SiteData.collection.updateOne(
-      {},
-      { $set: configData },
-      { upsert: true }
-    );
-    
+    await SiteData.collection.updateOne({}, { $set: req.body }, { upsert: true });
     res.json({ ok: true, success: true });
   } catch (error) {
     console.error('Erro ao salvar config:', error);
@@ -390,23 +252,19 @@ app.post('/api/admin/site-config', authenticateToken, async (req, res) => {
   }
 });
 
-// --- ROTAS DE NEWSLETTER ---
-
-// Inscrever (Público)
+// ========== NEWSLETTER ==========
 app.post('/api/newsletter/subscribe', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email obrigatório' });
 
-    // Verifica se já existe
     const existing = await Newsletter.findOne({ email });
     if (existing) {
-        if (!existing.active) {
-            existing.active = true;
-            await existing.save();
-            return res.json({ success: true, message: 'Reativado com sucesso' });
-        }
-        return res.json({ success: true, alreadySubscribed: true, message: 'Já inscrito' });
+      if (!existing.active) {
+        existing.active = true;
+        await existing.save();
+      }
+      return res.json({ success: true, alreadySubscribed: true, message: 'Já inscrito' });
     }
 
     await Newsletter.create({ email });
@@ -417,37 +275,161 @@ app.post('/api/newsletter/subscribe', async (req, res) => {
   }
 });
 
-// Listar Inscritos (Admin)
 app.get('/api/newsletter', authenticateToken, async (req, res) => {
-    try {
-        const subscribers = await Newsletter.find().sort({ createdAt: -1 });
-        res.json({ 
-            subscribers, 
-            pagination: { total: subscribers.length } 
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar inscritos' });
-    }
+  try {
+    const subscribers = await Newsletter.find().sort({ createdAt: -1 });
+    res.json({ subscribers, pagination: { total: subscribers.length } });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar inscritos' });
+  }
 });
 
-// Remover Inscrito (Admin)
 app.delete('/api/newsletter/:email', authenticateToken, async (req, res) => {
-    try {
-        await Newsletter.findOneAndDelete({ email: req.params.email });
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao remover' });
-    }
+  try {
+    await Newsletter.findOneAndDelete({ email: req.params.email });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao remover' });
+  }
 });
 
-// Export para Vercel Serverless
+// ========== FAQ ==========
+const faqPath = path.join(__dirname, 'data', 'faq-data.json');
+
+function readFAQData() {
+  try {
+    const data = fs.readFileSync(faqPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    return { faqs: [] };
+  }
+}
+
+function writeFAQData(data) {
+  try {
+    fs.writeFileSync(faqPath, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar FAQ:', error);
+    return false;
+  }
+}
+
+app.get('/api/faq', (req, res) => {
+  try {
+    const data = readFAQData();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar FAQs' });
+  }
+});
+
+app.post('/api/faq', authenticateToken, (req, res) => {
+  try {
+    const { question, answer } = req.body;
+    if (!question || !answer) {
+      return res.status(400).json({ error: 'Pergunta e resposta são obrigatórias' });
+    }
+
+    const data = readFAQData();
+    const newFAQ = {
+      id: `faq-${Date.now()}`,
+      question,
+      answer
+    };
+    data.faqs.push(newFAQ);
+
+    if (writeFAQData(data)) {
+      res.json({ success: true, faq: newFAQ });
+    } else {
+      res.status(500).json({ error: 'Erro ao salvar FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao adicionar FAQ:', error);
+    res.status(500).json({ error: 'Erro ao adicionar FAQ' });
+  }
+});
+
+app.put('/api/faq/:index', authenticateToken, (req, res) => {
+  try {
+    const index = parseInt(req.params.index);
+    const data = readFAQData();
+
+    if (index < 0 || index >= data.faqs.length) {
+      return res.status(404).json({ error: 'FAQ não encontrada' });
+    }
+
+    if (req.body.question !== undefined) data.faqs[index].question = req.body.question;
+    if (req.body.answer !== undefined) data.faqs[index].answer = req.body.answer;
+
+    if (writeFAQData(data)) {
+      res.json({ success: true, faq: data.faqs[index] });
+    } else {
+      res.status(500).json({ error: 'Erro ao atualizar FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar FAQ:', error);
+    res.status(500).json({ error: 'Erro ao atualizar FAQ' });
+  }
+});
+
+app.delete('/api/faq/:index', authenticateToken, (req, res) => {
+  try {
+    const index = parseInt(req.params.index);
+    const data = readFAQData();
+
+    if (index < 0 || index >= data.faqs.length) {
+      return res.status(404).json({ error: 'FAQ não encontrada' });
+    }
+
+    data.faqs.splice(index, 1);
+
+    if (writeFAQData(data)) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'Erro ao remover FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao remover FAQ:', error);
+    res.status(500).json({ error: 'Erro ao remover FAQ' });
+  }
+});
+
+app.post('/api/faq/:index/move', authenticateToken, (req, res) => {
+  try {
+    const index = parseInt(req.params.index);
+    const { direction } = req.body;
+    const data = readFAQData();
+
+    if (index < 0 || index >= data.faqs.length) {
+      return res.status(404).json({ error: 'FAQ não encontrada' });
+    }
+
+    if (direction === 'up' && index > 0) {
+      [data.faqs[index - 1], data.faqs[index]] = [data.faqs[index], data.faqs[index - 1]];
+    } else if (direction === 'down' && index < data.faqs.length - 1) {
+      [data.faqs[index], data.faqs[index + 1]] = [data.faqs[index + 1], data.faqs[index]];
+    } else {
+      return res.status(400).json({ error: 'Movimento inválido' });
+    }
+
+    if (writeFAQData(data)) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'Erro ao mover FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao mover FAQ:', error);
+    res.status(500).json({ error: 'Erro ao mover FAQ' });
+  }
+});
+
 module.exports = app;
 
 // Em desenvolvimento, iniciar servidor local
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-    console.log(`Modo: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`\nServidor rodando na porta ${PORT}`);
   });
 }

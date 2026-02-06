@@ -90,6 +90,35 @@
             background: none;
         }
 
+        /* FAQ Accordion */
+        .faq-item {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .faq-item:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .faq-question {
+            cursor: pointer;
+            user-select: none;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 1000px;
+            padding: 1.5rem;
+            padding-top: 0;
+        }
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+
         @media (max-width: 640px) {
             #whatsapp-widget {
                 bottom: 1rem;
@@ -302,6 +331,20 @@
             <div id="album-modal-photos" class="columns-1 sm:columns-2 lg:columns-4 gap-4 space-y-4"></div>
         </div>
     </div>
+
+    <!-- SEÇÃO FAQ -->
+    <section id="faq" class="py-24 bg-neutral-900 text-white">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-serif text-4xl md:text-5xl font-bold mb-4">IMPORTANTE SABER</h2>
+                <p class="text-gray-400 font-light text-lg">PERGUNTAS FREQUENTES</p>
+            </div>
+            
+            <div id="faq-accordion" class="space-y-4">
+                <!-- FAQs serão carregadas via JavaScript -->
+            </div>
+        </div>
+    </section>
 
     <!-- FOOTER -->
     <footer id="footer" class="bg-gray-900 border-t border-gray-800 text-gray-300">
@@ -907,6 +950,54 @@
             }
         }
 
+        // ========== FAQ ==========
+        let faqData = [];
+
+        async function loadFAQs() {
+            try {
+                const res = await fetch('/api/faq');
+                if (!res.ok) throw new Error('Erro ao carregar FAQs');
+                const data = await res.json();
+                faqData = data.faqs || [];
+                renderFAQs();
+            } catch (error) {
+                console.warn('Erro ao buscar FAQs:', error);
+            }
+        }
+
+        function renderFAQs() {
+            const accordion = document.getElementById('faq-accordion');
+            if (!accordion) return;
+
+            accordion.innerHTML = faqData.map((faq, index) => `
+                <div class="faq-item bg-black/40 rounded-lg overflow-hidden">
+                    <div class="faq-question px-6 py-4 flex justify-between items-center" onclick="toggleFAQ(${index})">
+                        <h3 class="font-semibold text-lg pr-4">${faq.question}</h3>
+                        <i data-lucide="chevron-down" class="faq-icon w-5 h-5 flex-shrink-0 text-gray-400"></i>
+                    </div>
+                    <div class="faq-answer px-6">
+                        <div class="text-gray-300 leading-relaxed whitespace-pre-line">${faq.answer}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function toggleFAQ(index) {
+            const items = document.querySelectorAll('.faq-item');
+            const item = items[index];
+            
+            if (item.classList.contains('active')) {
+                item.classList.remove('active');
+            } else {
+                // Fechar todos os outros
+                items.forEach(i => i.classList.remove('active'));
+                // Abrir o clicado
+                item.classList.add('active');
+            }
+        }
+
         // ========== MOBILE MENU ==========
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileMenuPanel = document.getElementById('mobile-menu-panel');
@@ -963,6 +1054,7 @@
                 if (store) {
                     render();
                     startWhatsappMessages();
+                    loadFAQs(); // Carregar FAQs
                 } else {
                     console.warn('Nenhum dado disponível do servidor');
                 }

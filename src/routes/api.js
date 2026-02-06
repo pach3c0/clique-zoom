@@ -365,5 +365,152 @@ router.post('/admin/upload', verifyToken, (req, res) => {
 });
 
 
-module.exports = router;
+// ========== FAQ ==========
+const faqPath = path.join(rootDir, 'src', 'data', 'faq-data.json');
 
+function readFAQData() {
+  try {
+    const data = fs.readFileSync(faqPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Erro ao ler FAQ data:', error);
+    return { faqs: [] };
+  }
+}
+
+function writeFAQData(data) {
+  try {
+    fs.writeFileSync(faqPath, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar FAQ data:', error);
+    return false;
+  }
+}
+
+// GET - Obter todas as FAQs
+router.get('/faq', (req, res) => {
+  try {
+    const data = readFAQData();
+    res.json(data);
+  } catch (error) {
+    console.error('Erro ao buscar FAQs:', error);
+    res.status(500).json({ error: 'Erro ao buscar FAQs' });
+  }
+});
+
+// POST - Adicionar nova FAQ (PROTEGIDO)
+router.post('/faq', verifyToken, (req, res) => {
+  try {
+    const { question, answer } = req.body;
+    
+    if (!question || !answer) {
+      return res.status(400).json({ error: 'Pergunta e resposta são obrigatórias' });
+    }
+    
+    const data = readFAQData();
+    const newFAQ = {
+      id: `faq-${Date.now()}`,
+      question,
+      answer
+    };
+    
+    data.faqs.push(newFAQ);
+    
+    if (writeFAQData(data)) {
+      res.json({ success: true, faq: newFAQ });
+    } else {
+      res.status(500).json({ error: 'Erro ao salvar FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao adicionar FAQ:', error);
+    res.status(500).json({ error: 'Erro ao adicionar FAQ' });
+  }
+});
+
+// PUT - Atualizar FAQ (PROTEGIDO)
+router.put('/faq/:index', verifyToken, (req, res) => {
+  try {
+    const index = parseInt(req.params.index);
+    const data = readFAQData();
+    
+    if (index < 0 || index >= data.faqs.length) {
+      return res.status(404).json({ error: 'FAQ não encontrada' });
+    }
+    
+    // Atualizar apenas os campos fornecidos
+    if (req.body.question !== undefined) {
+      data.faqs[index].question = req.body.question;
+    }
+    if (req.body.answer !== undefined) {
+      data.faqs[index].answer = req.body.answer;
+    }
+    
+    if (writeFAQData(data)) {
+      res.json({ success: true, faq: data.faqs[index] });
+    } else {
+      res.status(500).json({ error: 'Erro ao atualizar FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar FAQ:', error);
+    res.status(500).json({ error: 'Erro ao atualizar FAQ' });
+  }
+});
+
+// DELETE - Remover FAQ (PROTEGIDO)
+router.delete('/faq/:index', verifyToken, (req, res) => {
+  try {
+    const index = parseInt(req.params.index);
+    const data = readFAQData();
+    
+    if (index < 0 || index >= data.faqs.length) {
+      return res.status(404).json({ error: 'FAQ não encontrada' });
+    }
+    
+    data.faqs.splice(index, 1);
+    
+    if (writeFAQData(data)) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'Erro ao remover FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao remover FAQ:', error);
+    res.status(500).json({ error: 'Erro ao remover FAQ' });
+  }
+});
+
+// POST - Mover FAQ (PROTEGIDO)
+router.post('/faq/:index/move', verifyToken, (req, res) => {
+  try {
+    const index = parseInt(req.params.index);
+    const { direction } = req.body;
+    const data = readFAQData();
+    
+    if (index < 0 || index >= data.faqs.length) {
+      return res.status(404).json({ error: 'FAQ não encontrada' });
+    }
+    
+    if (direction === 'up' && index > 0) {
+      // Trocar com o item anterior
+      [data.faqs[index - 1], data.faqs[index]] = [data.faqs[index], data.faqs[index - 1]];
+    } else if (direction === 'down' && index < data.faqs.length - 1) {
+      // Trocar com o próximo item
+      [data.faqs[index], data.faqs[index + 1]] = [data.faqs[index + 1], data.faqs[index]];
+    } else {
+      return res.status(400).json({ error: 'Movimento inválido' });
+    }
+    
+    if (writeFAQData(data)) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'Erro ao mover FAQ' });
+    }
+  } catch (error) {
+    console.error('Erro ao mover FAQ:', error);
+    res.status(500).json({ error: 'Erro ao mover FAQ' });
+  }
+});
+
+
+module.exports = router;

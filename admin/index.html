@@ -365,6 +365,9 @@
                 <button onclick="switchTab('estudio')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="estudio">
                     <i data-lucide="building" class="w-4 h-4"></i> Estúdio
                 </button>
+                <button onclick="switchTab('faq')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="faq">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i> FAQ
+                </button>
                 <button onclick="switchTab('manutencao')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="manutencao">
                     <i data-lucide="shield" class="w-4 h-4"></i> Manutenção
                 </button>
@@ -575,7 +578,8 @@
                 estudio: 'Estúdio',
                 manutencao: 'Manutenção',
                 footer: 'Rodapé',
-                newsletter: 'Newsletter'
+                newsletter: 'Newsletter',
+                faq: 'FAQ - Perguntas Frequentes'
             };
             const pageTitle = document.getElementById('page-title');
             if (pageTitle) {
@@ -588,6 +592,7 @@
                 case 'portfolio': renderPortfolio(); break;
                 case 'albuns': renderAlbuns(); break;
                 case 'estudio': renderEstudio(); break;
+                case 'faq': renderFAQ(); break;
                 case 'manutencao': renderMaintenance(); break;
                 case 'footer': renderFooter(); break;
                 case 'newsletter': renderNewsletter(); break;
@@ -1223,6 +1228,170 @@
                     console.error('Erro ao exportar:', error);
                     alert('Erro ao exportar emails');
                 });
+        }
+
+        async function renderFAQ() {
+            const contentArea = document.getElementById('content-area');
+            
+            try {
+                const response = await fetch('/api/faq');
+                const data = await response.json();
+                const faqs = data.faqs || [];
+                
+                const html = `
+                    <div class="max-w-6xl mx-auto space-y-6">
+                        <!-- Header -->
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900">Perguntas Frequentes (FAQ)</h2>
+                                    <p class="text-sm text-gray-500 mt-1">Gerencie as perguntas que aparecem no site</p>
+                                </div>
+                                <button onclick="addFAQ()" class="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                    Adicionar FAQ
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- FAQs List -->
+                        <div id="faq-list" class="space-y-4">
+                            ${faqs.length === 0 ? `
+                                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+                                    <i data-lucide="help-circle" class="w-16 h-16 mx-auto mb-4 text-gray-300"></i>
+                                    <p class="text-gray-500">Nenhuma FAQ cadastrada ainda</p>
+                                    <button onclick="addFAQ()" class="mt-4 text-neutral-900 hover:underline font-medium">
+                                        Adicionar primeira FAQ
+                                    </button>
+                                </div>
+                            ` : faqs.map((faq, idx) => `
+                                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-2">Pergunta</label>
+                                            <input 
+                                                type="text" 
+                                                value="${faq.question}" 
+                                                onchange="updateFAQ(${idx}, 'question', this.value)"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900"
+                                                placeholder="Digite a pergunta"
+                                            >
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-2">Resposta</label>
+                                            <textarea 
+                                                rows="4" 
+                                                onchange="updateFAQ(${idx}, 'answer', this.value)"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-neutral-900"
+                                                placeholder="Digite a resposta"
+                                            >${faq.answer}</textarea>
+                                            <p class="text-xs text-gray-500 mt-1">Você pode usar **negrito** e quebras de linha</p>
+                                        </div>
+                                        <div class="flex justify-end gap-2">
+                                            <button onclick="moveFAQ(${idx}, 'up')" ${idx === 0 ? 'disabled' : ''} class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                                <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="moveFAQ(${idx}, 'down')" ${idx === faqs.length - 1 ? 'disabled' : ''} class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteFAQ(${idx})" class="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded-lg hover:bg-red-50 transition-colors">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                contentArea.innerHTML = html;
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Erro ao carregar FAQ:', error);
+                contentArea.innerHTML = `
+                    <div class="max-w-4xl mx-auto">
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                            <i data-lucide="alert-circle" class="w-12 h-12 mx-auto mb-3 text-red-500"></i>
+                            <p class="text-red-800 font-medium">Erro ao carregar FAQs</p>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        async function addFAQ() {
+            try {
+                const response = await fetch('/api/faq', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: 'Nova Pergunta',
+                        answer: 'Digite a resposta aqui'
+                    })
+                });
+                
+                if (response.ok) {
+                    renderFAQ();
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar FAQ:', error);
+                alert('Erro ao adicionar FAQ');
+            }
+        }
+
+        async function updateFAQ(index, field, value) {
+            try {
+                const response = await fetch(`/api/faq/${index}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [field]: value })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao atualizar FAQ');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar FAQ:', error);
+                alert('Erro ao atualizar FAQ');
+            }
+        }
+
+        async function deleteFAQ(index) {
+            if (!confirm('Tem certeza que deseja remover esta FAQ?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/faq/${index}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    renderFAQ();
+                }
+            } catch (error) {
+                console.error('Erro ao deletar FAQ:', error);
+                alert('Erro ao deletar FAQ');
+            }
+        }
+
+        async function moveFAQ(index, direction) {
+            try {
+                const response = await fetch(`/api/faq/${index}/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ direction })
+                });
+                
+                if (response.ok) {
+                    renderFAQ();
+                }
+            } catch (error) {
+                console.error('Erro ao mover FAQ:', error);
+                alert('Erro ao mover FAQ');
+            }
         }
 
         function renderFooter() {
