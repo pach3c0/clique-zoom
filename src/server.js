@@ -137,18 +137,33 @@ app.get('/api/debug/mongo', (req, res) => {
 // CLOUDINARY ENDPOINTS
 // ========================================
 
+// Testar configuração Cloudinary
+app.get('/api/admin/cloudinary/config', authenticateToken, (req, res) => {
+  res.json({
+    configured: !!process.env.CLOUDINARY_CLOUD_NAME,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'não configurado',
+    has_api_key: !!process.env.CLOUDINARY_API_KEY,
+    has_api_secret: !!process.env.CLOUDINARY_API_SECRET
+  });
+});
+
 // Listar últimas imagens do Cloudinary
 app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
   try {
     console.log('🔄 Listando imagens do Cloudinary...');
     console.log('Cloudinary configurado:', !!process.env.CLOUDINARY_CLOUD_NAME);
     
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      return res.status(400).json({ error: 'Cloudinary não configurado' });
+    }
+    
     const limit = parseInt(req.query.limit) || 100;
+    
+    console.log('Chamando cloudinary.api.resources com limit:', limit);
     
     const resources = await cloudinary.api.resources({
       type: 'upload',
-      max_results: limit,
-      resource_type: 'image'
+      max_results: Math.min(limit, 500)
     });
     
     console.log('✅ Imagens listadas:', resources.resources.length);
@@ -158,9 +173,7 @@ app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
       url: r.secure_url,
       width: r.width,
       height: r.height,
-      created_at: r.created_at,
-      size: r.bytes,
-      format: r.format
+      created_at: r.created_at
     }));
     
     res.json({
@@ -171,10 +184,10 @@ app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('❌ Erro ao listar Cloudinary:');
     console.error('   Mensagem:', error.message);
-    console.error('   Stack:', error.stack);
+    console.error('   Status:', error.http_code);
     res.status(500).json({ 
       error: error.message,
-      type: error.constructor.name
+      http_code: error.http_code
     });
   }
 });
