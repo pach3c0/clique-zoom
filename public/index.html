@@ -863,11 +863,14 @@
                 const siteData = siteDataRes.ok ? await siteDataRes.json() : null;
                 const heroData = heroRes.ok ? await heroRes.json() : null;
                 
-                // Combinar dados: hero vem do JSON local
-                if (siteData && heroData) {
-                    return { ...siteData, hero: heroData };
+                // Combinar dados
+                if (siteData) {
+                    if (heroData) {
+                        return { ...siteData, hero: heroData };
+                    }
+                    return siteData;
                 }
-                return siteData;
+                return null;
             } catch (error) {
                 console.warn('Erro ao buscar dados do servidor:', error);
                 return null;

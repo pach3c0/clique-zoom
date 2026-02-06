@@ -3,7 +3,7 @@
  * Módulo separado para evitar dependências circulares
  */
 
-export const appState = {
+export let appState = {
   authToken: localStorage.getItem('authToken') || '',
   appData: {},
   currentTab: 'hero'
