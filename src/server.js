@@ -106,6 +106,34 @@ mongoose.connection.on('error', (err) => {
   console.error('❌ Erro de conexão MongoDB:', err);
 });
 
+// Debug Endpoint - Mostra erro exato da conexão
+let lastConnectionError = null;
+mongoose.connection.on('error', (err) => {
+  lastConnectionError = {
+    message: err.message,
+    code: err.code,
+    name: err.name,
+    timestamp: new Date().toISOString()
+  };
+});
+
+app.get('/api/debug/mongo', (req, res) => {
+  const readyState = mongoose.connection.readyState;
+  const readyStateText = ['desconectado', 'conectado', 'conectando', 'desconectando'][readyState];
+  
+  res.json({
+    mongodb: {
+      state: readyState,
+      stateText: readyStateText,
+      connected: readyState === 1,
+      uri: process.env.MONGODB_URI ? 'configurada' : 'NÃO CONFIGURADA',
+      uriLength: process.env.MONGODB_URI?.length || 0,
+      lastError: lastConnectionError,
+      timestamp: new Date().toISOString()
+    }
+  });
+});
+
 // Configuração Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
