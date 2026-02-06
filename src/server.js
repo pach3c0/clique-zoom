@@ -614,23 +614,14 @@ app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadMemory.arra
 
     for (const file of req.files) {
       try {
-        // Upload direto do buffer para Cloudinary
-        const uploadPromise = new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: 'cliquezoom/sessions',
-              resource_type: 'auto'
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
-          
-          uploadStream.end(file.buffer);
+        // Converter buffer para data URI (mesmo padrão do /api/admin/upload)
+        const b64 = Buffer.from(file.buffer).toString('base64');
+        const dataUri = 'data:' + file.mimetype + ';base64,' + b64;
+        
+        const result = await cloudinary.uploader.upload(dataUri, {
+          folder: 'cliquezoom/sessions',
+          resource_type: 'auto'
         });
-
-        const result = await uploadPromise;
 
         const photo = {
           id: `photo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
