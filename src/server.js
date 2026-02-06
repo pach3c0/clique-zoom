@@ -633,8 +633,8 @@ app.delete('/api/sessions/:sessionId', authenticateToken, (req, res) => {
   }
 });
 
-// ADMIN: Upload de fotos para sessão
-app.post('/api/sessions/:sessionId/photos', authenticateToken, upload.array('photos', 50), async (req, res) => {
+// ADMIN: Upload de fotos para sessão (TODO: implementar corretamente)
+app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadDisk.array('photos', 50), async (req, res) => {
   try {
     const { sessionId } = req.params;
     const sessions = readSessionsData();
