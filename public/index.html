@@ -678,19 +678,19 @@
                     
                     if (store.studio.address) {
                         const addr = document.createElement('div');
-                        addr.innerHTML = `<strong class="text-white">📍 Localização</strong><p class="text-xs mt-1">${store.studio.address}</p>`;
+                        addr.innerHTML = `<strong class="text-white">Localização</strong><p class="text-xs mt-1">${store.studio.address}</p>`;
                         footerContact.appendChild(addr);
                     }
                     
                     if (store.studio.hours) {
                         const hrs = document.createElement('div');
-                        hrs.innerHTML = `<strong class="text-white">🕐 Horário</strong><p class="text-xs mt-1">${store.studio.hours.replace(/\n/g, '<br>')}</p>`;
+                        hrs.innerHTML = `<strong class="text-white">Horário</strong><p class="text-xs mt-1">${store.studio.hours.replace(/\n/g, '<br>')}</p>`;
                         footerContact.appendChild(hrs);
                     }
                     
                     if (store.studio.whatsapp) {
                         const wa = document.createElement('div');
-                        wa.innerHTML = `<strong class="text-white">📱 WhatsApp</strong><p><a href="https://wa.me/${store.studio.whatsapp}" class="text-xs text-green-400 hover:text-green-300">${store.studio.whatsapp}</a></p>`;
+                        wa.innerHTML = `<strong class="text-white">WhatsApp</strong><p><a href="https://wa.me/${store.studio.whatsapp}" class="text-xs text-green-400 hover:text-green-300">${store.studio.whatsapp}</a></p>`;
                         footerContact.appendChild(wa);
                     }
                 }
