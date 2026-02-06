@@ -283,7 +283,11 @@ const findSiteDataAny = async () => {
 
 app.get('/api/site-data', async (req, res) => {
   try {
+    console.log('📊 Requisição em /api/site-data');
+    console.log('📊 Estado da conexão MongoDB:', mongoose.connection.readyState); // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+    
     const result = await findSiteDataAny();
+    console.log('📊 Resultado encontrado:', result.source, 'Tem dados:', !!result.data);
     
     if (result.data) {
       if (result.source !== 'model') {
@@ -291,9 +295,10 @@ app.get('/api/site-data', async (req, res) => {
       }
       return res.json(result.data);
     }
+    console.log('⚠️ Nenhum dado encontrado, retornando objeto vazio');
     return res.json({});
   } catch (error) {
-    console.error('Erro ao carregar dados:', error.message);
+    console.error('❌ Erro ao carregar dados:', error.message);
     return res.json({});
   }
 });
