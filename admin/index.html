@@ -3105,7 +3105,21 @@
             });
 
             try {
-                // Enviar com token JWT no header
+                // Salvar Hero em JSON local
+                const heroResponse = await fetch('/api/hero', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(saveData.hero)
+                });
+
+                if (!heroResponse.ok) {
+                    console.warn('⚠️  Erro ao salvar hero:', heroResponse.status);
+                }
+
+                // Enviar demais dados com token JWT no header
                 const response = await fetch('/api/site-data', {
                     method: 'PUT',
                     headers: {

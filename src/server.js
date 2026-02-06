@@ -188,6 +188,65 @@ app.post('/api/admin/upload', authenticateToken, (req, res) => {
   }
 });
 
+// ========== HERO (JSON) ==========
+const heroPath = path.join(__dirname, 'data', 'hero-data.json');
+
+function readHeroData() {
+  try {
+    const data = fs.readFileSync(heroPath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Erro ao ler hero-data.json:', error);
+    return {
+      title: 'CLIQUE·ZOOM',
+      subtitle: 'Fotografia Minimalista e Autêntica',
+      image: '',
+      transform: { scale: 1, posX: 50, posY: 50 },
+      titleTransform: { posX: 50, posY: 40 },
+      subtitleTransform: { posX: 50, posY: 55 },
+      titleFontSize: 48,
+      subtitleFontSize: 18,
+      topBarHeight: 0,
+      bottomBarHeight: 0,
+      overlayOpacity: 30
+    };
+  }
+}
+
+function writeHeroData(data) {
+  try {
+    fs.writeFileSync(heroPath, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar hero-data.json:', error);
+    return false;
+  }
+}
+
+app.get('/api/hero', (req, res) => {
+  try {
+    const heroData = readHeroData();
+    res.json(heroData);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar dados do hero' });
+  }
+});
+
+app.put('/api/hero', authenticateToken, (req, res) => {
+  try {
+    const heroData = req.body;
+    
+    if (writeHeroData(heroData)) {
+      res.json({ success: true, message: 'Hero atualizado com sucesso', data: heroData });
+    } else {
+      res.status(500).json({ error: 'Erro ao salvar hero' });
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar hero:', error);
+    res.status(500).json({ error: 'Erro ao atualizar hero' });
+  }
+});
+
 // ========== SITE DATA ==========
 const findSiteDataAny = async () => {
   if (mongoose.connection.readyState !== 1) return { data: null, source: null };
