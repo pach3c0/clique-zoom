@@ -3404,8 +3404,43 @@
             }
         }
 
-        function editSession(sessionId) {
-            alert('Função de edição em desenvolvimento');
+        async function editSession(sessionId) {
+            // TODO: Implementar modal de edição completo
+            // Por enquanto, só permitir fazer upload de fotos
+            const action = prompt('O que deseja fazer?\n1 - Ver fotos\n2 - Upload de fotos\n3 - Cancelar');
+            
+            if (action === '1') {
+                window.open(`/galeria/${sessionId}`, '_blank');
+            } else if (action === '2') {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.accept = 'image/*';
+                input.onchange = async (e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length === 0) return;
+                    
+                    try {
+                        const formData = new FormData();
+                        files.forEach(file => formData.append('photos', file));
+                        
+                        const response = await fetch(`/api/sessions/${sessionId}/photos`, {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + authToken },
+                            body: formData
+                        });
+                        
+                        if (!response.ok) throw new Error('Erro ao fazer upload');
+                        
+                        const result = await response.json();
+                        alert(`✅ ${result.photos.length} foto(s) adicionada(s)!`);
+                        renderSessoes();
+                    } catch (error) {
+                        alert('❌ Erro ao fazer upload: ' + error.message);
+                    }
+                };
+                input.click();
+            }
         }
 
         function copyToClipboard(text) {
