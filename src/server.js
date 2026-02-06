@@ -266,6 +266,8 @@ const findSiteDataAny = async () => {
   }
 
   return { data: null, source: null };
+};
+
 // Rota Pública para Carregar Dados do Site (Frontend usa isso ao iniciar)
 app.get('/api/site-data', async (req, res) => {
   try {
