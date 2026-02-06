@@ -73,6 +73,38 @@ mongoose.connection.on('disconnected', () => {
   }, 5000);
 });
 
+// Health Check
+app.get('/api/health', async (req, res) => {
+  const readyState = mongoose.connection.readyState;
+  const readyStateText = ['desconectado', 'conectado', 'conectando', 'desconectando'][readyState] || 'desconhecido';
+  
+  try {
+    let mongoTest = null;
+    if (readyState === 1) {
+      mongoTest = await SiteData.findOne().lean();
+    }
+    
+    res.json({
+      ok: true,
+      timestamp: new Date().toISOString(),
+      mongodb: {
+        state: readyState,
+        stateText: readyStateText,
+        hasData: !!mongoTest
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      mongodb: {
+        state: readyState,
+        stateText: readyStateText
+      }
+    });
+  }
+});
+
 mongoose.connection.on('error', (err) => {
   console.error('❌ Erro de conexão MongoDB:', err);
 });
@@ -234,14 +266,23 @@ const findSiteDataAny = async () => {
   }
 
   return { data: null, source: null };
-};
-
 // Rota Pública para Carregar Dados do Site (Frontend usa isso ao iniciar)
 app.get('/api/site-data', async (req, res) => {
   try {
+    console.log('\n📥 GET /api/site-data');
+    console.log('   Mongoose state:', mongoose.connection.readyState);
+    
     const result = await findSiteDataAny();
+    
+    console.log('   Resultado:', {
+      hasData: !!result.data,
+      source: result.source,
+      keys: result.data ? Object.keys(result.data).slice(0, 5) : []
+    });
+    
     if (result.data) {
       if (result.source !== 'model') {
+        console.log('   🔄 Migrando dados para sitedatas...');
         await SiteData.collection.updateOne(
           {},
           { $set: result.data },
@@ -250,9 +291,12 @@ app.get('/api/site-data', async (req, res) => {
       }
       return res.json(result.data);
     }
+    
+    console.warn('   ⚠️  Nenhum dado encontrado, retornando vazio');
     return res.json({});
   } catch (error) {
-    console.error('Erro ao carregar dados:', error);
+    console.error('❌ Erro ao carregar dados:', error.message);
+    console.error('   Stack:', error.stack);
     res.status(500).json({ error: 'Erro ao carregar dados' });
   }
 });
