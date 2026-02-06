@@ -114,30 +114,38 @@
         // ========== STATE ==========
         let isLoggedIn = false;
         let galleryData = null;
+        let currentSessionId = null;
 
         // ========== AUTH ==========
-        function handleAccessCode(e) {
+        async function handleAccessCode(e) {
             e.preventDefault();
             const code = document.getElementById('access-code').value;
             
-            // TODO: Validar código no servidor
-            // Por enquanto, simular dados
-            if (code.length > 0) {
+            try {
+                const response = await fetch('/api/client/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accessCode: code })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || 'Código inválido');
+                    return;
+                }
+
+                const data = await response.json();
                 isLoggedIn = true;
-                galleryData = {
-                    clientName: 'João Silva',
-                    galleryDate: '15 de Janeiro de 2026',
-                    sessionType: 'Família',
-                    totalPhotos: 128,
-                    watermark: true,
-                    canShare: false,
-                    downloadQuality: 'high'
-                };
+                currentSessionId = data.sessionId;
+                galleryData = data;
                 
                 document.getElementById('login-area').classList.add('hidden');
                 document.getElementById('gallery-area').classList.remove('hidden');
                 loadGallery();
                 lucide.createIcons();
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao validar código. Tente novamente.');
             }
         }
 
@@ -145,6 +153,7 @@
             if (confirm('Tem certeza que quer sair?')) {
                 isLoggedIn = false;
                 galleryData = null;
+                currentSessionId = null;
                 document.getElementById('gallery-area').classList.add('hidden');
                 document.getElementById('login-area').classList.remove('hidden');
                 document.getElementById('access-code').value = '';
@@ -152,30 +161,50 @@
         }
 
         // ========== LOAD GALLERY ==========
-        function loadGallery() {
-            if (!galleryData) return;
+        async function loadGallery() {
+            if (!galleryData || !currentSessionId) return;
             
             document.getElementById('client-name').textContent = galleryData.clientName;
             document.getElementById('gallery-date').textContent = 'Sessão de ' + galleryData.sessionType + ' • ' + galleryData.galleryDate;
             document.getElementById('photo-count').textContent = galleryData.totalPhotos;
             
-            // Simular fotos
-            const html = Array(12).fill(0).map((_, i) => `
-                <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square cursor-pointer hover:shadow-lg transition-shadow">
-                    <div class="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200">
-                        <i data-lucide="image" class="w-8 h-8"></i>
+            try {
+                const response = await fetch(`/api/client/photos/${currentSessionId}`);
+                if (!response.ok) throw new Error('Erro ao carregar fotos');
+                
+                const result = await response.json();
+                const photos = result.photos || [];
+
+                if (photos.length === 0) {
+                    document.getElementById('photos-grid').innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-500">
+                            <i data-lucide="image" class="w-12 h-12 mx-auto mb-3 text-gray-400"></i>
+                            <p>Nenhuma foto disponível ainda</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                const html = photos.map(photo => `
+                    <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square cursor-pointer hover:shadow-lg transition-shadow">
+                        <img src="${photo.url}" alt="${photo.filename}" class="w-full h-full object-cover" />
+                        ${galleryData.watermark ? '<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="text-white text-opacity-20 font-serif text-3xl transform -rotate-45">CLIQUE·ZOOM</span></div>' : ''}
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <a href="${photo.url}" download="${photo.filename}" class="bg-white text-gray-900 px-4 py-2 rounded font-semibold text-sm flex items-center gap-2 hover:bg-gray-100">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                Baixar
+                            </a>
+                        </div>
                     </div>
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button class="bg-white text-gray-900 px-4 py-2 rounded font-semibold text-sm flex items-center gap-2">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            Baixar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-            
-            document.getElementById('photos-grid').innerHTML = html;
-            lucide.createIcons();
+                `).join('');
+                
+                document.getElementById('photos-grid').innerHTML = html;
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Erro ao carregar fotos:', error);
+                alert('Erro ao carregar fotos. Tente novamente.');
+            }
         }
 
         // ========== INIT ==========

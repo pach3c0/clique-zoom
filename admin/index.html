@@ -377,6 +377,9 @@
                 <button onclick="switchTab('newsletter')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="newsletter">
                     <i data-lucide="mail" class="w-4 h-4"></i> Newsletter
                 </button>
+                <button onclick="switchTab('sessoes')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="sessoes">
+                    <i data-lucide="photo" class="w-4 h-4"></i> Sessões
+                </button>
             </nav>
 
             <div class="p-4 border-t border-gray-800 space-y-2">
@@ -579,7 +582,8 @@
                 manutencao: 'Manutenção',
                 footer: 'Rodapé',
                 newsletter: 'Newsletter',
-                faq: 'FAQ - Perguntas Frequentes'
+                faq: 'FAQ - Perguntas Frequentes',
+                sessoes: 'Sessões de Clientes'
             };
             const pageTitle = document.getElementById('page-title');
             if (pageTitle) {
@@ -596,6 +600,7 @@
                 case 'manutencao': renderMaintenance(); break;
                 case 'footer': renderFooter(); break;
                 case 'newsletter': renderNewsletter(); break;
+                case 'sessoes': renderSessoes(); break;
                 default: renderHero(); break;
             }
 
@@ -3234,6 +3239,151 @@
             } catch (e) {
                 console.warn('Erro ao carregar dados:', e);
             }
+        }
+
+        // ========== SESSÕES ==========
+        async function renderSessoes() {
+            const contentArea = document.getElementById('content-area');
+            contentArea.innerHTML = '<div class="flex items-center justify-center h-64"><div class="text-gray-500">Carregando...</div></div>';
+            
+            try {
+                const response = await fetch('/api/sessions', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                
+                if (!response.ok) throw new Error('Erro ao carregar sessões');
+                
+                const result = await response.json();
+                const sessions = result.sessions || [];
+                
+                const html = `
+                    <div class="max-w-6xl mx-auto space-y-6">
+                        <!-- Botão Nova Sessão -->
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-semibold text-gray-900">Gerenciar Sessões de Clientes</h2>
+                            <button onclick="createNewSession()" class="bg-neutral-900 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                Nova Sessão
+                            </button>
+                        </div>
+
+                        <!-- Lista de Sessões -->
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                            ${sessions.length === 0 ? `
+                                <div class="p-12 text-center text-gray-500">
+                                    <i data-lucide="photo" class="w-12 h-12 mx-auto mb-3 text-gray-300"></i>
+                                    <p>Nenhuma sessão criada ainda</p>
+                                    <button onclick="createNewSession()" class="mt-4 px-4 py-2 bg-neutral-900 text-white rounded-lg font-medium hover:bg-gray-800">
+                                        Criar Primeira Sessão
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-gray-50 border-b border-gray-200">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fotos</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            ${sessions.map(session => `
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">${session.name}</td>
+                                                    <td class="px-6 py-4 text-sm text-gray-500">${session.type}</td>
+                                                    <td class="px-6 py-4 text-sm text-gray-500">${new Date(session.date).toLocaleDateString('pt-BR')}</td>
+                                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">${session.photos.length}</td>
+                                                    <td class="px-6 py-4 text-sm font-mono bg-gray-50 rounded px-2 py-1">
+                                                        <span class="text-gray-900 font-bold">${session.accessCode}</span>
+                                                        <button onclick="copyToClipboard('${session.accessCode}')" class="ml-2 text-gray-400 hover:text-gray-600">
+                                                            <i data-lucide="copy" class="w-4 h-4"></i>
+                                                        </button>
+                                                    </td>
+                                                    <td class="px-6 py-4 text-right text-sm space-x-2">
+                                                        <button onclick="editSession('${session.id}')" class="text-blue-600 hover:text-blue-800 font-medium">Editar</button>
+                                                        <button onclick="deleteSession('${session.id}')" class="text-red-600 hover:text-red-800 font-medium">Deletar</button>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+                
+                contentArea.innerHTML = html;
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Erro:', error);
+                contentArea.innerHTML = '<div class="p-6 text-red-600">Erro ao carregar sessões</div>';
+            }
+        }
+
+        async function createNewSession() {
+            const name = prompt('Nome do cliente/sessão:');
+            if (!name) return;
+            
+            const type = prompt('Tipo de sessão (ex: Família, Casamento, Evento):');
+            if (!type) return;
+            
+            const dateStr = prompt('Data (YYYY-MM-DD):');
+            if (!dateStr) return;
+
+            try {
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({
+                        name,
+                        type,
+                        date: new Date(dateStr).toISOString()
+                    })
+                });
+
+                if (!response.ok) throw new Error('Erro ao criar sessão');
+
+                const result = await response.json();
+                alert('Sessão criada! Código: ' + result.session.accessCode);
+                renderSessoes();
+            } catch (error) {
+                alert('Erro: ' + error.message);
+            }
+        }
+
+        async function deleteSession(sessionId) {
+            if (!confirm('Tem certeza que quer deletar esta sessão?')) return;
+
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                if (!response.ok) throw new Error('Erro ao deletar');
+
+                alert('Sessão deletada!');
+                renderSessoes();
+            } catch (error) {
+                alert('Erro: ' + error.message);
+            }
+        }
+
+        function editSession(sessionId) {
+            alert('Função de edição em desenvolvimento');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Código copiado!');
         }
 
         function resetToDefaults() {
