@@ -5,7 +5,10 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const jwt = require('jsonwebtoken');
 const path = require('path');
-require('dotenv').config();
+// Apenas em desenvolvimento
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const SiteData = require('./models/SiteData');
 const Newsletter = require('./models/Newsletter');
 
@@ -39,11 +42,10 @@ console.log('URI host:', mongoUri.includes('@') ? mongoUri.split('@')[1].split('
 const connectWithRetry = async () => {
   try {
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 30000, // Ajustado para 30s (padrão robusto)
-      connectTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 60000,
+      connectTimeoutMS: 60000,
+      socketTimeoutMS: 60000,
       keepAlive: true,
-      family: 4, // ✅ Forçar IPv4 (Essencial para evitar erro EHOSTUNREACH)
       retryWrites: true,
       w: 'majority',
       maxPoolSize: 20,
@@ -401,8 +403,14 @@ app.delete('/api/newsletter/:email', authenticateToken, async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`Modo: ${process.env.NODE_ENV || 'development'}`);
-});
+// Export para Vercel Serverless
+module.exports = app;
+
+// Em desenvolvimento, iniciar servidor local
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Modo: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
