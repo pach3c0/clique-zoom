@@ -45,7 +45,6 @@ const connectWithRetry = async () => {
       serverSelectionTimeoutMS: 60000,
       connectTimeoutMS: 60000,
       socketTimeoutMS: 60000,
-      keepAlive: true,
       retryWrites: true,
       w: 'majority',
       maxPoolSize: 20,
