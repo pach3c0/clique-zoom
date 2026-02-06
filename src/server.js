@@ -667,12 +667,14 @@ app.post('/api/sessions/:sessionId/photos', authenticateToken, (req, res, next) 
       });
     }
 
+    console.log(`💾 Salvando sessão com ${session.photos.length} foto(s) total...`);
     await session.save();
-    console.log(`✅ ${uploadedPhotos.length} foto(s) salva(s) na sessão`);
+    console.log(`✅ Sessão salva! Total de fotos: ${session.photos.length}`);
     
     res.json({ 
       success: true, 
       photos: uploadedPhotos,
+      totalPhotos: session.photos.length,
       errors: errors.length > 0 ? errors : undefined
     });
   } catch (error) {
