@@ -19,7 +19,7 @@ const tabModules = {};
 /**
  * Inicializa a aplicação
  */
-export async function initApp() {
+async function initApp() {
   console.log('🚀 Inicializando CLIQUE·ZOOM Admin...');
   
   // Verifica autenticação
@@ -28,15 +28,20 @@ export async function initApp() {
     return;
   }
   
-  // Carrega dados do servidor
-  await loadAppData();
-  
-  // Mostra painel
-  document.getElementById('loginForm')?.style.display = 'none';
-  document.getElementById('adminPanel')?.style.display = 'block';
-  
-  // Carrega módulo da primeira aba
-  await switchTab('hero');
+  try {
+    // Carrega dados do servidor
+    await loadAppData();
+    
+    // Mostra painel
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'flex';
+    
+    // Carrega módulo da primeira aba
+    await switchTab('hero');
+  } catch (error) {
+    console.error('Erro ao inicializar:', error);
+    alert('Erro ao carregar aplicação');
+  }
 }
 
 /**
@@ -71,7 +76,10 @@ function showLoginForm() {
         localStorage.setItem('authToken', data.token);
         
         loginForm.style.display = 'none';
-        await initApp();
+        document.getElementById('adminPanel').style.display = 'flex';
+        
+        await loadAppData();
+        await switchTab('hero');
       } catch (error) {
         alert('❌ ' + error.message);
       }
@@ -190,4 +198,4 @@ window.uploadImage = uploadImage;
 window.showUploadProgress = showUploadProgress;
 
 // Inicia ao carregar
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', () => initApp().catch(console.error));
