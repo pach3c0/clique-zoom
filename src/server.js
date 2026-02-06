@@ -597,7 +597,7 @@ app.delete('/api/sessions/:sessionId', authenticateToken, async (req, res) => {
 });
 
 // ADMIN: Upload de fotos para sessão
-app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadDisk.array('photos', 50), async (req, res) => {
+app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadMemory.array('photos', 50), async (req, res) => {
   try {
     const { sessionId } = req.params;
     const session = await Session.findById(sessionId);
@@ -614,10 +614,23 @@ app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadDisk.array(
 
     for (const file of req.files) {
       try {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: 'cliquezoom/sessions',
-          resource_type: 'auto'
+        // Upload direto do buffer para Cloudinary
+        const uploadPromise = new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'cliquezoom/sessions',
+              resource_type: 'auto'
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          
+          uploadStream.end(file.buffer);
         });
+
+        const result = await uploadPromise;
 
         const photo = {
           id: `photo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -628,11 +641,6 @@ app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadDisk.array(
 
         session.photos.push(photo);
         uploadedPhotos.push(photo);
-
-        // Limpar arquivo local
-        fs.unlink(file.path, err => {
-          if (err) console.error('Erro ao remover arquivo:', err);
-        });
       } catch (uploadError) {
         console.error('Erro ao fazer upload de foto:', uploadError);
       }
