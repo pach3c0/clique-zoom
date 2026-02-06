@@ -92,7 +92,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const uploadMemory = multer({ storage: multer.memoryStorage() });
+const uploadMemory = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB por arquivo
+    files: 50
+  }
+});
 const uploadDisk = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -596,8 +602,13 @@ app.delete('/api/sessions/:sessionId', authenticateToken, async (req, res) => {
   }
 });
 
-// ADMIN: Upload de fotos para sessão
-app.post('/api/sessions/:sessionId/photos', authenticateToken, uploadMemory.array('photos', 50), async (req, res) => {
+// ADMIN: Upload de fotos para sessão (com middleware de upload)
+app.post('/api/sessions/:sessionId/photos', authenticateToken, (req, res, next) => {
+  console.log('🔵 Requisição recebida em /api/sessions/:sessionId/photos');
+  console.log('🔵 SessionId:', req.params.sessionId);
+  console.log('🔵 Content-Type:', req.headers['content-type']);
+  next();
+}, uploadMemory.array('photos', 50), async (req, res) => {
   try {
     console.log('📸 Iniciando upload de fotos para sessão:', req.params.sessionId);
     const { sessionId } = req.params;
