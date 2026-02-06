@@ -3429,8 +3429,8 @@
                     }
                     
                     try {
-                        // Enviar em lotes de 3 fotos por vez para evitar erro 413
-                        const batchSize = 3;
+                        // Enviar 1 foto por vez para respeitar limite de 4.5MB do Vercel
+                        const batchSize = 1;
                         let totalUploaded = 0;
                         
                         for (let i = 0; i < files.length; i += batchSize) {
