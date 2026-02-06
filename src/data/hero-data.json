@@ -2,6 +2,9 @@
   "title": "CLIQUE·ZOOM",
   "subtitle": "Fotografia Minimalista e Autêntica",
   "image": "hero-bg.jpg",
+  "imageScale": 1,
+  "imagePosX": 50,
+  "imagePosY": 50,
   "transform": {
     "scale": 1,
     "posX": 50,
@@ -15,6 +18,10 @@
     "posX": 50,
     "posY": 55
   },
+  "titlePosX": 50,
+  "titlePosY": 40,
+  "subtitlePosX": 50,
+  "subtitlePosY": 55,
   "titleFontSize": 48,
   "subtitleFontSize": 18,
   "topBarHeight": 0,

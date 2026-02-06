@@ -500,11 +500,10 @@
             const heroSubtitle = document.getElementById('dom-hero-subtitle');
 
             // Imagem
-            const heroImageUrl = resolveImagePath(store.hero.bgImage);
-            const t = store.hero.transform || { scale: 1, posX: 50, posY: 50 };
-            const imgScale = t.scale ?? 1;
-            const imgPosX = t.posX ?? 50;
-            const imgPosY = t.posY ?? 50;
+            const heroImageUrl = resolveImagePath(store.hero.image || store.hero.bgImage);
+            const imgScale = store.hero.imageScale ?? (store.hero.transform?.scale ?? 1);
+            const imgPosX = store.hero.imagePosX ?? (store.hero.transform?.posX ?? 50);
+            const imgPosY = store.hero.imagePosY ?? (store.hero.transform?.posY ?? 50);
 
             heroImg.style.transform = `scale(${imgScale})`;
             heroImg.style.transformOrigin = `${imgPosX}% ${imgPosY}%`;
@@ -525,8 +524,8 @@
             heroBottomBar.style.height = (store.hero.bottomBarHeight ?? 0) + '%';
 
             // Título
-            const titlePosX = store.hero.titleTransform?.posX ?? 50;
-            const titlePosY = store.hero.titleTransform?.posY ?? 40;
+            const titlePosX = store.hero.titlePosX ?? (store.hero.titleTransform?.posX ?? 50);
+            const titlePosY = store.hero.titlePosY ?? (store.hero.titleTransform?.posY ?? 40);
             const titleFS = store.hero.titleFontSize ?? 48;
 
             heroTitle.textContent = store.hero.title;
@@ -538,8 +537,8 @@
             heroTitle.style.maxWidth = 'min(90vw, 800px)';
 
             // Subtítulo
-            const subPosX = store.hero.subtitleTransform?.posX ?? 50;
-            const subPosY = store.hero.subtitleTransform?.posY ?? 55;
+            const subPosX = store.hero.subtitlePosX ?? (store.hero.subtitleTransform?.posX ?? 50);
+            const subPosY = store.hero.subtitlePosY ?? (store.hero.subtitleTransform?.posY ?? 55);
             const subtitleFS = store.hero.subtitleFontSize ?? 18;
 
             heroSubtitle.textContent = store.hero.subtitle;
