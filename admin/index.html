@@ -3405,20 +3405,28 @@
         }
 
         async function editSession(sessionId) {
+            console.log('🔧 editSession chamado com sessionId:', sessionId);
             // TODO: Implementar modal de edição completo
             // Por enquanto, só permitir fazer upload de fotos
             const action = prompt('O que deseja fazer?\n1 - Ver fotos\n2 - Upload de fotos\n3 - Cancelar');
+            console.log('🔧 Ação escolhida:', action);
             
             if (action === '1') {
                 window.open(`/galeria/${sessionId}`, '_blank');
             } else if (action === '2') {
+                console.log('🔧 Criando input de arquivo...');
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.multiple = true;
                 input.accept = 'image/*';
                 input.onchange = async (e) => {
+                    console.log('🔧 Evento onchange disparado!');
                     const files = Array.from(e.target.files);
-                    if (files.length === 0) return;
+                    console.log('🔧 Arquivos selecionados:', files.length);
+                    if (files.length === 0) {
+                        console.log('🔧 Nenhum arquivo selecionado, abortando');
+                        return;
+                    }
                     
                     try {
                         // Enviar em lotes de 3 fotos por vez para evitar erro 413
