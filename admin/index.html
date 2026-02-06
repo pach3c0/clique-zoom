@@ -3421,19 +3421,30 @@
                     if (files.length === 0) return;
                     
                     try {
-                        const formData = new FormData();
-                        files.forEach(file => formData.append('photos', file));
+                        // Enviar em lotes de 3 fotos por vez para evitar erro 413
+                        const batchSize = 3;
+                        let totalUploaded = 0;
                         
-                        const response = await fetch(`/api/sessions/${sessionId}/photos`, {
-                            method: 'POST',
-                            headers: { 'Authorization': 'Bearer ' + authToken },
-                            body: formData
-                        });
+                        for (let i = 0; i < files.length; i += batchSize) {
+                            const batch = files.slice(i, i + batchSize);
+                            const formData = new FormData();
+                            batch.forEach(file => formData.append('photos', file));
+                            
+                            const response = await fetch(`/api/sessions/${sessionId}/photos`, {
+                                method: 'POST',
+                                headers: { 'Authorization': 'Bearer ' + authToken },
+                                body: formData
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`Erro no lote ${Math.floor(i/batchSize) + 1}`);
+                            }
+                            
+                            const result = await response.json();
+                            totalUploaded += result.photos.length;
+                        }
                         
-                        if (!response.ok) throw new Error('Erro ao fazer upload');
-                        
-                        const result = await response.json();
-                        alert(`✅ ${result.photos.length} foto(s) adicionada(s)!`);
+                        alert(`✅ ${totalUploaded} foto(s) adicionada(s)!`);
                         renderSessoes();
                     } catch (error) {
                         alert('❌ Erro ao fazer upload: ' + error.message);
