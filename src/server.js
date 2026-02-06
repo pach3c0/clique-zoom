@@ -140,14 +140,18 @@ app.get('/api/debug/mongo', (req, res) => {
 // Listar últimas imagens do Cloudinary
 app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
   try {
+    console.log('🔄 Listando imagens do Cloudinary...');
+    console.log('Cloudinary configurado:', !!process.env.CLOUDINARY_CLOUD_NAME);
+    
     const limit = parseInt(req.query.limit) || 100;
     
     const resources = await cloudinary.api.resources({
       type: 'upload',
       max_results: limit,
-      resource_type: 'image',
-      tags: false
+      resource_type: 'image'
     });
+    
+    console.log('✅ Imagens listadas:', resources.resources.length);
     
     const images = resources.resources.map(r => ({
       public_id: r.public_id,
@@ -165,8 +169,13 @@ app.get('/api/admin/cloudinary/recent', authenticateToken, async (req, res) => {
       images: images
     });
   } catch (error) {
-    console.error('❌ Erro ao listar Cloudinary:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Erro ao listar Cloudinary:');
+    console.error('   Mensagem:', error.message);
+    console.error('   Stack:', error.stack);
+    res.status(500).json({ 
+      error: error.message,
+      type: error.constructor.name
+    });
   }
 });
 
