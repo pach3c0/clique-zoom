@@ -1,24 +1,24 @@
 const jwt = require('jsonwebtoken');
 
-// Middleware para verificar JWT token
-function verifyToken(req, res, next) {
-    const token = req.headers.authorization?.split(' ')[1]; // Bearer token
-
-    if (!token) {
-        return res.status(401).json({ error: 'Token não fornecido' });
-    }
-
-    const jwtSecret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
-
-    try {
-        const decoded = jwt.verify(token, jwtSecret);
-        req.admin = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ error: 'Token inválido ou expirado' });
-    }
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be set in production');
+  }
+  return secret || 'clique-zoom-secret-key';
 }
 
-module.exports = {
-    verifyToken
-};
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+
+  jwt.verify(token, getJwtSecret(), (err, user) => {
+    if (err) return res.status(403).json({ error: 'Token inválido' });
+    req.user = user;
+    next();
+  });
+}
+
+module.exports = { authenticateToken };

@@ -5,31 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLIQUE·ZOOM | Fotografia</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/tailwind.css">
+    <link rel="stylesheet" href="/assets/css/shared.css">
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
-
-        :root {
-            --font-sans: 'Inter', sans-serif;
-            --font-serif: 'Playfair Display', serif;
-        }
-
-        body { font-family: var(--font-sans); }
-        h1, h2, h3, .font-serif { font-family: var(--font-serif); }
-
-        .fade-in {
-            animation: fadeIn 0.8s ease-out forwards;
-            opacity: 0;
-        }
-        .fade-in-delay { animation-delay: 0.3s; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         /* Hero height */
         .hero-section {
             min-height: 100vh;
@@ -291,7 +274,7 @@
 
                 <!-- Imagem -->
                 <div class="aspect-square bg-gray-200 rounded-2xl overflow-hidden shadow-2xl">
-                    <img id="dom-about-img" src="" alt="Sobre nós" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                    <img id="dom-about-img" src="" alt="Sobre nós" loading="lazy" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                 </div>
             </div>
         </div>
@@ -571,7 +554,7 @@
                 return `
                 <div class="${aspectClass} overflow-hidden cursor-pointer group">
                     <img src="${resolveImagePath(item.image)}" alt="Portfolio ${idx + 1}"
-                        class="w-full h-full object-cover transition-transform duration-700"
+                        loading="lazy" class="w-full h-full object-cover transition-transform duration-700"
                         style="object-position: ${posX}% ${posY}%; transform: scale(${scale});"
                         onmouseenter="this.style.transform='scale(${scale * 1.05})'"
                         onmouseleave="this.style.transform='scale(${scale})'" />
@@ -595,7 +578,7 @@
                 return `
                     <div onclick="openAlbum(${idx})" class="group cursor-pointer">
                         <div class="aspect-[4/5] rounded-xl overflow-hidden mb-4 relative shadow-2xl bg-black">
-                            <img src="${resolveImagePath(cover)}" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                            <img src="${resolveImagePath(cover)}" loading="lazy" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
                                 <span class="text-white text-xs border border-white/30 px-3 py-1 rounded-full">VER ÁLBUM</span>
                             </div>
@@ -631,7 +614,7 @@
                 return `
                 <div class="aspect-video bg-gray-200 rounded-2xl overflow-hidden shadow-lg group">
                     <img src="${resolveImagePath(photo.image)}" alt="Estúdio ${idx + 1}"
-                        class="w-full h-full object-cover transition-transform duration-500"
+                        loading="lazy" class="w-full h-full object-cover transition-transform duration-500"
                         style="object-position: ${posX}% ${posY}%; transform: scale(${scale});"
                         onmouseenter="this.style.transform='scale(${scale * 1.05})'"
                         onmouseleave="this.style.transform='scale(${scale})'" />
@@ -657,9 +640,6 @@
                 const encodedAddress = encodeURIComponent(store.studio.address);
                 mapIframe.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodedAddress}`;
             }
-
-            // Icons
-            lucide.createIcons();
 
             // ===== FOOTER =====
             if (store.footer) {
@@ -697,7 +677,6 @@
                         footerSocial.appendChild(emailLink);
                     }
                     
-                    lucide.createIcons();
                 }
 
                 // Links Úteis
@@ -755,6 +734,9 @@
                     footerCopyright.textContent = store.footer.copyright;
                 }
             }
+
+            // Render all icons once at end
+            lucide.createIcons();
         }
 
         function openAlbum(index) {

@@ -28,7 +28,11 @@ const SiteDataSchema = new mongoose.Schema({
   },
   studio: { type: mongoose.Schema.Types.Mixed, default: {} },
   albums: { type: Array, default: [] },
-  footer: { type: mongoose.Schema.Types.Mixed, default: {} }
+  footer: { type: mongoose.Schema.Types.Mixed, default: {} },
+  faq: {
+    faqs: { type: Array, default: [] }
+  },
+  maintenance: { type: mongoose.Schema.Types.Mixed, default: { enabled: false } }
 }, { 
   timestamps: true,
   strict: false,

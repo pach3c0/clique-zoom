@@ -5,34 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galeria de Álbuns - CLIQUE·ZOOM</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .font-serif {
-            font-family: 'Playfair Display', serif;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 1s ease-out forwards;
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/css/tailwind.css">
+    <link rel="stylesheet" href="/assets/css/shared.css">
 </head>
 <body class="bg-white text-gray-900">
 
@@ -196,6 +173,7 @@
         </div>
     </footer>
 
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
     <script>
         // ========== STATE ==========
         let albumsCache = [];
@@ -241,7 +219,7 @@
                 return `
                     <div onclick="openAlbum(${idx})" class="group cursor-pointer fade-in">
                         <div class="aspect-[4/5] rounded-xl overflow-hidden mb-4 relative shadow-2xl bg-black">
-                            <img src="${resolveImagePath(cover)}" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                            <img src="${resolveImagePath(cover)}" loading="lazy" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
                                 <span class="text-white text-xs border border-white/30 px-3 py-1 rounded-full">VER ÁLBUM</span>
                             </div>

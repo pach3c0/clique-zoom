@@ -4,20 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sua Galeria | CLIQUE·ZOOM</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
-        
-        :root {
-            --font-sans: 'Inter', sans-serif;
-            --font-serif: 'Playfair Display', serif;
-        }
-        
-        body { font-family: var(--font-sans); }
-        h1, h2, h3, .font-serif { font-family: var(--font-serif); }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/tailwind.css">
+    <link rel="stylesheet" href="/assets/css/shared.css">
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 </head>
 <body class="bg-white text-gray-900">
 
@@ -169,7 +161,7 @@
             document.getElementById('photo-count').textContent = galleryData.totalPhotos;
             
             try {
-                const response = await fetch(`/api/client/photos/${currentSessionId}`);
+                const response = await fetch(`/api/client/photos/${currentSessionId}?code=${encodeURIComponent(galleryData.accessCode)}`);
                 if (!response.ok) throw new Error('Erro ao carregar fotos');
                 
                 const result = await response.json();
@@ -188,7 +180,7 @@
 
                 const html = photos.map(photo => `
                     <div class="group relative overflow-hidden rounded-lg bg-gray-200 aspect-square cursor-pointer hover:shadow-lg transition-shadow">
-                        <img src="${photo.url}" alt="${photo.filename}" class="w-full h-full object-cover" />
+                        <img src="${photo.url}" alt="${photo.filename}" loading="lazy" class="w-full h-full object-cover" />
                         ${galleryData.watermark ? '<div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span class="text-white text-opacity-20 font-serif text-3xl transform -rotate-45">CLIQUE·ZOOM</span></div>' : ''}
                         <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <a href="${photo.url}" download="${photo.filename}" class="bg-white text-gray-900 px-4 py-2 rounded font-semibold text-sm flex items-center gap-2 hover:bg-gray-100">
