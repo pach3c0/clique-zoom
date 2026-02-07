@@ -99,6 +99,7 @@ app.use('/api', require('./routes/faq'));
 app.use('/api', require('./routes/site-data'));
 app.use('/api', require('./routes/newsletter'));
 app.use('/api', require('./routes/sessions'));
+app.use('/api', require('./routes/notifications'));
 app.use('/api', require('./routes/upload'));
 
 // Iniciar servidor

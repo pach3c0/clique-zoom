@@ -178,6 +178,10 @@
             </div>
             <h2 class="status-title">Selecao Enviada!</h2>
             <p class="status-desc">Suas fotos favoritas foram enviadas ao fotografo. Aguarde o processamento.</p>
+            <button id="requestReopenBtn" onclick="requestReopen()" style="margin-top:1.25rem; background:none; border:1px solid #d1d5db; color:#666; padding:0.625rem 1.25rem; border-radius:0.5rem; font-size:0.8125rem; cursor:pointer; transition:all 0.2s;">
+                Preciso alterar minha selecao
+            </button>
+            <p id="reopenSent" style="display:none; color:#16a34a; font-size:0.8125rem; margin-top:1rem;">Pedido enviado! Aguarde o fotografo reabrir a selecao.</p>
             <p style="color:#999; font-size:0.8125rem; margin-top:1rem;">Veja abaixo as fotos que voce selecionou:</p>
         </div>
 
@@ -335,6 +339,8 @@
                     if (data.selectionStatus !== 'submitted') {
                         clearInterval(pollingInterval);
                         pollingInterval = null;
+                        // Limpar flag de pedido de reabertura
+                        sessionStorage.removeItem(`reopen_requested_${sessionId}`);
                         // Status mudou - recarregar galeria
                         selectionStatus = data.selectionStatus;
                         selectedPhotos = new Set(data.selectedPhotos || []);
@@ -415,6 +421,13 @@
 
             if (type === 'submitted') {
                 document.getElementById('statusSubmitted').classList.add('active');
+                // Verificar se pedido de reabertura ja foi enviado
+                if (sessionStorage.getItem(`reopen_requested_${sessionId}`)) {
+                    const btn = document.getElementById('requestReopenBtn');
+                    const sentMsg = document.getElementById('reopenSent');
+                    if (btn) btn.style.display = 'none';
+                    if (sentMsg) sentMsg.style.display = 'block';
+                }
                 // Mostrar as fotos selecionadas abaixo do status
                 const submittedGrid = document.getElementById('submittedPhotosGrid');
                 const selectedList = photos.filter(p => selectedPhotos.has(p.id));
@@ -544,6 +557,38 @@
                 showStatusScreen('submitted');
             } catch (err) {
                 alert('Erro de conexao. Tente novamente.');
+            }
+        }
+
+        // ========== PEDIR REABERTURA ==========
+        async function requestReopen() {
+            const btn = document.getElementById('requestReopenBtn');
+            const sentMsg = document.getElementById('reopenSent');
+
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                const res = await fetch(`/api/client/request-reopen/${sessionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accessCode })
+                });
+
+                if (res.ok) {
+                    btn.style.display = 'none';
+                    sentMsg.style.display = 'block';
+                    sessionStorage.setItem(`reopen_requested_${sessionId}`, 'true');
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Erro ao enviar pedido');
+                    btn.disabled = false;
+                    btn.textContent = 'Preciso alterar minha selecao';
+                }
+            } catch (err) {
+                alert('Erro de conexao. Tente novamente.');
+                btn.disabled = false;
+                btn.textContent = 'Preciso alterar minha selecao';
             }
         }
 

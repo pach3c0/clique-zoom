@@ -25,6 +25,7 @@ async function initApp() {
   await loadAppData();
   document.getElementById('loginForm').style.display = 'none';
   document.getElementById('adminPanel').style.display = 'flex';
+  startNotificationPolling();
   await switchTab('hero');
 }
 
@@ -58,6 +59,7 @@ function showLoginForm() {
       document.getElementById('adminPanel').style.display = 'flex';
 
       await loadAppData();
+      startNotificationPolling();
       await switchTab('hero');
     } catch (error) {
       alert(error.message);
@@ -110,7 +112,143 @@ async function switchTab(tabName) {
   }
 }
 
+// ==================== NOTIFICACOES ====================
+
+const NOTIF_ICONS = {
+  session_accessed: '👁️',
+  selection_started: '🎯',
+  selection_submitted: '✅',
+  reopen_requested: '🔄'
+};
+
+let notifPollingInterval = null;
+let notifDropdownOpen = false;
+
+function startNotificationPolling() {
+  loadNotifications();
+  if (notifPollingInterval) clearInterval(notifPollingInterval);
+  notifPollingInterval = setInterval(loadNotifications, 30000);
+}
+
+async function loadNotifications() {
+  if (!appState.authToken) return;
+  try {
+    const res = await fetch('/api/notifications/unread-count', {
+      headers: { 'Authorization': `Bearer ${appState.authToken}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    updateBadge(data.count || 0);
+  } catch (e) { /* ignore */ }
+}
+
+function updateBadge(count) {
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function toggleNotifications() {
+  const dropdown = document.getElementById('notifDropdown');
+  if (!dropdown) return;
+
+  notifDropdownOpen = !notifDropdownOpen;
+  dropdown.style.display = notifDropdownOpen ? 'block' : 'none';
+
+  if (notifDropdownOpen) {
+    await renderNotifications();
+  }
+}
+
+async function renderNotifications() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+
+  try {
+    const res = await fetch('/api/notifications', {
+      headers: { 'Authorization': `Bearer ${appState.authToken}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const notifications = data.notifications || [];
+
+    if (notifications.length === 0) {
+      list.innerHTML = '<p style="color:#6b7280; font-size:0.75rem; text-align:center; padding:1.5rem;">Nenhuma notificacao</p>';
+      return;
+    }
+
+    list.innerHTML = notifications.map(n => {
+      const icon = NOTIF_ICONS[n.type] || '🔔';
+      const time = timeAgo(new Date(n.createdAt));
+      const unread = !n.read;
+      return `
+        <div style="padding:0.5rem 1rem; border-bottom:1px solid #1f2937; cursor:pointer; ${unread ? 'background:#1e293b;' : ''}"
+          onclick="onNotifClick('${n.sessionId || ''}')">
+          <div style="display:flex; align-items:flex-start; gap:0.5rem;">
+            <span style="font-size:1rem; flex-shrink:0;">${icon}</span>
+            <div style="flex:1; min-width:0;">
+              <p style="font-size:0.75rem; color:${unread ? '#f3f4f6' : '#9ca3af'}; ${unread ? 'font-weight:600;' : ''} line-height:1.4;">${n.message}</p>
+              <p style="font-size:0.625rem; color:#6b7280; margin-top:0.125rem;">${time}</p>
+            </div>
+            ${unread ? '<span style="width:6px; height:6px; background:#3b82f6; border-radius:50%; flex-shrink:0; margin-top:0.375rem;"></span>' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<p style="color:#f87171; font-size:0.75rem; text-align:center; padding:1rem;">Erro ao carregar</p>';
+  }
+}
+
+async function markAllNotificationsRead() {
+  try {
+    await fetch('/api/notifications/read-all', {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${appState.authToken}` }
+    });
+    updateBadge(0);
+    await renderNotifications();
+  } catch (e) { /* ignore */ }
+}
+
+function onNotifClick(sessionId) {
+  const dropdown = document.getElementById('notifDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+  notifDropdownOpen = false;
+
+  if (sessionId) {
+    switchTab('sessoes');
+  }
+}
+
+function timeAgo(date) {
+  const now = new Date();
+  const diff = Math.floor((now - date) / 1000);
+  if (diff < 60) return 'agora';
+  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+  return date.toLocaleDateString('pt-BR');
+}
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', (e) => {
+  if (!notifDropdownOpen) return;
+  const bell = document.getElementById('notificationBell');
+  const dropdown = document.getElementById('notifDropdown');
+  if (bell && !bell.contains(e.target) && dropdown && !dropdown.contains(e.target)) {
+    dropdown.style.display = 'none';
+    notifDropdownOpen = false;
+  }
+});
+
 function logout() {
+  if (notifPollingInterval) clearInterval(notifPollingInterval);
   appState.authToken = '';
   appState.appData = {};
   localStorage.removeItem('authToken');
@@ -127,6 +265,9 @@ window.resolveImagePath = resolveImagePath;
 window.copyToClipboard = copyToClipboard;
 window.uploadImage = uploadImage;
 window.showUploadProgress = showUploadProgress;
+window.toggleNotifications = toggleNotifications;
+window.markAllNotificationsRead = markAllNotificationsRead;
+window.onNotifClick = onNotifClick;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => initApp());

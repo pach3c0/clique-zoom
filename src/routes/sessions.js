@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const Session = require('../models/Session');
+const Notification = require('../models/Notification');
 const { authenticateToken } = require('../middleware/auth');
 
 // Garantir que o diretorio existe
@@ -38,6 +39,14 @@ router.post('/client/verify-code', async (req, res) => {
     if (!session) {
       return res.status(401).json({ error: 'Código inválido' });
     }
+
+    // Notificar admin que cliente acessou
+    await Notification.create({
+      type: 'session_accessed',
+      sessionId: session._id,
+      sessionName: session.name,
+      message: `${session.name} acessou a galeria`
+    }).catch(() => {});
 
     res.json({
       success: true,
@@ -139,6 +148,13 @@ router.put('/client/select/:sessionId', async (req, res) => {
     // Atualizar status
     if (session.selectionStatus === 'pending' && session.selectedPhotos.length > 0) {
       session.selectionStatus = 'in_progress';
+      // Notificar admin que cliente iniciou selecao
+      await Notification.create({
+        type: 'selection_started',
+        sessionId: session._id,
+        sessionName: session.name,
+        message: `${session.name} iniciou a seleção de fotos`
+      }).catch(() => {});
     }
     if (session.selectedPhotos.length === 0 && session.selectionStatus === 'in_progress') {
       session.selectionStatus = 'pending';
@@ -188,6 +204,17 @@ router.post('/client/submit-selection/:sessionId', async (req, res) => {
     session.selectionSubmittedAt = new Date();
     await session.save();
 
+    // Notificar admin que selecao foi enviada
+    const extras = Math.max(0, session.selectedPhotos.length - (session.packageLimit || 30));
+    let notifMsg = `${session.name} enviou a seleção (${session.selectedPhotos.length} fotos)`;
+    if (extras > 0) notifMsg += ` - ${extras} extras`;
+    await Notification.create({
+      type: 'selection_submitted',
+      sessionId: session._id,
+      sessionName: session.name,
+      message: notifMsg
+    }).catch(() => {});
+
     res.json({
       success: true,
       selectedCount: session.selectedPhotos.length,
@@ -196,6 +223,40 @@ router.post('/client/submit-selection/:sessionId', async (req, res) => {
   } catch (error) {
     console.error('Erro ao finalizar seleção:', error);
     res.status(500).json({ error: 'Erro ao finalizar seleção' });
+  }
+});
+
+// CLIENTE: Pedir reabertura da selecao
+router.post('/client/request-reopen/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { accessCode } = req.body;
+
+    const session = await Session.findById(sessionId);
+    if (!session || !session.isActive) {
+      return res.status(404).json({ error: 'Sessão não encontrada' });
+    }
+
+    if (session.accessCode !== accessCode) {
+      return res.status(403).json({ error: 'Acesso não autorizado' });
+    }
+
+    if (session.selectionStatus !== 'submitted') {
+      return res.status(400).json({ error: 'Seleção não está no status enviada' });
+    }
+
+    // Criar notificacao para o admin
+    await Notification.create({
+      type: 'reopen_requested',
+      sessionId: session._id,
+      sessionName: session.name,
+      message: `${session.name} pediu reabertura da seleção`
+    }).catch(() => {});
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao pedir reabertura:', error);
+    res.status(500).json({ error: 'Erro ao pedir reabertura' });
   }
 });
 
