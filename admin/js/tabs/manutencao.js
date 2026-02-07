@@ -5,15 +5,19 @@
 import { appState, saveAppData } from '../state.js';
 import { uploadImage, showUploadProgress } from '../utils/upload.js';
 import { resolveImagePath, generateId } from '../utils/helpers.js';
+import { photoEditorHtml, setupPhotoEditor } from '../utils/photoEditor.js';
 
 export async function renderManutencao(container) {
   const maintenance = appState.appData.maintenance || { enabled: false, title: '', message: '', carouselPhotos: [] };
   const photos = maintenance.carouselPhotos || [];
 
   const photosHtml = photos.map((photo, idx) => `
-    <div class="carousel-item" style="position:relative; width:8rem; height:8rem; border-radius:0.5rem; overflow:hidden; flex-shrink:0; border:1px solid #374151;">
-      <img src="${resolveImagePath(photo.url)}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">
-      <div class="carousel-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.5); opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center;">
+    <div class="carousel-item" style="position:relative; width:10rem; height:6.5rem; border-radius:0.5rem; overflow:hidden; flex-shrink:0; border:1px solid #374151;">
+      <img src="${resolveImagePath(photo.url)}" style="width:100%; height:100%; object-fit:cover; pointer-events:none; object-position:${photo.posX ?? 50}% ${photo.posY ?? 50}%; transform:scale(${photo.scale ?? 1});">
+      <div class="carousel-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.5); opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+        <button onclick="editCarouselPhoto(${idx})" style="background:#3b82f6; color:white; padding:0.375rem; border-radius:9999px; border:none; cursor:pointer;" title="Enquadrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
         <button onclick="deleteCarouselPhoto(${idx})" style="background:#ef4444; color:white; padding:0.375rem; border-radius:9999px; border:none; cursor:pointer;" title="Remover">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
         </button>
@@ -67,7 +71,7 @@ export async function renderManutencao(container) {
             <input type="file" accept=".jpg,.jpeg,.png" multiple id="carouselUpload" style="display:none;">
           </label>
         </div>
-        <p style="font-size:0.75rem; color:#9ca3af;">Fotos que aparecem em carrossel na tela de manutencao. Recomendado: fotos no formato paisagem.</p>
+        <p style="font-size:0.75rem; color:#9ca3af;">Fotos que aparecem em carrossel na tela de manutencao. Clique no icone azul para ajustar enquadramento.</p>
         <div id="carouselUploadProgress"></div>
 
         ${photos.length > 0 ? `
@@ -94,7 +98,7 @@ export async function renderManutencao(container) {
             <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
               ${photos.slice(0, 6).map(p => `
                 <div style="width:6rem; height:4rem; border-radius:0.375rem; overflow:hidden; opacity:0.8;">
-                  <img src="${resolveImagePath(p.url)}" style="width:100%; height:100%; object-fit:cover;">
+                  <img src="${resolveImagePath(p.url)}" style="width:100%; height:100%; object-fit:cover; object-position:${p.posX ?? 50}% ${p.posY ?? 50}%; transform:scale(${p.scale ?? 1});">
                 </div>
               `).join('')}
             </div>
@@ -106,6 +110,8 @@ export async function renderManutencao(container) {
         Salvar
       </button>
     </div>
+
+    ${photoEditorHtml('carouselEditorModal', '16/9')}
   `;
 
   const toggle = container.querySelector('#maintenanceToggle');
@@ -144,6 +150,23 @@ export async function renderManutencao(container) {
     item.onmouseleave = () => { overlay.style.opacity = '0'; };
   });
 
+  // Editar enquadramento
+  window.editCarouselPhoto = (idx) => {
+    const photo = photos[idx];
+    setupPhotoEditor(container, 'carouselEditorModal', resolveImagePath(photo.url),
+      { scale: photo.scale ?? 1, posX: photo.posX ?? 50, posY: photo.posY ?? 50 },
+      async (pos) => {
+        photos[idx] = { ...photos[idx], ...pos };
+        appState.appData.maintenance = {
+          ...appState.appData.maintenance,
+          carouselPhotos: photos
+        };
+        await saveAppData('maintenance', appState.appData.maintenance);
+        renderManutencao(container);
+      }
+    );
+  };
+
   // Upload de fotos
   container.querySelector('#carouselUpload').onchange = async (e) => {
     const files = Array.from(e.target.files);
@@ -156,7 +179,7 @@ export async function renderManutencao(container) {
         const result = await uploadImage(files[i], appState.authToken, (percent) => {
           showUploadProgress('carouselUploadProgress', percent, `Enviando ${i + 1}/${files.length}...`);
         });
-        currentPhotos.push({ id: generateId(), url: result.url });
+        currentPhotos.push({ id: generateId(), url: result.url, scale: 1, posX: 50, posY: 50 });
       } catch (error) {
         alert('Erro ao enviar foto: ' + error.message);
       }
