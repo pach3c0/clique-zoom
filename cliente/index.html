@@ -177,8 +177,12 @@
                 <svg viewBox="0 0 24 24" stroke="#16a34a" fill="none" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
             <h2 class="status-title">Selecao Enviada!</h2>
-            <p class="status-desc">Suas fotos favoritas foram enviadas ao fotografo. Aguarde o processamento. Voce sera notificado quando estiverem prontas para download.</p>
+            <p class="status-desc">Suas fotos favoritas foram enviadas ao fotografo. Aguarde o processamento.</p>
+            <p style="color:#999; font-size:0.8125rem; margin-top:1rem;">Veja abaixo as fotos que voce selecionou:</p>
         </div>
+
+        <!-- Grid de fotos selecionadas (apos submit) -->
+        <div id="submittedPhotosGrid" class="photo-grid" style="display:none;"></div>
 
         <!-- Status: waiting delivery -->
         <div id="statusWaiting" class="status-screen">
@@ -303,6 +307,7 @@
                 if (galleryMode === 'selection') {
                     if (selectionStatus === 'submitted') {
                         showStatusScreen('submitted');
+                        startStatusPolling();
                         return;
                     }
                     if (selectionStatus === 'delivered') {
@@ -316,6 +321,33 @@
             } catch (err) {
                 document.getElementById('photosGrid').innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:3rem; color:#999;">Erro ao carregar fotos</p>';
             }
+        }
+
+        // Polling para detectar quando admin reabrir a selecao
+        let pollingInterval = null;
+        function startStatusPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/client/photos/${sessionId}?code=${encodeURIComponent(accessCode)}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data.selectionStatus !== 'submitted') {
+                        clearInterval(pollingInterval);
+                        pollingInterval = null;
+                        // Status mudou - recarregar galeria
+                        selectionStatus = data.selectionStatus;
+                        selectedPhotos = new Set(data.selectedPhotos || []);
+                        document.getElementById('statusSubmitted').classList.remove('active');
+                        document.getElementById('submittedPhotosGrid').style.display = 'none';
+                        if (data.selectionStatus === 'delivered') {
+                            renderGalleryMode();
+                        } else {
+                            renderSelectionMode();
+                        }
+                    }
+                } catch (e) { /* ignore polling errors */ }
+            }, 15000); // Checa a cada 15 segundos
         }
 
         // ========== SELECTION MODE ==========
@@ -383,6 +415,23 @@
 
             if (type === 'submitted') {
                 document.getElementById('statusSubmitted').classList.add('active');
+                // Mostrar as fotos selecionadas abaixo do status
+                const submittedGrid = document.getElementById('submittedPhotosGrid');
+                const selectedList = photos.filter(p => selectedPhotos.has(p.id));
+                if (selectedList.length > 0) {
+                    const showWatermark = sessionData.watermark !== false;
+                    submittedGrid.innerHTML = selectedList.map((photo, idx) => `
+                        <div class="photo-item" onclick="openLightbox(${photos.indexOf(photo)})">
+                            <img src="${photo.url}" alt="" loading="lazy">
+                            ${showWatermark ? '<div class="watermark-overlay"><span class="watermark-text">CLIQUE&middot;ZOOM</span></div>' : ''}
+                            <div style="position:absolute; top:0.5rem; right:0.5rem; width:28px; height:28px; background:#dc2626; border-radius:50%; display:flex; align-items:center; justify-content:center; pointer-events:none;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="#fff" fill="#fff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            </div>
+                            <div class="photo-num">${idx + 1}</div>
+                        </div>
+                    `).join('');
+                    submittedGrid.style.display = 'grid';
+                }
             }
         }
 
@@ -474,7 +523,7 @@
             if (extras > 0) {
                 msg += `\n\n${extras} foto(s) extra(s) = R$ ${(extras * extraPhotoPrice).toFixed(2)}`;
             }
-            msg += '\n\nApos finalizar, nao sera possivel alterar.';
+            msg += '\n\nApos finalizar, o fotografo sera notificado. Caso precise alterar, entre em contato.';
 
             if (!confirm(msg)) return;
 

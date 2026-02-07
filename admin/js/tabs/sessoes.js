@@ -199,6 +199,9 @@ export async function renderSessoes(container) {
                 Selecao
               </button>` : ''}
               ${session.selectionStatus === 'submitted' ? `
+              <button onclick="reopenSelection('${session._id}')" style="background:#f59e0b; color:white; padding:0.375rem 0.75rem; border-radius:0.375rem; border:none; cursor:pointer; font-size:0.75rem; font-weight:500;">
+                Reabrir
+              </button>
               <button onclick="deliverSession('${session._id}')" style="background:#16a34a; color:white; padding:0.375rem 0.75rem; border-radius:0.375rem; border:none; cursor:pointer; font-size:0.75rem; font-weight:500;">
                 Entregar
               </button>` : ''}
@@ -365,6 +368,22 @@ export async function renderSessoes(container) {
     };
 
     modal.style.display = 'flex';
+  };
+
+  // Reabrir selecao
+  window.reopenSelection = async (sessionId) => {
+    if (!confirm('Reabrir selecao? O cliente podera alterar as fotos selecionadas.')) return;
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/reopen`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${appState.authToken}` }
+      });
+      if (response.ok) {
+        await renderSessoes(container);
+      }
+    } catch (error) {
+      alert('Erro: ' + error.message);
+    }
   };
 
   // Entregar sessao

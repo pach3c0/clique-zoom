@@ -269,6 +269,31 @@ router.delete('/sessions/:sessionId', authenticateToken, async (req, res) => {
   }
 });
 
+// ADMIN: Reabrir selecao (permitir cliente alterar)
+router.put('/sessions/:sessionId/reopen', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await Session.findById(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ error: 'Sessão não encontrada' });
+    }
+
+    if (session.selectionStatus !== 'submitted') {
+      return res.status(400).json({ error: 'Seleção não está no status enviada' });
+    }
+
+    session.selectionStatus = 'in_progress';
+    session.selectionSubmittedAt = null;
+    await session.save();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao reabrir seleção:', error);
+    res.status(500).json({ error: 'Erro ao reabrir seleção' });
+  }
+});
+
 // ADMIN: Marcar como entregue
 router.put('/sessions/:sessionId/deliver', authenticateToken, async (req, res) => {
   try {
