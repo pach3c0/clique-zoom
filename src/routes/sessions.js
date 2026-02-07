@@ -23,6 +23,8 @@ const uploadSession = multer({
   limits: { fileSize: 10 * 1024 * 1024, files: 50 }
 });
 
+// ==================== CLIENTE ====================
+
 // CLIENTE: Validar codigo de acesso
 router.post('/client/verify-code', async (req, res) => {
   try {
@@ -46,7 +48,12 @@ router.post('/client/verify-code', async (req, res) => {
       sessionType: session.type,
       totalPhotos: session.photos.length,
       watermark: session.watermark,
-      canShare: session.canShare
+      canShare: session.canShare,
+      mode: session.mode || 'gallery',
+      packageLimit: session.packageLimit || 30,
+      extraPhotoPrice: session.extraPhotoPrice || 25,
+      selectionStatus: session.selectionStatus || 'pending',
+      selectedCount: (session.selectedPhotos || []).length
     });
   } catch (error) {
     console.error('Erro ao validar código:', error);
@@ -54,7 +61,7 @@ router.post('/client/verify-code', async (req, res) => {
   }
 });
 
-// CLIENTE: Listar fotos da sessao (requer accessCode via query param)
+// CLIENTE: Listar fotos da sessao
 router.get('/client/photos/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -66,13 +73,18 @@ router.get('/client/photos/:sessionId', async (req, res) => {
       return res.status(404).json({ error: 'Sessão não encontrada' });
     }
 
-    // Verificar codigo de acesso
     if (session.accessCode !== code) {
       return res.status(403).json({ error: 'Acesso não autorizado' });
     }
 
     res.json({
       success: true,
+      mode: session.mode || 'gallery',
+      packageLimit: session.packageLimit || 30,
+      extraPhotoPrice: session.extraPhotoPrice || 25,
+      selectionStatus: session.selectionStatus || 'pending',
+      selectedPhotos: session.selectedPhotos || [],
+      watermark: session.watermark,
       photos: session.photos.map(p => ({
         id: p.id,
         url: p.url,
@@ -85,10 +97,114 @@ router.get('/client/photos/:sessionId', async (req, res) => {
   }
 });
 
+// CLIENTE: Selecionar/deselecionar foto
+router.put('/client/select/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { photoId, selected, accessCode } = req.body;
+
+    const session = await Session.findById(sessionId);
+    if (!session || !session.isActive) {
+      return res.status(404).json({ error: 'Sessão não encontrada' });
+    }
+
+    if (session.accessCode !== accessCode) {
+      return res.status(403).json({ error: 'Acesso não autorizado' });
+    }
+
+    if (session.mode !== 'selection') {
+      return res.status(400).json({ error: 'Sessão não está em modo seleção' });
+    }
+
+    if (session.selectionStatus === 'submitted' || session.selectionStatus === 'delivered') {
+      return res.status(400).json({ error: 'Seleção já foi finalizada' });
+    }
+
+    // Verificar que a foto existe na sessao
+    const photoExists = session.photos.some(p => p.id === photoId);
+    if (!photoExists) {
+      return res.status(404).json({ error: 'Foto não encontrada' });
+    }
+
+    if (!session.selectedPhotos) session.selectedPhotos = [];
+
+    if (selected) {
+      if (!session.selectedPhotos.includes(photoId)) {
+        session.selectedPhotos.push(photoId);
+      }
+    } else {
+      session.selectedPhotos = session.selectedPhotos.filter(id => id !== photoId);
+    }
+
+    // Atualizar status
+    if (session.selectionStatus === 'pending' && session.selectedPhotos.length > 0) {
+      session.selectionStatus = 'in_progress';
+    }
+    if (session.selectedPhotos.length === 0 && session.selectionStatus === 'in_progress') {
+      session.selectionStatus = 'pending';
+    }
+
+    await session.save();
+
+    res.json({
+      success: true,
+      selectedPhotos: session.selectedPhotos,
+      selectedCount: session.selectedPhotos.length
+    });
+  } catch (error) {
+    console.error('Erro ao selecionar foto:', error);
+    res.status(500).json({ error: 'Erro ao selecionar foto' });
+  }
+});
+
+// CLIENTE: Finalizar selecao
+router.post('/client/submit-selection/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { accessCode } = req.body;
+
+    const session = await Session.findById(sessionId);
+    if (!session || !session.isActive) {
+      return res.status(404).json({ error: 'Sessão não encontrada' });
+    }
+
+    if (session.accessCode !== accessCode) {
+      return res.status(403).json({ error: 'Acesso não autorizado' });
+    }
+
+    if (session.mode !== 'selection') {
+      return res.status(400).json({ error: 'Sessão não está em modo seleção' });
+    }
+
+    if (session.selectionStatus === 'submitted' || session.selectionStatus === 'delivered') {
+      return res.status(400).json({ error: 'Seleção já foi finalizada' });
+    }
+
+    if (!session.selectedPhotos || session.selectedPhotos.length === 0) {
+      return res.status(400).json({ error: 'Nenhuma foto selecionada' });
+    }
+
+    session.selectionStatus = 'submitted';
+    session.selectionSubmittedAt = new Date();
+    await session.save();
+
+    res.json({
+      success: true,
+      selectedCount: session.selectedPhotos.length,
+      submittedAt: session.selectionSubmittedAt
+    });
+  } catch (error) {
+    console.error('Erro ao finalizar seleção:', error);
+    res.status(500).json({ error: 'Erro ao finalizar seleção' });
+  }
+});
+
+// ==================== ADMIN ====================
+
 // ADMIN: Criar nova sessao
 router.post('/sessions', authenticateToken, async (req, res) => {
   try {
-    const { name, type, date } = req.body;
+    const { name, type, date, mode, packageLimit, extraPhotoPrice } = req.body;
 
     if (!name || !type || !date) {
       return res.status(400).json({ error: 'Nome, tipo e data são obrigatórios' });
@@ -102,6 +218,11 @@ router.post('/sessions', authenticateToken, async (req, res) => {
       date: new Date(date),
       accessCode,
       photos: [],
+      mode: mode || 'selection',
+      packageLimit: packageLimit || 30,
+      extraPhotoPrice: extraPhotoPrice || 25,
+      selectionStatus: 'pending',
+      selectedPhotos: [],
       watermark: true,
       canShare: false,
       isActive: true
@@ -130,11 +251,98 @@ router.get('/sessions', authenticateToken, async (req, res) => {
 router.delete('/sessions/:sessionId', authenticateToken, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    await Session.findByIdAndDelete(sessionId);
+    const session = await Session.findById(sessionId);
+    if (session) {
+      // Deletar arquivos de fotos do disco
+      for (const photo of session.photos) {
+        if (photo.url && photo.url.startsWith('/uploads/')) {
+          const filePath = path.join(__dirname, '../..', photo.url);
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        }
+      }
+      await Session.findByIdAndDelete(sessionId);
+    }
     res.json({ success: true });
   } catch (error) {
     console.error('Erro ao deletar sessão:', error);
     res.status(500).json({ error: 'Erro ao deletar sessão' });
+  }
+});
+
+// ADMIN: Marcar como entregue
+router.put('/sessions/:sessionId/deliver', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await Session.findById(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ error: 'Sessão não encontrada' });
+    }
+
+    session.selectionStatus = 'delivered';
+    session.deliveredAt = new Date();
+    session.watermark = false;
+    await session.save();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao marcar entrega:', error);
+    res.status(500).json({ error: 'Erro ao marcar entrega' });
+  }
+});
+
+// ADMIN: Exportar lista de fotos selecionadas (para Lightroom)
+// Aceita token via query param para abrir em nova aba
+router.get('/sessions/:sessionId/export', async (req, res) => {
+  try {
+    // Auth via query param ou header
+    const token = req.query.token || (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]);
+    if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'clique-zoom-secret-key';
+    try { jwt.verify(token, secret); } catch { return res.status(403).json({ error: 'Token inválido' }); }
+
+    const { sessionId } = req.params;
+    const session = await Session.findById(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ error: 'Sessão não encontrada' });
+    }
+
+    const selectedIds = session.selectedPhotos || [];
+    const filenames = session.photos
+      .filter(p => selectedIds.includes(p.id))
+      .map(p => p.filename);
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', `attachment; filename="selecao-${session.name.replace(/\s+/g, '-')}.txt"`);
+    res.send(filenames.join('\n'));
+  } catch (error) {
+    console.error('Erro ao exportar:', error);
+    res.status(500).json({ error: 'Erro ao exportar' });
+  }
+});
+
+// ADMIN: Editar configuracoes da sessao
+router.put('/sessions/:sessionId', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { mode, packageLimit, extraPhotoPrice } = req.body;
+    const session = await Session.findById(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ error: 'Sessão não encontrada' });
+    }
+
+    if (mode) session.mode = mode;
+    if (packageLimit !== undefined) session.packageLimit = packageLimit;
+    if (extraPhotoPrice !== undefined) session.extraPhotoPrice = extraPhotoPrice;
+
+    await session.save();
+    res.json({ success: true, session });
+  } catch (error) {
+    console.error('Erro ao editar sessão:', error);
+    res.status(500).json({ error: 'Erro ao editar sessão' });
   }
 });
 
@@ -200,6 +408,11 @@ router.delete('/sessions/:sessionId/photos/:photoId', authenticateToken, async (
     if (photo.url && photo.url.startsWith('/uploads/')) {
       const filePath = path.join(__dirname, '../..', photo.url);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+
+    // Remover da lista de selecionadas tambem
+    if (session.selectedPhotos) {
+      session.selectedPhotos = session.selectedPhotos.filter(id => id !== photoId);
     }
 
     session.photos.splice(photoIndex, 1);
