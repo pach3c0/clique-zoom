@@ -2,27 +2,12 @@ const router = require('express').Router();
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const multer = require('multer');
 const Session = require('../models/Session');
-const Notification = require('../models/Notification');
 const { authenticateToken } = require('../middleware/auth');
+const { createUploader } = require('../utils/multerConfig');
+const { notify } = require('../utils/notifications');
 
-// Garantir que o diretorio existe
-const sessionsDir = path.join(__dirname, '../../uploads/sessions');
-if (!fs.existsSync(sessionsDir)) fs.mkdirSync(sessionsDir, { recursive: true });
-
-const sessionStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, sessionsDir),
-  filename: (req, file, cb) => {
-    const suffix = crypto.randomBytes(8).toString('hex');
-    cb(null, suffix + path.extname(file.originalname));
-  }
-});
-
-const uploadSession = multer({
-  storage: sessionStorage,
-  limits: { fileSize: 10 * 1024 * 1024, files: 50 }
-});
+const uploadSession = createUploader('sessions');
 
 // ==================== CLIENTE ====================
 
@@ -41,12 +26,7 @@ router.post('/client/verify-code', async (req, res) => {
     }
 
     // Notificar admin que cliente acessou
-    await Notification.create({
-      type: 'session_accessed',
-      sessionId: session._id,
-      sessionName: session.name,
-      message: `${session.name} acessou a galeria`
-    }).catch(() => {});
+    await notify('session_accessed', session._id, session.name, `${session.name} acessou a galeria`);
 
     res.json({
       success: true,
@@ -149,12 +129,7 @@ router.put('/client/select/:sessionId', async (req, res) => {
     if (session.selectionStatus === 'pending' && session.selectedPhotos.length > 0) {
       session.selectionStatus = 'in_progress';
       // Notificar admin que cliente iniciou selecao
-      await Notification.create({
-        type: 'selection_started',
-        sessionId: session._id,
-        sessionName: session.name,
-        message: `${session.name} iniciou a seleção de fotos`
-      }).catch(() => {});
+      await notify('selection_started', session._id, session.name, `${session.name} iniciou a seleção de fotos`);
     }
     if (session.selectedPhotos.length === 0 && session.selectionStatus === 'in_progress') {
       session.selectionStatus = 'pending';
@@ -208,12 +183,7 @@ router.post('/client/submit-selection/:sessionId', async (req, res) => {
     const extras = Math.max(0, session.selectedPhotos.length - (session.packageLimit || 30));
     let notifMsg = `${session.name} enviou a seleção (${session.selectedPhotos.length} fotos)`;
     if (extras > 0) notifMsg += ` - ${extras} extras`;
-    await Notification.create({
-      type: 'selection_submitted',
-      sessionId: session._id,
-      sessionName: session.name,
-      message: notifMsg
-    }).catch(() => {});
+    await notify('selection_submitted', session._id, session.name, notifMsg);
 
     res.json({
       success: true,
@@ -246,12 +216,7 @@ router.post('/client/request-reopen/:sessionId', async (req, res) => {
     }
 
     // Criar notificacao para o admin
-    await Notification.create({
-      type: 'reopen_requested',
-      sessionId: session._id,
-      sessionName: session.name,
-      message: `${session.name} pediu reabertura da seleção`
-    }).catch(() => {});
+    await notify('reopen_requested', session._id, session.name, `${session.name} pediu reabertura da seleção`);
 
     res.json({ success: true });
   } catch (error) {

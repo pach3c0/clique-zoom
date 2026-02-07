@@ -5,8 +5,7 @@
 import { appState, saveAppData } from '../state.js';
 import { resolveImagePath, generateId } from '../utils/helpers.js';
 import { uploadImage, showUploadProgress } from '../utils/upload.js';
-
-let editingSobrePhoto = null;
+import { photoEditorHtml, setupPhotoEditor } from '../utils/photoEditor.js';
 
 export async function renderSobre(container) {
   const about = appState.appData.about || {};
@@ -82,46 +81,7 @@ export async function renderSobre(container) {
       </button>
     </div>
 
-    <!-- Modal Editor -->
-    <div id="sobreEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:50; flex-direction:column;">
-      <div style="background:#1f2937; border-bottom:1px solid #374151; padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="font-size:1.125rem; font-weight:bold; color:#f3f4f6;">Editor de Enquadramento</h3>
-        <div style="display:flex; gap:0.75rem;">
-          <button id="sobreEditorCancel" style="padding:0.5rem 1rem; color:#9ca3af; background:none; border:1px solid #374151; border-radius:0.375rem; cursor:pointer;">Cancelar</button>
-          <button id="sobreEditorSave" style="padding:0.5rem 1rem; background:#2563eb; color:white; border:none; border-radius:0.375rem; cursor:pointer; font-weight:600;">Aplicar</button>
-        </div>
-      </div>
-      <div style="flex:1; display:flex; overflow:hidden;">
-        <div style="width:16rem; background:#1f2937; border-right:1px solid #374151; padding:1.5rem; overflow-y:auto;">
-          <div style="margin-bottom:1.5rem;">
-            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Zoom</label>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <input type="range" id="sobreEditorZoom" min="1" max="2" step="0.05" value="1" style="flex:1;">
-              <span id="sobreEditorZoomVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">1.00x</span>
-            </div>
-          </div>
-          <div style="margin-bottom:1.5rem;">
-            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Posicao X</label>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <input type="range" id="sobreEditorPosX" min="0" max="100" step="1" value="50" style="flex:1;">
-              <span id="sobreEditorPosXVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">50%</span>
-            </div>
-          </div>
-          <div style="margin-bottom:1.5rem;">
-            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Posicao Y</label>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <input type="range" id="sobreEditorPosY" min="0" max="100" step="1" value="50" style="flex:1;">
-              <span id="sobreEditorPosYVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">50%</span>
-            </div>
-          </div>
-        </div>
-        <div style="flex:1; display:flex; align-items:center; justify-content:center; background:#111827; padding:2rem;">
-          <div style="width:100%; max-width:500px; aspect-ratio:1/1; background:#374151; border-radius:0.5rem; overflow:hidden; position:relative;">
-            <img id="sobreEditorImg" src="" alt="Preview" style="width:100%; height:100%; object-fit:cover;">
-          </div>
-        </div>
-      </div>
-    </div>
+    ${photoEditorHtml('sobreEditorModal', '1/1')}
   `;
 
   // Hover nos itens
@@ -164,62 +124,16 @@ export async function renderSobre(container) {
 
   // Abrir editor
   window.openSobreEditor = (idx) => {
-    editingSobrePhoto = idx;
     const photo = about.images[idx];
-    const modal = container.querySelector('#sobreEditorModal');
-    const img = container.querySelector('#sobreEditorImg');
-    const zoomSlider = container.querySelector('#sobreEditorZoom');
-    const posXSlider = container.querySelector('#sobreEditorPosX');
-    const posYSlider = container.querySelector('#sobreEditorPosY');
-
-    img.src = resolveImagePath(photo.image);
-    zoomSlider.value = photo.scale ?? 1;
-    posXSlider.value = photo.posX ?? 50;
-    posYSlider.value = photo.posY ?? 50;
-    updateSobrePreview();
-    modal.style.display = 'flex';
-  };
-
-  // Preview do editor
-  const zoomSlider = container.querySelector('#sobreEditorZoom');
-  const posXSlider = container.querySelector('#sobreEditorPosX');
-  const posYSlider = container.querySelector('#sobreEditorPosY');
-
-  function updateSobrePreview() {
-    const img = container.querySelector('#sobreEditorImg');
-    const zoom = parseFloat(zoomSlider.value);
-    const px = parseInt(posXSlider.value);
-    const py = parseInt(posYSlider.value);
-
-    img.style.objectPosition = `${px}% ${py}%`;
-    img.style.transform = `scale(${zoom})`;
-    container.querySelector('#sobreEditorZoomVal').textContent = zoom.toFixed(2) + 'x';
-    container.querySelector('#sobreEditorPosXVal').textContent = px + '%';
-    container.querySelector('#sobreEditorPosYVal').textContent = py + '%';
-  }
-
-  zoomSlider.oninput = updateSobrePreview;
-  posXSlider.oninput = updateSobrePreview;
-  posYSlider.oninput = updateSobrePreview;
-
-  // Salvar editor
-  container.querySelector('#sobreEditorSave').onclick = async () => {
-    if (editingSobrePhoto === null) return;
-    about.images[editingSobrePhoto].posX = parseInt(posXSlider.value);
-    about.images[editingSobrePhoto].posY = parseInt(posYSlider.value);
-    about.images[editingSobrePhoto].scale = parseFloat(parseFloat(zoomSlider.value).toFixed(2));
-
-    appState.appData.about = about;
-    await saveAppData('about', { ...about, image: about.images[0]?.image || '' });
-    container.querySelector('#sobreEditorModal').style.display = 'none';
-    editingSobrePhoto = null;
-    renderSobre(container);
-  };
-
-  // Cancelar editor
-  container.querySelector('#sobreEditorCancel').onclick = () => {
-    container.querySelector('#sobreEditorModal').style.display = 'none';
-    editingSobrePhoto = null;
+    setupPhotoEditor(container, 'sobreEditorModal', photo.image,
+      { scale: photo.scale, posX: photo.posX, posY: photo.posY },
+      async (pos) => {
+        about.images[idx] = { ...about.images[idx], ...pos };
+        appState.appData.about = about;
+        await saveAppData('about', { ...about, image: about.images[0]?.image || '' });
+        renderSobre(container);
+      }
+    );
   };
 
   // Salvar tudo

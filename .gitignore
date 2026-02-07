@@ -49,3 +49,4 @@ coverage/
 # Deployment
 .env.production.local
 .env*.local
+.vercel/

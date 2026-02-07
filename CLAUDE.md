@@ -3,12 +3,13 @@
 ## O QUE E ESTE PROJETO
 
 Plataforma de portfolio fotografico com 3 frontends e 1 backend:
-- **Site publico** (`public/index.html`) - Portfolio, galeria, FAQ, contato
+- **Site publico** (`public/index.html` + `public/js/main.js`) - Portfolio, galeria, FAQ, contato
 - **Painel admin** (`admin/`) - Gerencia todo o conteudo do site
-- **Galeria do cliente** (`cliente/index.html`) - Fotos privadas com codigo de acesso
+- **Galeria do cliente** (`cliente/index.html` + `cliente/js/gallery.js`) - Fotos privadas com codigo de acesso
 - **API backend** (`src/server.js` + `src/routes/`) - Express.js + MongoDB
 
 Deploy: **VPS Contabo** (Ubuntu + Nginx + PM2 + MongoDB local). Dominio: `cliquezoom.com.br`
+Path na VPS: `/var/www/clique-zoom`
 
 ---
 
@@ -49,16 +50,23 @@ Site/
       utils/
         helpers.js          # resolveImagePath, formatDate, generateId, copyToClipboard, escapeHtml
         upload.js           # compressImage, uploadImage, showUploadProgress
+        api.js              # apiGet, apiPost, apiPut, apiDelete (wrapper com auth automatico)
+        photoEditor.js      # photoEditorHtml, setupPhotoEditor (modal reutilizavel)
+        notifications.js    # startNotificationPolling, stopNotificationPolling, toggleNotifications, markAllNotificationsRead, onNotifClick
   assets/
     css/
       tailwind-input.css   # Source do Tailwind (com @source paths)
       tailwind.css          # Compilado (nao editar manualmente)
       shared.css            # Fontes Inter/Playfair, animacoes
   public/
-    index.html              # Site publico (single page)
+    index.html              # Site publico (HTML apenas, sem JS inline)
     albums.html             # Pagina de albuns
+    js/
+      main.js               # JS do site publico (~730 linhas)
   cliente/
-    index.html              # Galeria privada do cliente
+    index.html              # Galeria privada do cliente (HTML apenas, sem JS inline)
+    js/
+      gallery.js            # JS da galeria do cliente (~437 linhas)
   uploads/                  # Imagens do admin (servidas pelo Nginx)
   uploads/sessions/         # Fotos de sessoes de clientes
   src/
@@ -68,6 +76,7 @@ Site/
     models/
       SiteData.js           # Documento unico com todo o conteudo do site
       Session.js            # Sessoes de clientes (fotos privadas)
+      Notification.js       # Notificacoes do admin (acessos, selecoes, etc)
       Newsletter.js         # Inscritos na newsletter
     routes/
       auth.js               # POST /login, POST /auth/verify
@@ -75,8 +84,12 @@ Site/
       faq.js                # CRUD /faq
       site-data.js          # GET/PUT /site-data, GET /site-config
       newsletter.js         # POST /newsletter/subscribe, GET/DELETE /newsletter
-      sessions.js           # CRUD /sessions, upload/delete fotos
+      sessions.js           # CRUD /sessions, upload/delete fotos, client endpoints
       upload.js             # POST /admin/upload (salva em /uploads/)
+      notifications.js      # GET /notifications, GET /notifications/unread-count, PUT /notifications/read-all
+    utils/
+      multerConfig.js       # createUploader(subdir, options) - config compartilhada do multer
+      notifications.js      # notify(type, sessionId, sessionName, message) - helper de criacao
   package.json              # Node 22, CommonJS
 ```
 
@@ -95,7 +108,7 @@ Tab chama saveAppData('secao', dados)
 
 ### Carregar dados no site publico:
 ```
-public/index.html → loadRemoteData()
+public/js/main.js → loadRemoteData()
   → Promise.all([fetch('/api/site-data'), fetch('/api/hero')])
   → Combina: { ...siteData, hero: heroData }
   → Renderiza cada secao com os dados
@@ -111,6 +124,186 @@ Tab chama uploadImage(file, token, onProgress)
   → Tab salva a URL no campo correspondente do appState.appData
   → Chama saveAppData() para persistir no MongoDB
 ```
+
+---
+
+## SISTEMA DE SESSOES E SELECAO DE FOTOS
+
+### Fluxo completo:
+```
+1. Admin cria sessao (nome, tipo, data, codigo de acesso, modo, limite, preco extra)
+2. Admin faz upload de fotos na sessao
+3. Cliente acessa /cliente com codigo → ve galeria
+4. Se modo = 'selection':
+   a. Cliente seleciona fotos (coracao) → optimistic UI + salva no servidor
+   b. Cliente clica "Finalizar Selecao" → status muda para 'submitted'
+   c. Admin ve notificacao, revisa, pode reabrir ou marcar como entregue
+   d. Se entregue: cliente ve fotos para download (sem watermark)
+5. Se modo = 'gallery': cliente so visualiza/baixa fotos
+```
+
+### Status da selecao (selectionStatus):
+| Status | Descricao |
+|--------|-----------|
+| `pending` | Sessao criada, cliente ainda nao selecionou |
+| `in_progress` | Cliente comecou a selecionar (ou admin reabriu) |
+| `submitted` | Cliente finalizou selecao |
+| `delivered` | Admin marcou como entregue (cliente pode baixar) |
+
+### Modelo Session:
+```javascript
+{
+  name: String,                     // Nome do cliente
+  type: String,                     // Tipo: Familia, Casamento, Evento, etc
+  date: Date,                       // Data da sessao
+  accessCode: String,               // Codigo de acesso do cliente
+  photos: [{                        // Fotos da sessao
+    id: String,
+    filename: String,
+    url: String,
+    uploadedAt: Date
+  }],
+  mode: 'selection' | 'gallery',    // Modo da sessao
+  packageLimit: Number,             // Limite de fotos do pacote (default 30)
+  extraPhotoPrice: Number,          // Preco por foto extra (default R$25)
+  selectionStatus: String,          // pending → in_progress → submitted → delivered
+  selectedPhotos: [String],         // IDs das fotos selecionadas pelo cliente
+  selectionSubmittedAt: Date,       // Data do envio da selecao
+  deliveredAt: Date,                // Data da entrega
+  watermark: Boolean,               // Mostrar watermark (default true)
+  canShare: Boolean,                // Cliente pode compartilhar (default false)
+  isActive: Boolean                 // Sessao ativa (default true)
+}
+```
+
+### Rotas do cliente (sem autenticacao):
+| Metodo | Rota | Descricao |
+|--------|------|-----------|
+| POST | `/api/client/verify-code` | Verifica codigo de acesso |
+| GET | `/api/client/photos/:id?code=X` | Carrega fotos da sessao |
+| PUT | `/api/client/select/:id` | Seleciona/deseleciona uma foto |
+| POST | `/api/client/submit-selection/:id` | Finaliza a selecao |
+| POST | `/api/client/request-reopen/:id` | Pede reabertura da selecao |
+
+### Rotas do admin (com autenticacao):
+| Metodo | Rota | Descricao |
+|--------|------|-----------|
+| GET | `/api/sessions` | Lista todas as sessoes |
+| POST | `/api/sessions` | Cria nova sessao |
+| PUT | `/api/sessions/:id` | Edita sessao |
+| DELETE | `/api/sessions/:id` | Deleta sessao |
+| POST | `/api/sessions/:id/photos` | Upload de fotos (multer) |
+| DELETE | `/api/sessions/:id/photos/:photoId` | Deleta uma foto |
+| PUT | `/api/sessions/:id/reopen` | Reabre selecao (submitted → in_progress) |
+| PUT | `/api/sessions/:id/deliver` | Marca como entregue |
+
+---
+
+## SISTEMA DE NOTIFICACOES
+
+### Tipos de notificacao:
+| Tipo | Icone | Quando |
+|------|-------|--------|
+| `session_accessed` | 👁️ | Cliente acessa a galeria |
+| `selection_started` | 🎯 | Cliente comeca a selecionar |
+| `selection_submitted` | ✅ | Cliente finaliza a selecao |
+| `reopen_requested` | 🔄 | Cliente pede reabertura |
+
+### Modelo Notification:
+```javascript
+{
+  type: String,          // Tipo da notificacao
+  sessionId: String,     // ID da sessao relacionada
+  sessionName: String,   // Nome do cliente
+  message: String,       // Mensagem para exibir
+  read: Boolean          // Se foi lida (default false)
+}
+```
+
+### Rotas da API:
+| Metodo | Rota | Descricao |
+|--------|------|-----------|
+| GET | `/api/notifications` | Lista notificacoes recentes |
+| GET | `/api/notifications/unread-count` | Contagem de nao lidas |
+| PUT | `/api/notifications/read-all` | Marca todas como lidas |
+
+### Como funciona no admin:
+- Polling a cada 30 segundos (`admin/js/utils/notifications.js`)
+- Badge no sininho mostra contagem de nao lidas
+- Dropdown lista notificacoes com icone, mensagem e tempo relativo
+- Clicar numa notificacao navega para a aba Sessoes
+- Botao "Marcar todas como lidas" zera o badge
+
+### Backend: helper de criacao (`src/utils/notifications.js`):
+```javascript
+const { notify } = require('../utils/notifications');
+await notify('selection_submitted', session._id, session.name, `${session.name} finalizou a selecao`);
+```
+
+---
+
+## GALERIA DO CLIENTE
+
+A galeria do cliente (`cliente/index.html` + `cliente/js/gallery.js`) e uma SPA minimalista:
+
+### Funcionalidades:
+- **Login**: campo de codigo de acesso, validado via API
+- **Grid de fotos**: 2 colunas mobile, 3 tablet, 4 desktop
+- **Watermark**: overlay "CLIQUE·ZOOM" sobre cada foto (removido quando entregue)
+- **Selecao**: coracao no canto de cada foto, contador no topo e barra inferior fixa
+- **Fotos extras**: acima do limite do pacote mostra valor adicional (R$ X,XX)
+- **Lightbox**: visualizacao em tela cheia com navegacao por setas e swipe touch
+- **Status screens**: "Selecao Enviada" (com grid das fotos selecionadas) ou "Aguardando Processamento"
+- **Pedir reabertura**: botao "Preciso alterar minha selecao" na tela de status
+- **Polling 15s**: detecta automaticamente quando admin reabre a selecao ou entrega
+- **Modo gallery**: so visualizacao/download (sem selecao)
+- **Modo delivered**: fotos sem watermark, com botao de download
+
+### Anti-copia:
+- `oncontextmenu="return false"` no body
+- `-webkit-user-select: none` no body
+- `pointer-events: none` nas imagens
+- Watermark overlay sobre cada foto
+
+---
+
+## PADRAO DO PHOTO EDITOR MODAL
+
+O componente reutilizavel `admin/js/utils/photoEditor.js` permite ajustar enquadramento de fotos em qualquer tab. Ele foi extraido de 3 tabs que tinham codigo duplicado.
+
+### Como usar em um novo tab:
+
+```javascript
+import { photoEditorHtml, setupPhotoEditor } from '../utils/photoEditor.js';
+
+// 1. No HTML template, adicionar o modal:
+container.innerHTML = `
+  ... seu conteudo ...
+  ${photoEditorHtml('meuEditorModal', '3/4')}
+`;
+// Aspect ratios disponiveis: '3/4' (portfolio), '1/1' (sobre), '16/9' (estudio), ou qualquer valor CSS
+
+// 2. Abrir o editor para uma foto:
+window.openMeuEditor = (idx) => {
+  const photo = fotos[idx];
+  setupPhotoEditor(container, 'meuEditorModal', resolveImagePath(photo.image),
+    { scale: photo.scale, posX: photo.posX, posY: photo.posY },
+    async (pos) => {
+      // pos = { scale, posX, posY }
+      fotos[idx] = { ...fotos[idx], ...pos };
+      appState.appData.secao = dados;
+      await saveAppData('secao', dados);
+      renderMinhaAba(container);
+    }
+  );
+};
+```
+
+### API do componente:
+- `photoEditorHtml(modalId, aspectRatio)` - retorna string HTML do modal
+- `setupPhotoEditor(container, modalId, imageUrl, currentPos, onSave)` - configura sliders, preview, callbacks
+  - `currentPos`: `{ scale: Number, posX: Number, posY: Number }`
+  - `onSave`: callback que recebe `{ scale, posX, posY }` quando usuario clica "Salvar"
 
 ---
 
@@ -130,6 +323,8 @@ import { appState, saveAppData } from '../state.js';
 import { uploadImage, showUploadProgress } from '../utils/upload.js';
 // Se precisar de helpers:
 import { resolveImagePath, generateId } from '../utils/helpers.js';
+// Se precisar de editor de enquadramento:
+import { photoEditorHtml, setupPhotoEditor } from '../utils/photoEditor.js';
 
 export async function renderNovaaba(container) {
   const dados = appState.appData.novaaba || {};
@@ -391,35 +586,20 @@ container.querySelector('#saveBtn').onclick = async () => {
 Newsletter e Sessoes nao usam `saveAppData()` porque tem seus proprios modelos MongoDB. Padrao:
 
 ```javascript
-// Carregar do backend
+// Usando o wrapper api.js (recomendado):
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api.js';
+
+const data = await apiGet('/api/endpoint');
+const result = await apiPost('/api/endpoint', { campo1, campo2 });
+await apiPut(`/api/endpoint/${id}`, { campo: 'valor' });
+await apiDelete(`/api/endpoint/${id}`);
+
+// Ou com fetch manual (se precisar de controle extra):
 const response = await fetch('/api/endpoint', {
   headers: { 'Authorization': `Bearer ${appState.authToken}` }
 });
 if (!response.ok) throw new Error('Erro ao carregar');
 const result = await response.json();
-const items = result.items || [];  // extrair do wrapper
-
-// Criar
-const response = await fetch('/api/endpoint', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${appState.authToken}`
-  },
-  body: JSON.stringify({ campo1, campo2 })
-});
-const result = await response.json();
-
-// Deletar
-const response = await fetch(`/api/endpoint/${id}`, {
-  method: 'DELETE',
-  headers: { 'Authorization': `Bearer ${appState.authToken}` }
-});
-
-// Apos criar/deletar: re-renderizar
-if (response.ok) {
-  await renderMinhaAba(container);
-}
 ```
 
 ---
@@ -476,6 +656,7 @@ npm start            # Iniciar servidor (producao)
 ## DEPLOY NA VPS
 
 O app roda na VPS Contabo com Nginx como reverse proxy e PM2 como process manager.
+Path: `/var/www/clique-zoom`
 
 ### Deploy de atualizacoes:
 ```bash
@@ -518,7 +699,7 @@ MongoDB: localhost:27017 (sempre conectado)
 
 Classes Tailwind com valores arbitrarios como `aspect-[3/4]`, `w-[200px]`, `bg-[#123456]` so sao incluidas no CSS compilado se o Tailwind encontra o texto exato durante o build scan. Classes geradas **dinamicamente em JavaScript** (dentro de strings template, concatenacao, etc.) NAO sao detectadas pelo scanner.
 
-**Regra: No site publico (`public/index.html`), sempre use inline styles para valores dinamicos em vez de classes Tailwind arbitrarias.**
+**Regra: No site publico (`public/js/main.js`), sempre use inline styles para valores dinamicos em vez de classes Tailwind arbitrarias.**
 
 Exemplo ERRADO:
 ```javascript
@@ -572,14 +753,21 @@ Documento unico no MongoDB que armazena todo o conteudo do site:
   about: {
     title: String,
     text: String,
-    image: String               // URL da imagem
+    image: String,              // URL da imagem (legado, single)
+    images: [{                  // Array de imagens (novo, multiplas)
+      image: String,
+      posX: Number,
+      posY: Number,
+      scale: Number
+    }]
   },
   portfolio: [                  // Array de fotos
     {
       image: String,            // URL da imagem
       posX: Number,             // 0 a 100 (default 50)
       posY: Number,             // 0 a 100 (default 50)
-      scale: Number             // 1 a 2 (default 1)
+      scale: Number,            // 1 a 2 (default 1)
+      ratio: String             // Aspect ratio: '3/4', '1/1', '16/9' (default '3/4')
     }
   ],
   albums: [                     // Array de albuns
@@ -611,15 +799,23 @@ Documento unico no MongoDB que armazena todo o conteudo do site:
     ]
   },
   footer: {
-    company: String,
-    address: String,
-    phone: String,
-    email: String,
-    socialLinks: {
+    socialMedia: {
       instagram: String,
       facebook: String,
-      whatsapp: String
-    }
+      linkedin: String,
+      tiktok: String,
+      youtube: String,
+      email: String
+    },
+    quickLinks: [
+      { label: String, url: String }
+    ],
+    newsletter: {
+      enabled: Boolean,
+      title: String,
+      description: String
+    },
+    copyright: String
   },
   maintenance: {
     enabled: Boolean,

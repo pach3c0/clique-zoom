@@ -5,15 +5,14 @@
 import { appState, saveAppData } from '../state.js';
 import { resolveImagePath, generateId } from '../utils/helpers.js';
 import { uploadImage, showUploadProgress } from '../utils/upload.js';
-
-let editingStudioPhoto = null;
+import { photoEditorHtml, setupPhotoEditor } from '../utils/photoEditor.js';
 
 export async function renderEstudio(container) {
   const studio = appState.appData.studio || {};
   if (!studio.photos) studio.photos = [];
   if (!studio.whatsappMessages) studio.whatsappMessages = [{ text: 'Olá! Como posso ajudar você hoje?', delay: 5 }];
 
-  // Grid de fotos do estúdio
+  // Grid de fotos do estudio
   let photosHtml = '';
   studio.photos.forEach((p, idx) => {
     const posX = p.posX ?? 50;
@@ -140,46 +139,7 @@ export async function renderEstudio(container) {
       </button>
     </div>
 
-    <!-- Modal Editor de Foto -->
-    <div id="studioEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:50; flex-direction:column;">
-      <div style="background:#1f2937; border-bottom:1px solid #374151; padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="font-size:1.125rem; font-weight:bold; color:#f3f4f6;">Editor de Enquadramento</h3>
-        <div style="display:flex; gap:0.75rem;">
-          <button id="studioEditorCancel" style="padding:0.5rem 1rem; color:#9ca3af; background:none; border:1px solid #374151; border-radius:0.375rem; cursor:pointer;">Cancelar</button>
-          <button id="studioEditorSave" style="padding:0.5rem 1rem; background:#2563eb; color:white; border:none; border-radius:0.375rem; cursor:pointer; font-weight:600;">Aplicar</button>
-        </div>
-      </div>
-      <div style="flex:1; display:flex; overflow:hidden;">
-        <div style="width:16rem; background:#1f2937; border-right:1px solid #374151; padding:1.5rem; overflow-y:auto;">
-          <div style="margin-bottom:1.5rem;">
-            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Zoom</label>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <input type="range" id="studioEditorZoom" min="1" max="2" step="0.05" value="1" style="flex:1;">
-              <span id="studioEditorZoomVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">1.00x</span>
-            </div>
-          </div>
-          <div style="margin-bottom:1.5rem;">
-            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Posicao X</label>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <input type="range" id="studioEditorPosX" min="0" max="100" step="1" value="50" style="flex:1;">
-              <span id="studioEditorPosXVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">50%</span>
-            </div>
-          </div>
-          <div style="margin-bottom:1.5rem;">
-            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Posicao Y</label>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <input type="range" id="studioEditorPosY" min="0" max="100" step="1" value="50" style="flex:1;">
-              <span id="studioEditorPosYVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">50%</span>
-            </div>
-          </div>
-        </div>
-        <div style="flex:1; display:flex; align-items:center; justify-content:center; background:#111827; padding:2rem;">
-          <div style="width:100%; max-width:600px; aspect-ratio:16/9; background:#374151; border-radius:0.5rem; overflow:hidden; position:relative;">
-            <img id="studioEditorImg" src="" alt="Preview" style="width:100%; height:100%; object-fit:cover;">
-          </div>
-        </div>
-      </div>
-    </div>
+    ${photoEditorHtml('studioEditorModal', '16/9')}
   `;
 
   // Hover nas fotos
@@ -222,62 +182,16 @@ export async function renderEstudio(container) {
 
   // Abrir editor
   window.openStudioEditor = (idx) => {
-    editingStudioPhoto = idx;
     const photo = studio.photos[idx];
-    const modal = container.querySelector('#studioEditorModal');
-    const img = container.querySelector('#studioEditorImg');
-    const zoomSlider = container.querySelector('#studioEditorZoom');
-    const posXSlider = container.querySelector('#studioEditorPosX');
-    const posYSlider = container.querySelector('#studioEditorPosY');
-
-    img.src = resolveImagePath(photo.image);
-    zoomSlider.value = photo.scale ?? 1;
-    posXSlider.value = photo.posX ?? 50;
-    posYSlider.value = photo.posY ?? 50;
-    updateStudioPreview();
-    modal.style.display = 'flex';
-  };
-
-  // Preview do editor
-  const zoomSlider = container.querySelector('#studioEditorZoom');
-  const posXSlider = container.querySelector('#studioEditorPosX');
-  const posYSlider = container.querySelector('#studioEditorPosY');
-
-  function updateStudioPreview() {
-    const img = container.querySelector('#studioEditorImg');
-    const zoom = parseFloat(zoomSlider.value);
-    const px = parseInt(posXSlider.value);
-    const py = parseInt(posYSlider.value);
-
-    img.style.objectPosition = `${px}% ${py}%`;
-    img.style.transform = `scale(${zoom})`;
-    container.querySelector('#studioEditorZoomVal').textContent = zoom.toFixed(2) + 'x';
-    container.querySelector('#studioEditorPosXVal').textContent = px + '%';
-    container.querySelector('#studioEditorPosYVal').textContent = py + '%';
-  }
-
-  zoomSlider.oninput = updateStudioPreview;
-  posXSlider.oninput = updateStudioPreview;
-  posYSlider.oninput = updateStudioPreview;
-
-  // Salvar editor
-  container.querySelector('#studioEditorSave').onclick = async () => {
-    if (editingStudioPhoto === null) return;
-    studio.photos[editingStudioPhoto].posX = parseInt(posXSlider.value);
-    studio.photos[editingStudioPhoto].posY = parseInt(posYSlider.value);
-    studio.photos[editingStudioPhoto].scale = parseFloat(parseFloat(zoomSlider.value).toFixed(2));
-
-    appState.appData.studio = studio;
-    await saveAppData('studio', studio);
-    container.querySelector('#studioEditorModal').style.display = 'none';
-    editingStudioPhoto = null;
-    renderEstudio(container);
-  };
-
-  // Cancelar editor
-  container.querySelector('#studioEditorCancel').onclick = () => {
-    container.querySelector('#studioEditorModal').style.display = 'none';
-    editingStudioPhoto = null;
+    setupPhotoEditor(container, 'studioEditorModal', photo.image,
+      { scale: photo.scale, posX: photo.posX, posY: photo.posY },
+      async (pos) => {
+        studio.photos[idx] = { ...studio.photos[idx], ...pos };
+        appState.appData.studio = studio;
+        await saveAppData('studio', studio);
+        renderEstudio(container);
+      }
+    );
   };
 
   // Adicionar mensagem WhatsApp
