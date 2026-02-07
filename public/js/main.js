@@ -706,14 +706,68 @@ function showMaintenanceScreen(maintenance) {
     const splash = document.getElementById('splash-screen');
     if (splash) splash.style.display = 'none';
 
+    const photos = maintenance.carouselPhotos || [];
+    const hasPhotos = photos.length > 0;
+
     document.body.innerHTML = `
-        <div style="position:fixed; inset:0; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; z-index:9999;">
-            <h1 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:bold; color:white; margin-bottom:0.5rem;">CLIQUE·ZOOM</h1>
-            <div style="width:3rem; height:1px; background:#374151; margin:1.5rem 0;"></div>
-            <h2 style="font-size:1.5rem; color:#f3f4f6; margin-bottom:1rem;">${maintenance.title || 'Site em Manutencao'}</h2>
-            <p style="color:#9ca3af; font-size:1rem; max-width:30rem; line-height:1.6;">${maintenance.message || 'Estamos realizando manutencao. Volte em breve!'}</p>
+        <div style="position:fixed; inset:0; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; z-index:9999; overflow-y:auto;">
+            <div style="flex-shrink:0;">
+                <h1 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:bold; color:white; margin-bottom:0.5rem;">CLIQUE·ZOOM</h1>
+                <div style="width:3rem; height:1px; background:#374151; margin:1.5rem auto;"></div>
+                <h2 style="font-size:1.5rem; color:#f3f4f6; margin-bottom:1rem;">${maintenance.title || 'Site em Manutencao'}</h2>
+                <p style="color:#9ca3af; font-size:1rem; max-width:30rem; line-height:1.6; margin:0 auto;">${maintenance.message || 'Estamos realizando manutencao. Volte em breve!'}</p>
+            </div>
+            ${hasPhotos ? `
+                <div style="width:100%; max-width:50rem; margin-top:2.5rem; position:relative; overflow:hidden; border-radius:0.75rem;">
+                    <div id="carouselTrack" style="display:flex; transition:transform 0.5s ease; will-change:transform;">
+                        ${photos.map(p => `
+                            <div style="min-width:100%; position:relative;">
+                                <img src="${p.url}" style="width:100%; height:20rem; object-fit:cover; display:block; pointer-events:none; user-select:none;" draggable="false">
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${photos.length > 1 ? `
+                        <button id="carouselPrev" style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:white; border:none; width:2.5rem; height:2.5rem; border-radius:9999px; cursor:pointer; font-size:1.25rem; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">&#10094;</button>
+                        <button id="carouselNext" style="position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:white; border:none; width:2.5rem; height:2.5rem; border-radius:9999px; cursor:pointer; font-size:1.25rem; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">&#10095;</button>
+                        <div id="carouselDots" style="position:absolute; bottom:0.75rem; left:50%; transform:translateX(-50%); display:flex; gap:0.5rem;">
+                            ${photos.map((_, i) => `<span class="carousel-dot" data-idx="${i}" style="width:0.5rem; height:0.5rem; border-radius:9999px; background:${i === 0 ? 'white' : 'rgba(255,255,255,0.4)'}; cursor:pointer; transition:background 0.3s;"></span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
         </div>
     `;
+
+    // Carrossel interativo
+    if (hasPhotos && photos.length > 1) {
+        let currentSlide = 0;
+        const track = document.getElementById('carouselTrack');
+        const dots = document.querySelectorAll('.carousel-dot');
+        const total = photos.length;
+
+        function goToSlide(idx) {
+            currentSlide = ((idx % total) + total) % total;
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            dots.forEach((d, i) => {
+                d.style.background = i === currentSlide ? 'white' : 'rgba(255,255,255,0.4)';
+            });
+        }
+
+        document.getElementById('carouselPrev').onclick = () => goToSlide(currentSlide - 1);
+        document.getElementById('carouselNext').onclick = () => goToSlide(currentSlide + 1);
+        dots.forEach(d => { d.onclick = () => goToSlide(parseInt(d.dataset.idx)); });
+
+        // Auto-play a cada 4 segundos
+        setInterval(() => goToSlide(currentSlide + 1), 4000);
+
+        // Swipe touch
+        let touchStartX = 0;
+        track.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', (e) => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) goToSlide(currentSlide + (diff > 0 ? 1 : -1));
+        }, { passive: true });
+    }
 }
 
 // ========== COMPARTILHAMENTO ==========
