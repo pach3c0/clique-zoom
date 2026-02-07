@@ -716,6 +716,114 @@ function showMaintenanceScreen(maintenance) {
     `;
 }
 
+// ========== COMPARTILHAMENTO ==========
+const SHARE_CONFIG = {
+    portfolio: {
+        title: 'Galeria | CLIQUE·ZOOM',
+        text: 'Confira essa galeria de fotos incrivel!',
+        hash: '#portfolio'
+    },
+    albums: {
+        title: 'Albuns | CLIQUE·ZOOM',
+        text: 'Veja os albuns de fotos da CLIQUE·ZOOM!',
+        hash: '#albums'
+    },
+    estudio: {
+        title: 'Estudio | CLIQUE·ZOOM',
+        text: 'Conheca o estudio da CLIQUE·ZOOM!',
+        hash: '#estudio'
+    }
+};
+
+function shareSection(section) {
+    const config = SHARE_CONFIG[section];
+    if (!config) return;
+
+    const url = window.location.origin + '/' + config.hash;
+    doShare(config.title, config.text, url);
+}
+
+function shareAlbum() {
+    const titleEl = document.getElementById('album-modal-title');
+    const albumTitle = titleEl ? titleEl.textContent : 'Album';
+    const url = window.location.origin + '/#albums';
+    doShare(
+        `${albumTitle} | CLIQUE·ZOOM`,
+        `Veja o album "${albumTitle}" da CLIQUE·ZOOM!`,
+        url
+    );
+}
+
+function doShare(title, text, url) {
+    // Tentar Web Share API (nativo em celulares)
+    if (navigator.share) {
+        navigator.share({ title, text, url }).catch(() => {});
+        return;
+    }
+    // Fallback: mostrar dropdown
+    showShareDropdown(title, text, url);
+}
+
+function showShareDropdown(title, text, url) {
+    // Remover dropdown anterior se existir
+    const existing = document.getElementById('share-dropdown-global');
+    if (existing) { existing.remove(); return; }
+
+    const encodedText = encodeURIComponent(text + ' ' + url);
+    const encodedUrl = encodeURIComponent(url);
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'share-dropdown-global';
+    dropdown.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:1rem; box-shadow:0 20px 60px rgba(0,0,0,0.3); min-width:280px; z-index:200; overflow:hidden;';
+    dropdown.innerHTML = `
+        <div style="padding:1rem 1.25rem; border-bottom:1px solid #f3f4f6; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:600; font-size:0.9375rem; color:#1a1a1a;">Compartilhar</span>
+            <button onclick="document.getElementById('share-dropdown-global').remove()" style="background:none; border:none; cursor:pointer; padding:0.25rem; color:#9ca3af; font-size:1.25rem;">&times;</button>
+        </div>
+        <div style="padding:0.5rem 0;">
+            <a href="https://wa.me/?text=${encodedText}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1.25rem; color:#374151; text-decoration:none; transition:background 0.15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+            </a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1.25rem; color:#374151; text-decoration:none; transition:background 0.15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Facebook
+            </a>
+            <button onclick="copyShareLink('${url}')" style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1.25rem; color:#374151; background:none; border:none; cursor:pointer; width:100%; font-size:0.8125rem; transition:background 0.15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copiar link
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(dropdown);
+
+    // Fechar ao clicar fora
+    setTimeout(() => {
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.remove();
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }, 10);
+}
+
+function copyShareLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        const dropdown = document.getElementById('share-dropdown-global');
+        if (dropdown) {
+            const btn = dropdown.querySelector('button:last-child');
+            if (btn) {
+                const original = btn.innerHTML;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Link copiado!';
+                btn.style.color = '#16a34a';
+                setTimeout(() => { dropdown.remove(); }, 1000);
+            }
+        }
+    });
+}
+
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
