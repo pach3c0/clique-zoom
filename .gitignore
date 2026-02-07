@@ -8,7 +8,10 @@ package-lock.json
 .env.*.local
 
 # Uploads & Temporários
-uploads/
+uploads/*
+!uploads/.gitkeep
+uploads/sessions/*
+!uploads/sessions/.gitkeep
 *.temp
 *.tmp
 
@@ -44,6 +47,5 @@ coverage/
 .nyc_output/
 
 # Deployment
-.vercel
 .env.production.local
 .env*.local

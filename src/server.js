@@ -3,9 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+require('dotenv').config();
 
 const app = express();
 
@@ -16,6 +14,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads/sessions', express.static(path.join(__dirname, '../uploads/sessions')));
 app.use('/assets', express.static(path.join(__dirname, '../assets')));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
@@ -48,9 +47,7 @@ const connectWithRetry = async () => {
   } catch (err) {
     console.error('Erro na conexão MongoDB:', err.message);
     isConnected = false;
-    if (process.env.NODE_ENV !== 'production') {
-      setTimeout(connectWithRetry, 5000);
-    }
+    setTimeout(connectWithRetry, 5000);
   }
 };
 
@@ -99,12 +96,8 @@ app.use('/api', require('./routes/newsletter'));
 app.use('/api', require('./routes/sessions'));
 app.use('/api', require('./routes/upload'));
 
-module.exports = app;
-
-// Em desenvolvimento, iniciar servidor local
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`\nServidor rodando na porta ${PORT}`);
-  });
-}
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});

@@ -6,25 +6,23 @@ Plataforma de portfolio fotografico com 3 frontends e 1 backend:
 - **Site publico** (`public/index.html`) - Portfolio, galeria, FAQ, contato
 - **Painel admin** (`admin/`) - Gerencia todo o conteudo do site
 - **Galeria do cliente** (`cliente/index.html`) - Fotos privadas com codigo de acesso
-- **API backend** (`src/server.js` + `src/routes/`) - Express.js + MongoDB + Cloudinary
+- **API backend** (`src/server.js` + `src/routes/`) - Express.js + MongoDB
 
-Deploy: **Vercel** (serverless). Dominio: `cliquezoom.com.br`
+Deploy: **VPS Contabo** (Ubuntu + Nginx + PM2 + MongoDB local). Dominio: `cliquezoom.com.br`
 
 ---
 
 ## REGRAS CRITICAS - NUNCA QUEBRE ESTAS
 
-1. **Admin JS = ES Modules puros.** Nunca use `require()`, `module.exports`, ou `exports`. Sempre `import/export`. O Vercel serve esses arquivos via `@vercel/static` para evitar compilacao CJS.
+1. **Admin JS = ES Modules puros.** Nunca use `require()`, `module.exports`, ou `exports`. Sempre `import/export`. O Nginx serve esses arquivos como static com content-type `application/javascript`.
 
 2. **Backend JS = CommonJS.** O `package.json` tem `"type": "commonjs"`. Use `require()` e `module.exports` em tudo dentro de `src/`.
 
 3. **Admin tabs usam INLINE STYLES, nao classes Tailwind.** O admin tem tema escuro (fundo `#111827`). Classes Tailwind como `bg-white`, `text-gray-600` ficam invisiveis. Use sempre `style="background:#1f2937; color:#f3f4f6;"` etc.
 
-4. **Nunca escreva em arquivos JSON no servidor.** O filesystem da Vercel e read-only. Tudo vai pro MongoDB via modelo `SiteData`.
+4. **Upload de imagens salva no disco local** em `/uploads/`. Retorna URL relativa `/uploads/filename.jpg`. NAO usar servicos externos (Cloudinary, S3, etc).
 
-5. **Nunca mude a estrutura do `vercel.json`.** A ordem das rotas importa: admin JS static primeiro, catch-all pro Express depois.
-
-6. **Sempre rode `npm run build:css` antes de deploy** se alterar qualquer HTML que use classes Tailwind. O Tailwind v4 compila de `assets/css/tailwind-input.css` para `assets/css/tailwind.css`.
+5. **Sempre rode `npm run build:css` antes de deploy** se alterar qualquer HTML que use classes Tailwind. O Tailwind v4 compila de `assets/css/tailwind-input.css` para `assets/css/tailwind.css`.
 
 ---
 
@@ -61,10 +59,10 @@ Site/
     albums.html             # Pagina de albuns
   cliente/
     index.html              # Galeria privada do cliente
+  uploads/                  # Imagens do admin (servidas pelo Nginx)
+  uploads/sessions/         # Fotos de sessoes de clientes
   src/
-    server.js               # Entry point Express (~110 linhas)
-    config/
-      cloudinary.js         # Config Cloudinary + multer (memory e disk)
+    server.js               # Entry point Express
     middleware/
       auth.js               # authenticateToken (JWT)
     models/
@@ -78,8 +76,7 @@ Site/
       site-data.js          # GET/PUT /site-data, GET /site-config
       newsletter.js         # POST /newsletter/subscribe, GET/DELETE /newsletter
       sessions.js           # CRUD /sessions, upload/delete fotos
-      upload.js             # POST /admin/upload
-  vercel.json               # Build: static (admin JS) + node (server)
+      upload.js             # POST /admin/upload (salva em /uploads/)
   package.json              # Node 22, CommonJS
 ```
 
@@ -109,8 +106,8 @@ public/index.html → loadRemoteData()
 Tab chama uploadImage(file, token, onProgress)
   → utils/upload.js comprime imagem (1200px, 85% quality)
   → XHR POST /api/admin/upload com FormData
-  → Backend: multer recebe em memoria → cloudinary.uploader.upload_stream()
-  → Retorna { url: 'https://res.cloudinary.com/...', filename: '...' }
+  → Backend: multer salva no disco em /uploads/
+  → Retorna { url: '/uploads/filename.jpg', filename: '...' }
   → Tab salva a URL no campo correspondente do appState.appData
   → Chama saveAppData() para persistir no MongoDB
 ```
@@ -170,7 +167,7 @@ export async function renderNovaaba(container) {
 
 Em `admin/index.html`, dentro da `<nav>`:
 ```html
-<div data-tab="novaaba" class="nav-item">🆕 Nome da Aba</div>
+<div data-tab="novaaba" class="nav-item">Nome da Aba</div>
 ```
 
 ### 3. Pronto
@@ -302,7 +299,7 @@ container.querySelector('#uploadInput').onchange = async (e) => {
     const result = await uploadImage(file, appState.authToken, (percent) => {
       showUploadProgress('uploadProgress', percent);
     });
-    // result.url = URL do Cloudinary
+    // result.url = URL local (/uploads/filename.jpg)
     dados.image = result.url;
     e.target.value = '';
   } catch (error) {
@@ -353,7 +350,7 @@ items.forEach((item, index) => {
     <div style="border:1px solid #374151; border-radius:0.375rem; padding:1rem; background:#1f2937;">
       <input type="text" value="${item.titulo}" data-item-titulo="${index}"
         style="width:100%; ... background:#111827; color:#f3f4f6;">
-      <button onclick="deleteItem(${index})" style="color:#ef4444; background:none; border:none; cursor:pointer;">🗑️</button>
+      <button onclick="deleteItem(${index})" style="color:#ef4444; background:none; border:none; cursor:pointer;">Delete</button>
     </div>
   `;
 });
@@ -427,33 +424,6 @@ if (response.ok) {
 
 ---
 
-## PADRAO DO SITE PUBLICO
-
-O `public/index.html` carrega dados assim:
-
-```javascript
-async function loadRemoteData() {
-  const [siteDataRes, heroRes] = await Promise.all([
-    fetch('/api/site-data'),
-    fetch('/api/hero')
-  ]);
-  const siteData = siteDataRes.ok ? await siteDataRes.json() : null;
-  const heroData = heroRes.ok ? await heroRes.json() : null;
-  if (siteData) {
-    if (heroData) return { ...siteData, hero: heroData };
-    return siteData;
-  }
-  return null;
-}
-```
-
-Para adicionar uma nova secao no site publico:
-1. Adicionar o HTML da secao no `public/index.html`
-2. Na funcao `applyData(data)`, usar os dados para preencher o DOM
-3. Referenciar por `data.novaSecao.campo`
-
----
-
 ## PADRAO DE HOVER OVERLAY EM IMAGENS
 
 Para botoes que aparecem ao passar o mouse sobre imagens:
@@ -464,8 +434,8 @@ Para botoes que aparecem ao passar o mouse sobre imagens:
 <div class="meu-item" style="position:relative; ...">
   <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
   <div class="meu-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.5); opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
-    <button onclick="editar(${idx})" style="background:#3b82f6; color:white; padding:0.5rem; border-radius:9999px; border:none; cursor:pointer;">✏️</button>
-    <button onclick="deletar(${idx})" style="background:#ef4444; color:white; padding:0.5rem; border-radius:9999px; border:none; cursor:pointer;">🗑️</button>
+    <button onclick="editar(${idx})" style="background:#3b82f6; color:white; padding:0.5rem; border-radius:9999px; border:none; cursor:pointer;">Editar</button>
+    <button onclick="deletar(${idx})" style="background:#ef4444; color:white; padding:0.5rem; border-radius:9999px; border:none; cursor:pointer;">Deletar</button>
   </div>
 </div>
 `
@@ -483,14 +453,12 @@ container.querySelectorAll('.meu-item').forEach(item => {
 ## VARIAVEIS DE AMBIENTE
 
 ```
-MONGODB_URI=mongodb+srv://...          # Conexao MongoDB Atlas
-CLOUDINARY_CLOUD_NAME=...             # Nome do cloud Cloudinary
-CLOUDINARY_API_KEY=...                # API key
-CLOUDINARY_API_SECRET=...             # API secret
-ADMIN_PASSWORD=...                    # Senha admin (texto plano, legado)
-ADMIN_PASSWORD_HASH=...               # Hash bcrypt da senha (preferido)
-JWT_SECRET=...                        # Secret para assinar tokens
-NODE_ENV=production                   # Ambiente
+MONGODB_URI=mongodb://localhost:27017/cliquezoom  # MongoDB local na VPS
+ADMIN_PASSWORD=...                                # Senha admin (texto plano, legado)
+ADMIN_PASSWORD_HASH=...                           # Hash bcrypt da senha (preferido)
+JWT_SECRET=...                                    # Secret para assinar tokens
+NODE_ENV=production                               # Ambiente
+PORT=3000                                         # Porta do Express
 ```
 
 ---
@@ -498,10 +466,36 @@ NODE_ENV=production                   # Ambiente
 ## COMANDOS
 
 ```bash
-npm run dev          # Servidor local com nodemon
+npm run dev          # Servidor local com nodemon (desenvolvimento)
 npm run build:css    # Compilar Tailwind CSS
-npm run deploy       # Build CSS + deploy Vercel
-npx vercel --prod    # Deploy direto (sem build CSS)
+npm start            # Iniciar servidor (producao)
+```
+
+---
+
+## DEPLOY NA VPS
+
+O app roda na VPS Contabo com Nginx como reverse proxy e PM2 como process manager.
+
+### Deploy de atualizacoes:
+```bash
+# Do seu computador local:
+git add . && git commit -m "descricao" && git push
+
+# Na VPS (via SSH):
+cd /var/www/clique-zoom && git pull && npm install && pm2 restart cliquezoom
+```
+
+### Estrutura do servidor:
+```
+Nginx (porta 80/443)
+  ├── /uploads/     → /var/www/clique-zoom/uploads/ (static)
+  ├── /assets/      → /var/www/clique-zoom/assets/ (static)
+  ├── /admin/js/    → /var/www/clique-zoom/admin/js/ (static, ESM)
+  └── /*            → localhost:3000 (proxy para Node.js)
+
+PM2: gerencia processo Node.js (auto-restart)
+MongoDB: localhost:27017 (sempre conectado)
 ```
 
 ---
@@ -513,9 +507,8 @@ npx vercel --prod    # Deploy direto (sem build CSS)
 - [ ] Se criou nova rota: registrar com `app.use('/api', require('./routes/arquivo'))` no `server.js`
 - [ ] Se criou novo modelo: verificar se tem `timestamps: true`
 - [ ] Testar localmente com `npm run dev`
-- [ ] Commitar e push: `git add . && git commit -m "descricao" && git push`
-- [ ] Deploy: `npx vercel --prod --yes`
-- [ ] Verificar se admin JS serve como ESM: `curl https://cliquezoom.com.br/admin/js/app.js | head -3`
+- [ ] Commitar e push para GitHub
+- [ ] Na VPS: `cd /var/www/clique-zoom && git pull && npm install && pm2 restart cliquezoom`
 
 ---
 
@@ -547,14 +540,13 @@ Classes Tailwind padrao (nao arbitrarias) como `aspect-video`, `aspect-square`, 
 
 | Erro | Causa | Solucao |
 |------|-------|---------|
-| `Can't find variable: exports` | Vercel compilou admin JS para CJS | Verificar que `vercel.json` tem `@vercel/static` para `admin/js/**/*.js` |
-| Conteudo aparece e some | CSS invisivel no tema escuro | Usar inline styles, nao classes Tailwind |
+| Conteudo aparece e some no admin | CSS invisivel no tema escuro | Usar inline styles, nao classes Tailwind |
 | `@apply` nao funciona | `@apply` so funciona durante build | Substituir por CSS puro ou inline styles |
 | Portfolio nao aparece no site | Classe `aspect-[3/4]` nao existe no CSS compilado | Usar inline style `style="aspect-ratio:3/4;"` em vez de classe arbitraria |
-| `loadRemoteData` retorna null | Hero ou site-data falhou | `loadRemoteData` ja trata erros individuais; verificar API no Vercel |
-| `fs.writeFileSync` falha | Filesystem read-only na Vercel | Usar MongoDB (SiteData) em vez de arquivos JSON |
-| Upload falha com 413 | Payload muito grande | Imagem e comprimida no client (1200px). Se persistir, verificar limite do multer |
+| Upload falha com 413 | Payload muito grande | Imagem e comprimida no client (1200px). Se persistir, verificar `client_max_body_size` no Nginx |
 | Portfolio mostra imagem quebrada | Item antigo sem campo `image` no MongoDB | `processRemoteData` ja filtra itens sem `image`; nao salvar itens sem URL |
+| App nao inicia | MongoDB desligado | `sudo systemctl start mongod` |
+| 502 Bad Gateway | Node.js caiu | `pm2 restart cliquezoom` e verificar logs: `pm2 logs cliquezoom` |
 
 ---
 
@@ -567,7 +559,7 @@ Documento unico no MongoDB que armazena todo o conteudo do site:
   hero: {
     title: String,
     subtitle: String,
-    image: String,              // URL Cloudinary
+    image: String,              // URL da imagem (/uploads/xxx ou URL externa)
     imageScale: Number,         // 0.5 a 2
     imagePosX: Number,          // 0 a 100
     imagePosY: Number,          // 0 a 100
@@ -580,11 +572,11 @@ Documento unico no MongoDB que armazena todo o conteudo do site:
   about: {
     title: String,
     text: String,
-    image: String               // URL Cloudinary
+    image: String               // URL da imagem
   },
   portfolio: [                  // Array de fotos
     {
-      image: String,            // URL Cloudinary
+      image: String,            // URL da imagem
       posX: Number,             // 0 a 100 (default 50)
       posY: Number,             // 0 a 100 (default 50)
       scale: Number             // 1 a 2 (default 1)

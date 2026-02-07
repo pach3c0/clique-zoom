@@ -1,8 +1,27 @@
 const router = require('express').Router();
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const Session = require('../models/Session');
 const { authenticateToken } = require('../middleware/auth');
-const { cloudinary, uploadMemory } = require('../config/cloudinary');
+
+// Garantir que o diretorio existe
+const sessionsDir = path.join(__dirname, '../../uploads/sessions');
+if (!fs.existsSync(sessionsDir)) fs.mkdirSync(sessionsDir, { recursive: true });
+
+const sessionStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, sessionsDir),
+  filename: (req, file, cb) => {
+    const suffix = crypto.randomBytes(8).toString('hex');
+    cb(null, suffix + path.extname(file.originalname));
+  }
+});
+
+const uploadSession = multer({
+  storage: sessionStorage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 50 }
+});
 
 // CLIENTE: Validar codigo de acesso
 router.post('/client/verify-code', async (req, res) => {
@@ -120,7 +139,7 @@ router.delete('/sessions/:sessionId', authenticateToken, async (req, res) => {
 });
 
 // ADMIN: Upload de fotos para sessao
-router.post('/sessions/:sessionId/photos', authenticateToken, uploadMemory.array('photos', 50), async (req, res) => {
+router.post('/sessions/:sessionId/photos', authenticateToken, uploadSession.array('photos', 50), async (req, res) => {
   try {
     const { sessionId } = req.params;
     const session = await Session.findById(sessionId);
@@ -134,39 +153,18 @@ router.post('/sessions/:sessionId/photos', authenticateToken, uploadMemory.array
     }
 
     const uploadedPhotos = [];
-    const errors = [];
 
     for (let i = 0; i < req.files.length; i++) {
       const file = req.files[i];
-      try {
-        const b64 = Buffer.from(file.buffer).toString('base64');
-        const dataUri = 'data:' + file.mimetype + ';base64,' + b64;
+      const photo = {
+        id: `photo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        filename: file.originalname,
+        url: `/uploads/sessions/${file.filename}`,
+        uploadedAt: new Date()
+      };
 
-        const result = await cloudinary.uploader.upload(dataUri, {
-          folder: 'cliquezoom/sessions',
-          resource_type: 'auto'
-        });
-
-        const photo = {
-          id: `photo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
-          filename: file.originalname,
-          url: result.secure_url,
-          uploadedAt: new Date()
-        };
-
-        session.photos.push(photo);
-        uploadedPhotos.push(photo);
-      } catch (uploadError) {
-        console.error(`Erro ao fazer upload de ${file.originalname}:`, uploadError.message);
-        errors.push({ filename: file.originalname, error: uploadError.message });
-      }
-    }
-
-    if (uploadedPhotos.length === 0) {
-      return res.status(500).json({
-        error: 'Nenhuma foto foi enviada com sucesso',
-        details: errors
-      });
+      session.photos.push(photo);
+      uploadedPhotos.push(photo);
     }
 
     await session.save();
@@ -174,11 +172,10 @@ router.post('/sessions/:sessionId/photos', authenticateToken, uploadMemory.array
     res.json({
       success: true,
       photos: uploadedPhotos,
-      totalPhotos: session.photos.length,
-      errors: errors.length > 0 ? errors : undefined
+      totalPhotos: session.photos.length
     });
   } catch (error) {
-    console.error('Erro geral ao fazer upload:', error);
+    console.error('Erro ao fazer upload:', error);
     res.status(500).json({ error: 'Erro ao fazer upload', details: error.message });
   }
 });
@@ -196,6 +193,13 @@ router.delete('/sessions/:sessionId/photos/:photoId', authenticateToken, async (
     const photoIndex = session.photos.findIndex(p => p.id === photoId);
     if (photoIndex === -1) {
       return res.status(404).json({ error: 'Foto não encontrada' });
+    }
+
+    // Deletar arquivo do disco se for local
+    const photo = session.photos[photoIndex];
+    if (photo.url && photo.url.startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, '../..', photo.url);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
 
     session.photos.splice(photoIndex, 1);

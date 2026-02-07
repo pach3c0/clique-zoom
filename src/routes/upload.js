@@ -1,42 +1,33 @@
 const router = require('express').Router();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const crypto = require('crypto');
 const { authenticateToken } = require('../middleware/auth');
-const { cloudinary, uploadMemory, uploadDisk } = require('../config/cloudinary');
 
-router.post('/admin/upload', authenticateToken, (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    uploadMemory.single('image')(req, res, async (err) => {
-      if (err) return res.status(400).json({ ok: false, error: err.message });
-      if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
+// Garantir que o diretorio existe
+const uploadsDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
-      try {
-        const b64 = Buffer.from(req.file.buffer).toString('base64');
-        const dataUri = 'data:' + req.file.mimetype + ';base64,' + b64;
-        const result = await cloudinary.uploader.upload(dataUri, { folder: 'cliquezoom' });
-
-        return res.json({
-          ok: true,
-          success: true,
-          filename: result.original_filename,
-          url: result.secure_url
-        });
-      } catch (error) {
-        console.error('Erro Cloudinary:', error);
-        return res.status(500).json({ ok: false, error: 'Falha no upload' });
-      }
-    });
-  } else {
-    uploadDisk.single('image')(req, res, (err) => {
-      if (err) return res.status(400).json({ ok: false, error: err.message });
-      if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
-
-      res.json({
-        ok: true,
-        success: true,
-        filename: req.file.filename,
-        url: `/uploads/${req.file.filename}`
-      });
-    });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const suffix = crypto.randomBytes(8).toString('hex');
+    cb(null, suffix + path.extname(file.originalname));
   }
+});
+
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+
+router.post('/admin/upload', authenticateToken, upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado' });
+
+  res.json({
+    ok: true,
+    success: true,
+    filename: req.file.filename,
+    url: `/uploads/${req.file.filename}`
+  });
 });
 
 module.exports = router;
