@@ -25,6 +25,11 @@ app.get('/galeria/:id', (req, res) => {
   res.sendFile(path.join(__dirname, '../cliente/index.html'));
 });
 
+// Preview route (bypasses maintenance curtain)
+app.get('/preview', (req, res) => {
+  res.redirect('/?preview');
+});
+
 // MongoDB connection
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cliquezoom';
 let isConnected = false;

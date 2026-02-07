@@ -54,13 +54,13 @@
 <!-- Admin Panel -->
 <div id="adminPanel" class="flex h-screen" style="display: none;">
     <!-- Sidebar -->
-    <div class="w-64 bg-gray-800 border-r border-gray-700 overflow-y-auto">
-        <div class="p-6">
-            <h1 class="text-2xl font-bold text-white">CLIQUE<span class="text-blue-500">·</span>ZOOM</h1>
-            <p class="text-gray-400 text-sm">Painel Administrativo</p>
+    <div style="width:16rem; background:#1f2937; border-right:1px solid #374151; display:flex; flex-direction:column; flex-shrink:0;">
+        <div style="padding:1.5rem;">
+            <h1 style="font-size:1.5rem; font-weight:bold; color:white;">CLIQUE<span style="color:#3b82f6;">·</span>ZOOM</h1>
+            <p style="color:#9ca3af; font-size:0.75rem;">Painel Administrativo</p>
         </div>
 
-        <nav class="px-4 py-6 space-y-2">
+        <nav style="padding:0 1rem; flex:1; overflow-y:auto;" class="space-y-2">
             <div data-tab="hero" class="nav-item">📸 Hero / Capa</div>
             <div data-tab="sobre" class="nav-item">ℹ️ Sobre</div>
             <div data-tab="portfolio" class="nav-item">🖼️ Portfólio</div>
@@ -73,9 +73,10 @@
             <div data-tab="manutencao" class="nav-item">⚙️ Manutenção</div>
         </nav>
 
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
-            <button onclick="logout()" class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">
-                Logout
+        <div style="padding:0.75rem 1rem; border-top:1px solid #374151;">
+            <button onclick="logout()" style="width:100%; background:#7f1d1d; color:#fca5a5; padding:0.375rem 0.75rem; border-radius:0.375rem; border:none; cursor:pointer; font-size:0.75rem; font-weight:500; transition:background 0.15s;"
+              onmouseenter="this.style.background='#991b1b'" onmouseleave="this.style.background='#7f1d1d'">
+                Sair
             </button>
         </div>
     </div>

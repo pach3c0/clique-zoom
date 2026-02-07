@@ -3,101 +3,232 @@
  */
 
 import { appState, saveAppData } from '../state.js';
-import { resolveImagePath } from '../utils/helpers.js';
+import { resolveImagePath, generateId } from '../utils/helpers.js';
 import { uploadImage, showUploadProgress } from '../utils/upload.js';
+
+let editingSobrePhoto = null;
 
 export async function renderSobre(container) {
   const about = appState.appData.about || {};
-  const imgSrc = resolveImagePath(about.image);
+  if (!about.images) about.images = [];
+
+  // Migrar imagem antiga (campo 'image') para array 'images'
+  if (about.image && about.images.length === 0) {
+    about.images.push({ image: about.image, posX: 50, posY: 50, scale: 1 });
+  }
+
+  let photosHtml = '';
+  about.images.forEach((p, idx) => {
+    const posX = p.posX ?? 50;
+    const posY = p.posY ?? 50;
+    const scale = p.scale ?? 1;
+    photosHtml += `
+      <div class="about-photo-item" data-index="${idx}"
+        style="position:relative; aspect-ratio:1/1; background:#374151; border-radius:0.5rem; overflow:hidden;">
+        <img src="${resolveImagePath(p.image)}" alt="Sobre ${idx + 1}"
+          style="width:100%; height:100%; object-fit:cover; pointer-events:none; object-position:${posX}% ${posY}%; transform:scale(${scale});">
+        <div class="about-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.5); opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+          <button onclick="event.stopPropagation(); openSobreEditor(${idx})" style="background:#3b82f6; color:white; padding:0.5rem; border-radius:9999px; border:none; cursor:pointer;" title="Ajustar">
+            ✏️
+          </button>
+          <button onclick="event.stopPropagation(); deleteSobrePhoto(${idx})" style="background:#ef4444; color:white; padding:0.5rem; border-radius:9999px; border:none; cursor:pointer;" title="Remover">
+            🗑️
+          </button>
+        </div>
+        <div style="position:absolute; bottom:0.5rem; left:0.5rem; background:rgba(0,0,0,0.7); color:white; font-size:0.75rem; padding:0.125rem 0.5rem; border-radius:0.25rem;">${idx + 1}</div>
+      </div>
+    `;
+  });
 
   container.innerHTML = `
     <div style="display:flex; flex-direction:column; gap:1.5rem;">
       <h2 style="font-size:1.5rem; font-weight:bold; color:#f3f4f6;">Sobre</h2>
 
       <div style="border:1px solid #374151; border-radius:0.75rem; background:#1f2937; padding:1.5rem; display:flex; flex-direction:column; gap:1rem;">
-        <h3 style="font-size:1rem; font-weight:600; color:#d1d5db;">Conteúdo</h3>
+        <h3 style="font-size:1rem; font-weight:600; color:#d1d5db;">Conteudo</h3>
         <div>
-          <label style="display:block; font-size:0.75rem; font-weight:500; color:#9ca3af; margin-bottom:0.25rem;">Título da Seção</label>
+          <label style="display:block; font-size:0.75rem; font-weight:500; color:#9ca3af; margin-bottom:0.25rem;">Titulo da Secao</label>
           <input type="text" id="aboutTitle" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#111827; color:#f3f4f6;"
             value="${about.title || ''}">
         </div>
         <div>
-          <label style="display:block; font-size:0.75rem; font-weight:500; color:#9ca3af; margin-bottom:0.25rem;">Texto (separe parágrafos com linha em branco)</label>
+          <label style="display:block; font-size:0.75rem; font-weight:500; color:#9ca3af; margin-bottom:0.25rem;">Texto (separe paragrafos com linha em branco)</label>
           <textarea id="aboutText" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#111827; color:#f3f4f6; height:12rem; resize:vertical;"
             rows="8">${about.text || ''}</textarea>
         </div>
       </div>
 
+      <!-- Imagens -->
       <div style="border:1px solid #374151; border-radius:0.75rem; background:#1f2937; padding:1.5rem; display:flex; flex-direction:column; gap:1rem;">
-        <h3 style="font-size:1rem; font-weight:600; color:#d1d5db;">Imagem</h3>
-        <div style="display:flex; gap:1rem; align-items:flex-start;">
-          <div style="flex:1; display:flex; flex-direction:column; gap:0.5rem;">
-            <input type="text" id="aboutImageUrl" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#111827; color:#f3f4f6;"
-              value="${about.image || ''}" placeholder="URL da imagem">
-            <label style="display:inline-block; background:#2563eb; color:white; padding:0.5rem 1rem; border-radius:0.375rem; font-size:0.875rem; font-weight:600; cursor:pointer;">
-              Fazer Upload
-              <input type="file" id="aboutImage" accept="image/*" style="display:none;">
-            </label>
-            <div id="aboutUploadProgress"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="font-size:1rem; font-weight:600; color:#d1d5db;">Imagens</h3>
+            <p style="font-size:0.75rem; color:#9ca3af;">Passe o mouse para editar ou remover</p>
           </div>
-          <div style="width:8rem; height:8rem; background:#374151; border-radius:0.5rem; overflow:hidden; flex-shrink:0;">
-            ${imgSrc ? `<img id="aboutPreview" src="${imgSrc}" alt="Preview" style="width:100%; height:100%; object-fit:cover;">` : `<div id="aboutPreview" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:#9ca3af;">Sem imagem</div>`}
-          </div>
+          <label style="background:#2563eb; color:white; padding:0.375rem 0.75rem; border-radius:0.375rem; font-size:0.875rem; font-weight:600; cursor:pointer;">
+            Upload de Fotos
+            <input type="file" accept=".jpg,.jpeg,.png" multiple id="aboutUploadInput" style="display:none;">
+          </label>
         </div>
+        <div id="aboutUploadProgress"></div>
+        <div id="aboutPhotosGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:0.75rem;">
+          ${photosHtml}
+        </div>
+        ${about.images.length === 0 ? '<p style="color:#9ca3af; text-align:center; padding:2rem;">Nenhuma imagem. Use o botao acima para adicionar.</p>' : ''}
       </div>
 
       <button id="saveAboutBtn" style="background:#2563eb; color:white; padding:0.5rem 1.5rem; border-radius:0.375rem; border:none; font-weight:600; cursor:pointer;">
         Salvar
       </button>
     </div>
+
+    <!-- Modal Editor -->
+    <div id="sobreEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:50; flex-direction:column;">
+      <div style="background:#1f2937; border-bottom:1px solid #374151; padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:1.125rem; font-weight:bold; color:#f3f4f6;">Editor de Enquadramento</h3>
+        <div style="display:flex; gap:0.75rem;">
+          <button id="sobreEditorCancel" style="padding:0.5rem 1rem; color:#9ca3af; background:none; border:1px solid #374151; border-radius:0.375rem; cursor:pointer;">Cancelar</button>
+          <button id="sobreEditorSave" style="padding:0.5rem 1rem; background:#2563eb; color:white; border:none; border-radius:0.375rem; cursor:pointer; font-weight:600;">Aplicar</button>
+        </div>
+      </div>
+      <div style="flex:1; display:flex; overflow:hidden;">
+        <div style="width:16rem; background:#1f2937; border-right:1px solid #374151; padding:1.5rem; overflow-y:auto;">
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Zoom</label>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <input type="range" id="sobreEditorZoom" min="1" max="2" step="0.05" value="1" style="flex:1;">
+              <span id="sobreEditorZoomVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">1.00x</span>
+            </div>
+          </div>
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Posicao X</label>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <input type="range" id="sobreEditorPosX" min="0" max="100" step="1" value="50" style="flex:1;">
+              <span id="sobreEditorPosXVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">50%</span>
+            </div>
+          </div>
+          <div style="margin-bottom:1.5rem;">
+            <label style="display:block; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; margin-bottom:0.5rem;">Posicao Y</label>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <input type="range" id="sobreEditorPosY" min="0" max="100" step="1" value="50" style="flex:1;">
+              <span id="sobreEditorPosYVal" style="font-size:0.875rem; font-family:monospace; color:#f3f4f6; min-width:3rem; text-align:right;">50%</span>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1; display:flex; align-items:center; justify-content:center; background:#111827; padding:2rem;">
+          <div style="width:100%; max-width:500px; aspect-ratio:1/1; background:#374151; border-radius:0.5rem; overflow:hidden; position:relative;">
+            <img id="sobreEditorImg" src="" alt="Preview" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 
-  const titleInput = container.querySelector('#aboutTitle');
-  const textInput = container.querySelector('#aboutText');
-  const imageUrlInput = container.querySelector('#aboutImageUrl');
-  const imageInput = container.querySelector('#aboutImage');
-  const saveBtn = container.querySelector('#saveAboutBtn');
+  // Hover nos itens
+  container.querySelectorAll('.about-photo-item').forEach(item => {
+    const overlay = item.querySelector('.about-overlay');
+    item.onmouseenter = () => { overlay.style.opacity = '1'; };
+    item.onmouseleave = () => { overlay.style.opacity = '0'; };
+  });
 
-  // Atualizar preview ao digitar URL
-  imageUrlInput.oninput = () => {
-    const preview = container.querySelector('#aboutPreview');
-    if (preview && preview.tagName === 'IMG') {
-      preview.src = resolveImagePath(imageUrlInput.value);
-    }
-  };
+  // Upload multiplo
+  container.querySelector('#aboutUploadInput').onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-  imageInput.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      const result = await uploadImage(file, appState.authToken, (percent) => {
-        showUploadProgress('aboutUploadProgress', percent);
-      });
-      about.image = result.url;
-      imageUrlInput.value = result.url;
-
-      // Atualizar preview
-      const previewContainer = container.querySelector('#aboutPreview');
-      if (previewContainer) {
-        if (previewContainer.tagName === 'IMG') {
-          previewContainer.src = resolveImagePath(result.url);
-        } else {
-          previewContainer.outerHTML = `<img id="aboutPreview" src="${resolveImagePath(result.url)}" alt="Preview" style="width:100%; height:100%; object-fit:cover;">`;
-        }
+    for (const file of files) {
+      try {
+        showUploadProgress('aboutUploadProgress', Math.round((about.images.length / (about.images.length + files.length)) * 100));
+        const result = await uploadImage(file, appState.authToken);
+        about.images.push({ image: result.url, posX: 50, posY: 50, scale: 1 });
+      } catch (error) {
+        alert('Erro no upload: ' + error.message);
       }
-
-      e.target.value = '';
-    } catch (error) {
-      alert('Erro: ' + error.message);
     }
+
+    showUploadProgress('aboutUploadProgress', 100);
+    e.target.value = '';
+    appState.appData.about = about;
+    await saveAppData('about', { ...about, image: about.images[0]?.image || '' });
+    renderSobre(container);
   };
 
-  saveBtn.onclick = async () => {
+  // Deletar foto
+  window.deleteSobrePhoto = async (idx) => {
+    if (!confirm('Remover esta imagem?')) return;
+    about.images.splice(idx, 1);
+    appState.appData.about = about;
+    await saveAppData('about', { ...about, image: about.images[0]?.image || '' });
+    renderSobre(container);
+  };
+
+  // Abrir editor
+  window.openSobreEditor = (idx) => {
+    editingSobrePhoto = idx;
+    const photo = about.images[idx];
+    const modal = container.querySelector('#sobreEditorModal');
+    const img = container.querySelector('#sobreEditorImg');
+    const zoomSlider = container.querySelector('#sobreEditorZoom');
+    const posXSlider = container.querySelector('#sobreEditorPosX');
+    const posYSlider = container.querySelector('#sobreEditorPosY');
+
+    img.src = resolveImagePath(photo.image);
+    zoomSlider.value = photo.scale ?? 1;
+    posXSlider.value = photo.posX ?? 50;
+    posYSlider.value = photo.posY ?? 50;
+    updateSobrePreview();
+    modal.style.display = 'flex';
+  };
+
+  // Preview do editor
+  const zoomSlider = container.querySelector('#sobreEditorZoom');
+  const posXSlider = container.querySelector('#sobreEditorPosX');
+  const posYSlider = container.querySelector('#sobreEditorPosY');
+
+  function updateSobrePreview() {
+    const img = container.querySelector('#sobreEditorImg');
+    const zoom = parseFloat(zoomSlider.value);
+    const px = parseInt(posXSlider.value);
+    const py = parseInt(posYSlider.value);
+
+    img.style.objectPosition = `${px}% ${py}%`;
+    img.style.transform = `scale(${zoom})`;
+    container.querySelector('#sobreEditorZoomVal').textContent = zoom.toFixed(2) + 'x';
+    container.querySelector('#sobreEditorPosXVal').textContent = px + '%';
+    container.querySelector('#sobreEditorPosYVal').textContent = py + '%';
+  }
+
+  zoomSlider.oninput = updateSobrePreview;
+  posXSlider.oninput = updateSobrePreview;
+  posYSlider.oninput = updateSobrePreview;
+
+  // Salvar editor
+  container.querySelector('#sobreEditorSave').onclick = async () => {
+    if (editingSobrePhoto === null) return;
+    about.images[editingSobrePhoto].posX = parseInt(posXSlider.value);
+    about.images[editingSobrePhoto].posY = parseInt(posYSlider.value);
+    about.images[editingSobrePhoto].scale = parseFloat(parseFloat(zoomSlider.value).toFixed(2));
+
+    appState.appData.about = about;
+    await saveAppData('about', { ...about, image: about.images[0]?.image || '' });
+    container.querySelector('#sobreEditorModal').style.display = 'none';
+    editingSobrePhoto = null;
+    renderSobre(container);
+  };
+
+  // Cancelar editor
+  container.querySelector('#sobreEditorCancel').onclick = () => {
+    container.querySelector('#sobreEditorModal').style.display = 'none';
+    editingSobrePhoto = null;
+  };
+
+  // Salvar tudo
+  container.querySelector('#saveAboutBtn').onclick = async () => {
     const newAbout = {
-      title: titleInput.value,
-      text: textInput.value,
-      image: imageUrlInput.value || about.image || ''
+      title: container.querySelector('#aboutTitle').value,
+      text: container.querySelector('#aboutText').value,
+      image: about.images[0]?.image || '',
+      images: about.images
     };
     appState.appData.about = newAbout;
     await saveAppData('about', newAbout);
