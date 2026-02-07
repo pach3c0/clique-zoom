@@ -96,6 +96,39 @@ export async function renderSessoes(container) {
       </div>
     </div>
 
+    <!-- Modal Editar Sessao -->
+    <div id="editSessionModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:50; align-items:center; justify-content:center;">
+      <div style="background:#1f2937; border:1px solid #374151; border-radius:0.75rem; padding:1.5rem; width:28rem; display:flex; flex-direction:column; gap:1rem; max-height:90vh; overflow-y:auto;">
+        <h3 style="font-size:1.125rem; font-weight:bold; color:#f3f4f6;">Editar Sessao</h3>
+        <div style="background:#111827; border-radius:0.5rem; padding:0.75rem 1rem;">
+          <span id="editSessionName" style="color:#f3f4f6; font-weight:600;"></span>
+          <span id="editSessionType" style="color:#9ca3af; font-size:0.875rem; margin-left:0.5rem;"></span>
+        </div>
+        <div>
+          <label style="display:block; font-size:0.75rem; color:#9ca3af; margin-bottom:0.25rem;">Modo</label>
+          <select id="editMode" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#111827; color:#f3f4f6;">
+            <option value="selection">Selecao (cliente escolhe favoritas)</option>
+            <option value="gallery">Galeria (cliente so visualiza/baixa)</option>
+          </select>
+        </div>
+        <div id="editSelectionFields" style="display:flex; gap:0.75rem;">
+          <div style="flex:1;">
+            <label style="display:block; font-size:0.75rem; color:#9ca3af; margin-bottom:0.25rem;">Fotos do pacote</label>
+            <input type="number" id="editLimit" min="1" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#111827; color:#f3f4f6;">
+          </div>
+          <div style="flex:1;">
+            <label style="display:block; font-size:0.75rem; color:#9ca3af; margin-bottom:0.25rem;">Preco foto extra (R$)</label>
+            <input type="number" id="editExtraPrice" min="0" step="0.01" style="width:100%; padding:0.5rem 0.75rem; border:1px solid #374151; border-radius:0.375rem; background:#111827; color:#f3f4f6;">
+          </div>
+        </div>
+        <p style="font-size:0.6875rem; color:#6b7280;">Cada cliente pode ter valores diferentes de pacote e preco de extras.</p>
+        <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+          <button id="cancelEditSession" style="padding:0.5rem 1rem; color:#9ca3af; background:none; border:1px solid #374151; border-radius:0.375rem; cursor:pointer;">Cancelar</button>
+          <button id="confirmEditSession" style="padding:0.5rem 1rem; background:#2563eb; color:white; border:none; border-radius:0.375rem; cursor:pointer; font-weight:600;">Salvar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Ver Selecao -->
     <div id="selectionModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:50; flex-direction:column;">
       <div style="background:#1f2937; border-bottom:1px solid #374151; padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
@@ -169,6 +202,9 @@ export async function renderSessoes(container) {
               <button onclick="deliverSession('${session._id}')" style="background:#16a34a; color:white; padding:0.375rem 0.75rem; border-radius:0.375rem; border:none; cursor:pointer; font-size:0.75rem; font-weight:500;">
                 Entregar
               </button>` : ''}
+              <button onclick="editSession('${session._id}')" style="background:#d97706; color:white; padding:0.375rem 0.75rem; border-radius:0.375rem; border:none; cursor:pointer; font-size:0.75rem; font-weight:500;">
+                Config
+              </button>
               <button onclick="copySessionCode('${session.accessCode}')" style="background:#374151; color:#d1d5db; padding:0.375rem 0.75rem; border-radius:0.375rem; border:none; cursor:pointer; font-size:0.75rem;" title="Copiar codigo">
                 Codigo
               </button>
@@ -342,6 +378,63 @@ export async function renderSessoes(container) {
       if (response.ok) {
         await renderSessoes(container);
       }
+    } catch (error) {
+      alert('Erro: ' + error.message);
+    }
+  };
+
+  // Editar sessao
+  let editingSessionId = null;
+  const editModal = container.querySelector('#editSessionModal');
+  const editModeSelect = container.querySelector('#editMode');
+  const editSelFields = container.querySelector('#editSelectionFields');
+
+  editModeSelect.onchange = () => {
+    editSelFields.style.display = editModeSelect.value === 'selection' ? 'flex' : 'none';
+  };
+
+  window.editSession = (sessionId) => {
+    const session = sessionsData.find(s => s._id === sessionId);
+    if (!session) return;
+    editingSessionId = sessionId;
+
+    container.querySelector('#editSessionName').textContent = session.name;
+    container.querySelector('#editSessionType').textContent = session.type;
+    editModeSelect.value = session.mode || 'selection';
+    container.querySelector('#editLimit').value = session.packageLimit || 30;
+    container.querySelector('#editExtraPrice').value = session.extraPhotoPrice || 25;
+    editSelFields.style.display = editModeSelect.value === 'selection' ? 'flex' : 'none';
+
+    editModal.style.display = 'flex';
+  };
+
+  container.querySelector('#cancelEditSession').onclick = () => {
+    editModal.style.display = 'none';
+    editingSessionId = null;
+  };
+
+  container.querySelector('#confirmEditSession').onclick = async () => {
+    if (!editingSessionId) return;
+    const mode = editModeSelect.value;
+    const packageLimit = parseInt(container.querySelector('#editLimit').value) || 30;
+    const extraPhotoPrice = parseFloat(container.querySelector('#editExtraPrice').value) || 25;
+
+    try {
+      const response = await fetch(`/api/sessions/${editingSessionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${appState.authToken}`
+        },
+        body: JSON.stringify({ mode, packageLimit, extraPhotoPrice })
+      });
+
+      if (!response.ok) throw new Error('Erro ao salvar');
+
+      editModal.style.display = 'none';
+      editingSessionId = null;
+      alert('Configuracao salva!');
+      await renderSessoes(container);
     } catch (error) {
       alert('Erro: ' + error.message);
     }
