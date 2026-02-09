@@ -3,27 +3,56 @@
  *
  * Envia eventos duplicados pelo servidor para complementar o Pixel client-side.
  * Isso garante que eventos sejam capturados mesmo com bloqueadores de anuncios.
+ *
+ * Tokens sao lidos do MongoDB (campo integracoes.metaPixel no SiteData).
+ * Fallback: process.env.META_PIXEL_ID e META_ACCESS_TOKEN.
  */
 
 const https = require('https');
 const crypto = require('crypto');
+const SiteData = require('../models/SiteData');
 
-const PIXEL_ID = process.env.META_PIXEL_ID;
-const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const API_VERSION = 'v21.0';
+
+// Cache de config (evita ler MongoDB a cada evento)
+let cachedConfig = null;
+let cacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+async function getMetaConfig() {
+  if (cachedConfig !== null && Date.now() - cacheTime < CACHE_TTL) {
+    return cachedConfig;
+  }
+
+  try {
+    const data = await SiteData.findOne().lean();
+    const meta = data?.integracoes?.metaPixel;
+
+    if (meta?.enabled && meta?.pixelId && meta?.accessToken) {
+      cachedConfig = { pixelId: meta.pixelId, accessToken: meta.accessToken };
+    } else if (process.env.META_PIXEL_ID && process.env.META_ACCESS_TOKEN) {
+      cachedConfig = { pixelId: process.env.META_PIXEL_ID, accessToken: process.env.META_ACCESS_TOKEN };
+    } else {
+      cachedConfig = false;
+    }
+  } catch {
+    if (process.env.META_PIXEL_ID && process.env.META_ACCESS_TOKEN) {
+      cachedConfig = { pixelId: process.env.META_PIXEL_ID, accessToken: process.env.META_ACCESS_TOKEN };
+    } else {
+      cachedConfig = false;
+    }
+  }
+
+  cacheTime = Date.now();
+  return cachedConfig;
+}
 
 /**
  * Envia evento para a Meta Conversions API
- * @param {string} eventName - Nome do evento (PageView, Lead, Contact, etc)
- * @param {object} req - Express request (para extrair IP e User Agent)
- * @param {object} userData - Dados do usuario (email, phone, etc) - opcionais
- * @param {object} customData - Dados customizados do evento
  */
 async function sendEvent(eventName, req, userData = {}, customData = {}) {
-  if (!PIXEL_ID || !ACCESS_TOKEN) {
-    console.warn('Meta CAPI: PIXEL_ID ou ACCESS_TOKEN nao configurados');
-    return;
-  }
+  const config = await getMetaConfig();
+  if (!config) return;
 
   try {
     const eventData = {
@@ -51,7 +80,7 @@ async function sendEvent(eventName, req, userData = {}, customData = {}) {
 
     const options = {
       hostname: 'graph.facebook.com',
-      path: `/${API_VERSION}/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
+      path: `/${API_VERSION}/${config.pixelId}/events?access_token=${config.accessToken}`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -86,14 +115,10 @@ async function sendEvent(eventName, req, userData = {}, customData = {}) {
   }
 }
 
-/**
- * Hash SHA256 para dados pessoais (exigido pela Meta)
- */
 function hashData(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
-// Helpers para eventos especificos
 const sendPageView = (req) => sendEvent('PageView', req);
 const sendContact = (req) => sendEvent('Contact', req);
 const sendLead = (req, clientName) => sendEvent('Lead', req, {}, { content_name: clientName });

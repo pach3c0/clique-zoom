@@ -19,13 +19,17 @@ router.get('/site-data', async (req, res) => {
 router.get('/site-config', async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      const data = await SiteData.findOne().sort({ updatedAt: -1 });
-      return res.json({ maintenance: data?.maintenance || { enabled: false } });
+      const data = await SiteData.findOne().sort({ updatedAt: -1 }).lean();
+      const meta = data?.integracoes?.metaPixel;
+      return res.json({
+        maintenance: data?.maintenance || { enabled: false },
+        metaPixelId: (meta?.enabled && meta?.pixelId) ? meta.pixelId : null
+      });
     }
-    return res.json({ maintenance: { enabled: false } });
+    return res.json({ maintenance: { enabled: false }, metaPixelId: null });
   } catch (error) {
     console.error('Erro ao carregar config:', error.message);
-    return res.json({ maintenance: { enabled: false } });
+    return res.json({ maintenance: { enabled: false }, metaPixelId: null });
   }
 });
 

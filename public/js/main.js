@@ -668,6 +668,20 @@ document.querySelectorAll('[data-close-mobile]')?.forEach((link) => {
     link.addEventListener('click', () => closeMobileMenu());
 });
 
+// ========== META PIXEL (dinâmico) ==========
+function initMetaPixel(pixelId) {
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', pixelId);
+    fbq('track', 'PageView');
+}
+
 // ========== INIT ==========
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -677,20 +691,22 @@ if (document.readyState === 'loading') {
 
 async function init() {
     try {
-        // Checar manutencao (pular se URL tem ?preview)
+        // Checar manutencao e carregar config (pular manutencao se URL tem ?preview)
         const isPreview = new URLSearchParams(window.location.search).has('preview');
-        if (!isPreview) {
-            try {
-                const configRes = await fetch('/api/site-config');
-                if (configRes.ok) {
-                    const config = await configRes.json();
-                    if (config.maintenance?.enabled) {
-                        showMaintenanceScreen(config.maintenance);
-                        return;
-                    }
+        try {
+            const configRes = await fetch('/api/site-config');
+            if (configRes.ok) {
+                const config = await configRes.json();
+                if (!isPreview && config.maintenance?.enabled) {
+                    showMaintenanceScreen(config.maintenance);
+                    return;
                 }
-            } catch (e) { /* ignora erro de config */ }
-        }
+                // Injetar Meta Pixel dinamicamente
+                if (config.metaPixelId) {
+                    initMetaPixel(config.metaPixelId);
+                }
+            }
+        } catch (e) { /* ignora erro de config */ }
 
         const remote = await loadRemoteData();
         store = processRemoteData(remote);
