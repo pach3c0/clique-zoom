@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Newsletter = require('../models/Newsletter');
 const { authenticateToken } = require('../middleware/auth');
+const { sendSubscribe } = require('../utils/metaEvents');
 
 router.post('/newsletter/subscribe', async (req, res) => {
   try {
@@ -17,6 +18,7 @@ router.post('/newsletter/subscribe', async (req, res) => {
     }
 
     await Newsletter.create({ email });
+    sendSubscribe(req, email);
     res.json({ success: true, message: 'Inscrito com sucesso' });
   } catch (error) {
     console.error('Erro newsletter:', error);

@@ -407,6 +407,7 @@ function openWhatsapp() {
     const whatsappNumber = store.studio.whatsapp || '5511999999999';
     const defaultText = 'Olá! Vi seu site e gostaria de mais informações.';
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(defaultText)}`;
+    if (typeof fbq === 'function') fbq('track', 'Contact');
     window.open(whatsappUrl, '_blank');
 }
 
@@ -538,6 +539,9 @@ async function handleNewsletterSubscribe(event) {
         if (response.ok) {
             // Limpar formulario
             emailInput.value = '';
+
+            // Evento Meta Pixel
+            if (!data.alreadySubscribed && typeof fbq === 'function') fbq('track', 'Subscribe');
 
             // Feedback de sucesso
             button.textContent = data.alreadySubscribed ? '✓ Já inscrito!' : '✓ Inscrito!';

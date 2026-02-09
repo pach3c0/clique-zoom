@@ -6,6 +6,7 @@ const Session = require('../models/Session');
 const { authenticateToken } = require('../middleware/auth');
 const { createUploader } = require('../utils/multerConfig');
 const { notify } = require('../utils/notifications');
+const { sendLead, sendCompleteRegistration } = require('../utils/metaEvents');
 
 const uploadSession = createUploader('sessions');
 
@@ -27,6 +28,7 @@ router.post('/client/verify-code', async (req, res) => {
 
     // Notificar admin que cliente acessou
     await notify('session_accessed', session._id, session.name, `${session.name} acessou a galeria`);
+    sendLead(req, session.name);
 
     res.json({
       success: true,
@@ -184,6 +186,7 @@ router.post('/client/submit-selection/:sessionId', async (req, res) => {
     let notifMsg = `${session.name} enviou a seleção (${session.selectedPhotos.length} fotos)`;
     if (extras > 0) notifMsg += ` - ${extras} extras`;
     await notify('selection_submitted', session._id, session.name, notifMsg);
+    sendCompleteRegistration(req, session.name, extras * (session.extraPhotoPrice || 25));
 
     res.json({
       success: true,

@@ -43,6 +43,8 @@ async function handleLogin(e) {
         extraPhotoPrice = sessionData.extraPhotoPrice || 25;
         selectionStatus = sessionData.selectionStatus || 'pending';
 
+        if (typeof fbq === 'function') fbq('track', 'Lead', { content_name: sessionData.clientName });
+
         document.getElementById('loginArea').style.display = 'none';
         document.getElementById('galleryArea').style.display = 'block';
         loadGallery();
@@ -312,6 +314,8 @@ async function submitSelection() {
             alert(data.error || 'Erro ao finalizar');
             return;
         }
+
+        if (typeof fbq === 'function') fbq('track', 'CompleteRegistration', { content_name: sessionData.clientName, value: extras * extraPhotoPrice, currency: 'BRL' });
 
         selectionStatus = 'submitted';
         showStatusScreen('submitted');
